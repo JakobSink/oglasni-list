@@ -5,75 +5,96 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Oglasni list — kreative, budget in izračun profita</title>
 <meta name="description" content="Delovni prostor za pisanje oglasnih kreativ za Facebook in Google, načrtovanje budgeta ter izračun marže, CPA in profita na naročilo.">
-<meta name="theme-color" content="#F1F2F6" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0B0D12" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0E1117">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="stylesheet" href="styles.css">
 <script>
-/* tema pred izrisom, da ne utripne */
 try{var t=localStorage.getItem("oglasni-list-tema");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}
 </script>
 </head>
 <body>
 
-<header class="top">
-  <div class="top-in">
-    <a class="brand" href="#projekti" aria-label="Oglasni list, na začetek">
-      <span class="mark" aria-hidden="true">
-        <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8"/><path d="M9 10h9M9 15h14M9 20h11" stroke-linecap="round"/><circle cx="23" cy="20" r="2.5"/></svg>
-      </span>
-      <span class="brand-t"><b>Oglasni list</b><em>kreative · budget · profit</em></span>
-    </a>
+<div class="shell">
 
-    <div class="switch no-print">
-      <label class="sw">
-        <span>Mapa</span>
-        <select id="prsel" aria-label="Izbrani projekt"></select>
-      </label>
-      <label class="sw">
-        <span>Izdelek</span>
-        <select id="psel" aria-label="Izbrani izdelek"></select>
-      </label>
+  <aside class="side" id="side">
+    <div class="side-head">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 40 40"><rect x="4" y="4" width="32" height="32" rx="10"/><path d="M12 15h11M12 20.5h16M12 26h8" stroke-linecap="round"/><circle cx="26" cy="26" r="3"/></svg>
+      </span>
+      <span class="side-name"><b>Oglasni list</b><em>kreative · budget · profit</em></span>
+      <button class="side-close" id="sideClose" aria-label="Zapri meni">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+      </button>
     </div>
 
-    <div class="tools no-print">
-      <button class="btn btn-soft" id="pnew">+ Izdelek</button>
-      <button class="btn btn-ghost btn-ico" id="tema" aria-label="Preklopi svetlo in temno temo" title="Svetlo / temno">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6.3 6.3 4.9 4.9M19.1 19.1l-1.4-1.4M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/><circle cx="12" cy="12" r="4"/></svg>
-      </button>
+    <div class="side-pick">
+      <label class="sw"><span>Mapa</span><select id="prsel" aria-label="Izbrani projekt"></select></label>
+      <label class="sw"><span>Izdelek</span><select id="psel" aria-label="Izbrani izdelek"></select></label>
+      <button class="btn btn-p btn-w" id="pnew">Nov izdelek</button>
+    </div>
+
+    <nav class="rail" id="rail" role="tablist" aria-label="Razdelki">
+      <button class="tab" role="tab" data-v="projekti">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h3.6a2 2 0 0 1 1.5.7L11.5 7H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>
+        Projekti</button>
+      <button class="tab" role="tab" data-v="pregled">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/></svg>
+        Pregled</button>
+      <button class="tab" role="tab" data-v="ekonomika">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.6-1-1.7-1.5-3-1.5-1.7 0-3 .9-3 2.1 0 1.3 1.2 1.8 3 2.2 1.8.4 3 .9 3 2.2 0 1.2-1.3 2.1-3 2.1-1.3 0-2.4-.5-3-1.5M12 6.5v11"/></svg>
+        Ekonomika</button>
+      <button class="tab" role="tab" data-v="kreative">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M3 17l4.5-4 3 2.5L15 11l6 5"/></svg>
+        Kreative</button>
+      <button class="tab" role="tab" data-v="kalkulator">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>
+        Kalkulator</button>
+      <button class="tab" role="tab" data-v="vodnik">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11a2 2 0 0 1 2 2v13a1.5 1.5 0 0 0-1.5-1.5H5.5A1.5 1.5 0 0 1 4 16Z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H15a2 2 0 0 0-2 2v13a1.5 1.5 0 0 1 1.5-1.5h4A1.5 1.5 0 0 0 20 16Z"/></svg>
+        Vodnik</button>
+      <button class="tab" role="tab" data-v="podatki">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+        Podatki</button>
+    </nav>
+
+    <div class="side-foot">
+      <button class="btn btn-quiet btn-w" id="tema">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v1.8M12 19.2V21M4.8 12H3M21 12h-1.8M6.7 6.7 5.4 5.4M18.6 18.6l-1.3-1.3M6.7 17.3l-1.3 1.3M18.6 5.4l-1.3 1.3"/><circle cx="12" cy="12" r="3.8"/></svg>
+        Svetlo / temno</button>
       <span class="saved" id="saved">shranjeno</span>
     </div>
-  </div>
+  </aside>
 
-  <nav class="rail" aria-label="Razdelki">
-    <div class="rail-in" role="tablist" id="rail">
-      <button class="tab" role="tab" data-v="projekti">Projekti</button>
-      <button class="tab" role="tab" data-v="pregled">Pregled</button>
-      <button class="tab" role="tab" data-v="ekonomika">Ekonomika</button>
-      <button class="tab" role="tab" data-v="kreative">Kreative</button>
-      <button class="tab" role="tab" data-v="kalkulator">Kalkulator</button>
-      <button class="tab" role="tab" data-v="vodnik">Vodnik</button>
-      <button class="tab" role="tab" data-v="podatki">Podatki</button>
+  <div class="side-veil" id="sideVeil" hidden></div>
+
+  <div class="body">
+    <div class="mob">
+      <button class="mob-btn" id="sideOpen" aria-label="Odpri meni">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/></svg>
+      </button>
+      <span class="mob-t" id="mobTitle">Oglasni list</span>
     </div>
-  </nav>
-</header>
 
-<main>
-  <section class="view" id="v-projekti" hidden></section>
-  <section class="view" id="v-pregled" hidden></section>
-  <section class="view" id="v-ekonomika" hidden></section>
-  <section class="view" id="v-kreative" hidden></section>
-  <section class="view" id="v-kalkulator" hidden></section>
-  <section class="view" id="v-vodnik" hidden></section>
-  <section class="view" id="v-podatki" hidden></section>
-</main>
+    <main>
+      <section class="view" id="v-projekti" hidden></section>
+      <section class="view" id="v-pregled" hidden></section>
+      <section class="view" id="v-ekonomika" hidden></section>
+      <section class="view" id="v-kreative" hidden></section>
+      <section class="view" id="v-kalkulator" hidden></section>
+      <section class="view" id="v-vodnik" hidden></section>
+      <section class="view" id="v-podatki" hidden></section>
+    </main>
+  </div>
+</div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <div class="lb" id="lb" hidden>
-  <button class="lb-x" id="lb-x" aria-label="Zapri predogled">✕</button>
+  <button class="lb-x" id="lb-x" aria-label="Zapri predogled">
+    <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg>
+  </button>
   <div class="lb-in" id="lb-in"></div>
 </div>
 

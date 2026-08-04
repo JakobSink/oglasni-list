@@ -335,19 +335,31 @@ var Datoteke=(function(){
       });
     });
   }
+  /* zaporedna številka, da je vrstni req nalaganja enolicen tudi znotraj iste milisekunde */
+  var zap=0;
+  function poVrsti(a,b){
+    var za=a.zap||0, zb=b.zap||0;
+    if(za!==zb)return za-zb;
+    return String(a.dodano).localeCompare(String(b.dodano))||String(a.ime).localeCompare(String(b.ime));
+  }
   return {
     naVoljo:naVoljo,
+    poVrsti:poVrsti,
     dodaj:function(kreativaId,file){
       return op("readwrite",function(s){
         return s.put({id:uid(),kreativa:kreativaId,ime:file.name||"brez-imena",
-          tip:file.type||"",velikost:file.size||0,dodano:new Date().toISOString(),blob:file});
+          tip:file.type||"",velikost:file.size||0,
+          dodano:new Date().toISOString(),zap:Date.now()*1000+(zap++),blob:file});
       });
     },
-    zaKreativo:function(kid){return op("readonly",function(s){return s.index("kreativa").getAll(kid);});},
+    zaKreativo:function(kid){
+      return op("readonly",function(s){return s.index("kreativa").getAll(kid);})
+        .then(function(sez){return (sez||[]).slice().sort(poVrsti);});
+    },
     /* prva slika ali video kreative — za naslovnico kartice in predogled oglasa */
     prviVizual:function(kid){
       return op("readonly",function(s){return s.index("kreativa").getAll(kid);}).then(function(sez){
-        sez=(sez||[]).sort(function(a,b){return String(a.dodano).localeCompare(String(b.dodano));});
+        sez=(sez||[]).slice().sort(poVrsti);
         var slika=sez.filter(function(d){return /^image\//.test(d.tip);})[0];
         var video=sez.filter(function(d){return /^video\//.test(d.tip);})[0];
         return slika||video||null;
@@ -922,7 +934,8 @@ function varList(k,polje,label,limit,hint,vrstic){
         : '<input class="txt" type="text" data-c="'+polje+'.'+i+'" data-limit="'+limit+'" value="'+esc(val)+'">')+
       '<span class="vend">'+
         '<span class="counter'+(over?" over":"")+'" data-cnt="'+polje+'.'+i+'">'+val.length+' / '+limit+'</span>'+
-        (arr.length>1?'<button class="vx no-print" data-vdel="'+polje+'.'+i+'" title="Odstrani to različico" aria-label="Odstrani">✕</button>':'')+
+        (arr.length>1?'<button class="vx no-print" data-vdel="'+polje+'.'+i+'" title="Odstrani to različico" aria-label="Odstrani">'+
+          '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button>':'')+
       '</span>'+
     '</div>';
   });
@@ -1033,9 +1046,10 @@ function renderEditor(){
           '</div></div>'+
         '</div>'+
         '<div><div class="prev-wrap">'+
-          '<div class="prev-lab"><span class="eyebrow">Predogled</span><span class="sp"></span><span class="pill plat np">'+esc(platIme)+'</span></div>'+
-          '<div id="predogled" style="width:100%;display:flex;justify-content:center"></div>'+
-          '<p class="note" style="align-self:stretch">Približek, ne posnetek. Platforme besedilo krajšajo različno na različnih napravah.</p>'+
+          '<div class="prev-lab"><span class="eyebrow">Živi predogled</span><span class="sp"></span><span class="pill plat np">'+esc(platIme)+'</span></div>'+
+          '<div id="predogled" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:10px"></div>'+
+          '<p class="prev-note">Približek, ne posnetek zaslona. Platforme besedilo krajšajo različno na različnih napravah. '+
+          'Številka v krogu ob vsaki različici pove, katera je zdaj v predogledu — klikni drugo, da jo zamenjaš.</p>'+
         '</div></div>'+
       '</div>'+
     '</fieldset>'+
@@ -1133,32 +1147,89 @@ function skrajsaj(s,limit){
   if(s.length<=limit)return esc(s);
   return esc(s.slice(0,limit))+'… <span class="more">Več</span>';
 }
+/* Oblika predogleda: format pove, kakšen je oglas, platforma pa, kje se prikaže. */
+var OBLIKE={
+  "slika":          {v:"feed",r:"4 / 5"},
+  "UGC video":      {v:"feed",r:"4 / 5"},
+  "video 9:16":     {v:"vert"},
+  "zgodba":         {v:"vert"},
+  "karusel":        {v:"karusel"},
+  "kolekcija":      {v:"kolekcija"},
+  "RSA":            {v:"search"},
+  "Performance Max":{v:"search"},
+  "besedilo":       {v:"besedilo"}
+};
+function oblika(k){
+  var o=OBLIKE[k.format]||{v:"feed",r:"1.91 / 1"};
+  if(k.platforma==="google")return {v:"search",pmax:k.format==="Performance Max"};
+  if(k.platforma==="tiktok")return {v:"vert"};
+  if(k.platforma==="youtube")return o.v==="vert"?{v:"vert"}:{v:"splosno"};
+  if(k.platforma==="instagram"&&o.v==="feed")return {v:"feed",r:"1 / 1"};
+  return o;
+}
 function risiPredogled(){
   var cilj=el("predogled");if(!cilj)return;
   var p=P(),k=K();if(!p||!k)return;
-  var c=cfg(k);
-  cilj.innerHTML =
-    c.predogled==="search"   ? predSearch(p,k) :
-    c.predogled==="feed"     ? predFeed(p,k,!!c.kvadrat) :
-    c.predogled==="vertikala"? predVert(p,k) : predSplosno(p,k);
+  var o=oblika(k);
+  var html =
+    o.v==="search"    ? predSearch(p,k,o) :
+    o.v==="vert"      ? predVert(p,k) :
+    o.v==="karusel"   ? predKarusel(p,k) :
+    o.v==="kolekcija" ? predKolekcija(p,k) :
+    o.v==="besedilo"  ? predFeed(p,k,null,true) :
+    o.v==="splosno"   ? predSplosno(p,k) : predFeed(p,k,o.r);
+  cilj.innerHTML=html+'<p class="prev-note" style="text-align:center">'+esc(opisOblike(k,o))+'</p>';
 }
-function predFeed(p,k,kvadrat){
+function opisOblike(k,o){
+  var plat=(PLATFORME.filter(function(x){return x[0]===k.platforma;})[0]||["","?"])[1];
+  if(o.v==="search")return o.pmax
+    ? "Performance Max: tu je videti iskalni del, isti oglas pa Google predvaja tudi na Display, YouTube in v Gmailu."
+    : plat+" iskanje — brez slike, vse nosi besedilo.";
+  if(o.v==="vert")return "Vertikalno 9:16 na celem zaslonu ("+esc(k.format)+"). Besedilo v spodnji tretjini, nad gumbom.";
+  if(o.v==="karusel")return "Karusel: vsaka kartica ima svoj naslov — uporabijo se tvoje različice naslovov po vrsti.";
+  if(o.v==="kolekcija")return "Kolekcija: glavni vizual in pod njim mreža izdelkov iz kataloga.";
+  if(o.v==="besedilo")return "Samo besedilo, brez vizuala.";
+  if(o.v==="splosno")return plat+" — vodoravni format 16:9.";
+  return plat+" feed, razmerje "+String(o.r||"1.91 / 1").replace(" / "," : ")+".";
+}
+var IKONA_SLIKA='<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M3 17l4.5-4 3 2.5L15 11l6 5"/></svg>';
+var IKONA_VIDEO='<svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="14" height="14" rx="3"/><path d="M16.5 10l5-3v10l-5-3z"/></svg>';
+
+/* glava objave: avatar, ime oglaševalca, oznaka Sponzorirano */
+function feedGlava(ime,jeIG){
+  var globus='<svg viewBox="0 0 24 24" style="width:11px;height:11px"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>';
+  return '<div class="fb-h">'+
+    '<span class="fb-av">'+esc(zacetnice(ime))+'</span>'+
+    '<span class="fb-hn"><b>'+esc(ime)+'</b><span>'+(jeIG?"Sponzorirano":"Sponzorirano · "+globus)+'</span></span>'+
+    '<span class="fb-x">···</span>'+
+  '</div>';
+}
+function feedNoge(){
+  return '<div class="fb-r"><span class="ic">👍</span><span class="ic" style="background:#F33E58">❤</span>'+
+    '<span style="margin-left:4px">142</span><span class="sp"></span><span>18 komentarjev · 6 delitev</span></div>'+
+    '<div class="fb-a">'+
+      '<span><svg viewBox="0 0 24 24"><path d="M7 10v10H4V10zM7 10l4-7a2 2 0 0 1 3 2l-1 5h5a2 2 0 0 1 2 2.3l-1 6A2 2 0 0 1 17 20H7"/></svg>Všeč mi je</span>'+
+      '<span><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4A8 8 0 1 1 20 12z"/></svg>Komentiraj</span>'+
+      '<span><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 3v12M8 7l4-4 4 4"/></svg>Deli</span>'+
+    '</div>';
+}
+function predFeed(p,k,razmerje,brezMedija){
   var lim=LIM[k.platforma]||LIM.drugo;
+  var jeIG=k.platforma==="instagram";
   var ime=znamkaIme(p);
   var telo=[prvi(k.hooki,predIzbor.hooki).trim(),prvi(k.primarna,predIzbor.primarna).trim()].filter(Boolean).join("\n\n");
   var dom=domenaIz(p,k);
   var m=medij();
-  var naslov=prvi(k.naslovi,predIzbor.naslovi), opis=(k.platforma==="facebook"||k.platforma==="drugo")?prvi(k.opisi,predIzbor.opisi):"";
-  return '<div class="fb">'+
-    '<div class="fb-h">'+
-      '<span class="fb-av">'+esc(zacetnice(ime))+'</span>'+
-      '<span class="fb-hn"><b>'+esc(ime)+'</b><span>Sponzorirano · <svg viewBox="0 0 24 24" style="width:11px;height:11px"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></span></span>'+
-      '<span class="fb-x">···</span>'+
-    '</div>'+
+  var naslov=prvi(k.naslovi,predIzbor.naslovi);
+  var opis=(k.platforma==="facebook"||k.platforma==="drugo")?prvi(k.opisi,predIzbor.opisi):"";
+  var stil=razmerje?' style="aspect-ratio:'+razmerje+'"':'';
+  return '<div class="fb'+(jeIG?" ig":"")+'">'+
+    feedGlava(ime,jeIG)+
     (telo?'<div class="fb-t">'+skrajsaj(telo,lim.primarni)+'</div>':'')+
-    '<div class="fb-m'+(kvadrat?" kvadrat":"")+'">'+
-      (m||'<div class="ph">Ni naložene slike ali videa<br>Naloži material zgoraj in pokaže se tu</div>')+
-    '</div>'+
+    (brezMedija?''
+      : '<div class="fb-m"'+stil+'>'+
+        (m||'<div class="ph"'+stil+'>'+IKONA_SLIKA+'Ni naložene slike ali videa<br>Naloži material v razdelku zgoraj in pokazal se bo tu</div>')+
+        '</div>')+
     (naslov||opis||dom
       ? '<div class="fb-f">'+
           '<span class="fb-fn">'+
@@ -1169,7 +1240,49 @@ function predFeed(p,k,kvadrat){
           '<span class="fb-cta">'+esc(k.cta||"Izvedi več")+'</span>'+
         '</div>'
       : '')+
-    '<div class="fb-a"><span>Všeč mi je</span><span>Komentiraj</span><span>Deli</span></div>'+
+    (jeIG?'':feedNoge())+
+  '</div>';
+}
+/* karusel: vsaka kartica dobi svoj naslov iz seznama različic */
+function predKarusel(p,k){
+  var lim=LIM[k.platforma]||LIM.drugo;
+  var ime=znamkaIme(p), jeIG=k.platforma==="instagram";
+  var telo=[prvi(k.hooki,predIzbor.hooki).trim(),prvi(k.primarna,predIzbor.primarna).trim()].filter(Boolean).join("\n\n");
+  var m=medij();
+  var nas=k.naslovi.filter(function(x){return String(x||"").trim();});
+  if(!nas.length)nas=["Naslov kartice"];
+  var kartice=nas.slice(0,4).map(function(t,i){
+    return '<div class="kar-c">'+
+      '<div class="kar-m">'+(m||'<span class="ph">'+IKONA_SLIKA+'</span>')+'<span class="kar-n">'+(i+1)+'</span></div>'+
+      '<div class="kar-b"><b>'+esc(t)+'</b>'+
+        (domenaIz(p,k)?'<span>'+esc(domenaIz(p,k))+'</span>':'')+
+        '<span class="kar-cta">'+esc(k.cta||"Izvedi več")+'</span></div>'+
+    '</div>';
+  }).join("");
+  return '<div class="fb'+(jeIG?" ig":"")+'">'+
+    feedGlava(ime,jeIG)+
+    (telo?'<div class="fb-t">'+skrajsaj(telo,lim.primarni)+'</div>':'')+
+    '<div class="kar"><div class="kar-t">'+kartice+'</div></div>'+
+    '<div class="kar-d">'+nas.slice(0,4).map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>';}).join("")+'</div>'+
+    (jeIG?'':feedNoge())+
+  '</div>';
+}
+/* kolekcija: glavni vizual in mreža izdelkov pod njim */
+function predKolekcija(p,k){
+  var lim=LIM[k.platforma]||LIM.drugo;
+  var ime=znamkaIme(p), jeIG=k.platforma==="instagram";
+  var telo=[prvi(k.hooki,predIzbor.hooki).trim(),prvi(k.primarna,predIzbor.primarna).trim()].filter(Boolean).join("\n\n");
+  var m=medij();
+  return '<div class="fb'+(jeIG?" ig":"")+'">'+
+    feedGlava(ime,jeIG)+
+    (telo?'<div class="fb-t">'+skrajsaj(telo,lim.primarni)+'</div>':'')+
+    '<div class="fb-m" style="aspect-ratio:1.91 / 1">'+
+      (m||'<div class="ph" style="aspect-ratio:1.91 / 1">'+IKONA_SLIKA+'Glavni vizual</div>')+'</div>'+
+    '<div class="kol">'+[0,1,2].map(function(i){
+      return '<div class="kol-c">'+(m||'<span class="ph">'+IKONA_SLIKA+'</span>')+
+        '<span>'+(i===0?e(n(p.cena)):"izdelek "+(i+1))+'</span></div>';
+    }).join("")+'</div>'+
+    (jeIG?'':feedNoge())+
   '</div>';
 }
 function predSearch(p,k){
@@ -1177,8 +1290,13 @@ function predSearch(p,k){
   var opi=k.opisi.filter(function(x){return String(x||"").trim();});
   var dom=domenaIz(p,k)||"tvoja-domena.si";
   var pot=potIz(k);
+  var lupa='<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>';
+  var poizvedba=String(k.kljucneBesede||"").split(",")[0].trim()||prvi(k.naslovi).toLowerCase()||"tvoja ključna beseda";
   if(!nas.length&&!opi.length){
-    return '<div class="gg"><p class="gg-empty">Vpiši vsaj en naslov, da se predogled izriše. Google iz tvojih naslovov sam sestavlja kombinacije — zato mora vsak zveneti smiselno tudi sam.</p></div>';
+    return '<div class="gg">'+
+      '<div class="gg-q">'+lupa+esc(poizvedba)+'</div>'+
+      '<p class="gg-empty">Vpiši vsaj en naslov, da se predogled izriše.<br><br>'+
+      'Google iz tvojih naslovov sam sestavlja kombinacije po tri — zato mora vsak zveneti smiselno tudi sam in ne sme biti nadaljevanje prejšnjega.</p></div>';
   }
   function vrstica(nabor,opisi){
     return '<div class="gg-r">'+
@@ -1186,6 +1304,7 @@ function predSearch(p,k){
       '<div class="gg-u">'+esc(dom)+(pot.length?' <i>› '+pot.map(esc).join(" › ")+'</i>':'')+'</div>'+
       '<span class="gg-t">'+esc(nabor.join(" | "))+'</span>'+
       '<p class="gg-d">'+esc(opisi.join(" "))+'</p>'+
+      (nabor.length>2?'<div class="gg-x"><span>'+esc(nabor.slice(1,3).join("</span><span>"))+'</span></div>':'')+
     '</div>';
   }
   var a=vrstica(nas.slice(0,3),opi.slice(0,2));
@@ -1195,21 +1314,34 @@ function predSearch(p,k){
     var ob=opi.slice(2).concat(opi.slice(0,1)).slice(0,2);
     b=vrstica(nb.length?nb:nas.slice(0,3),ob.length?ob:opi.slice(0,2));
   }
-  return '<div class="gg">'+a+b+'</div>'+
-    (b?'<p class="note" style="margin-top:10px;text-align:center">Dve od možnih kombinacij — Google jih rotira sam.</p>':'');
+  return '<div class="gg">'+
+    '<div class="gg-q">'+lupa+esc(poizvedba)+'</div>'+
+    a+b+'</div>'+
+    (b?'<p class="prev-note" style="text-align:center">Dve od možnih kombinacij — Google jih rotira sam in izbira, katera dela najbolje.</p>':'');
 }
 function predVert(p,k){
   var ime=znamkaIme(p);
   var telo=[prvi(k.hooki,predIzbor.hooki).trim(),prvi(k.primarna,predIzbor.primarna).trim()].filter(Boolean).join(" ");
   var m=medij();
-  return '<div class="tt">'+
-    (m||'<div class="ph">Ni naloženega videa<br><br>Naloži 9:16 material zgoraj</div>')+
-    '<span class="tt-ov">Sponzorirano</span>'+
+  var jeTT=k.platforma==="tiktok";
+  var jeMeta=k.platforma==="facebook"||k.platforma==="instagram";
+  var oznaka=jeTT?"Sponzorirano":(k.platforma==="instagram"?"Sponzorirano · Reels":"Sponzorirano");
+  return '<div class="tt'+(jeMeta?" meta":"")+'">'+
+    (m||'<div class="ph">'+IKONA_VIDEO+'Ni naloženega videa<br>Naloži vertikalni 9:16 material zgoraj</div>')+
+    '<span class="tt-ov">'+esc(oznaka)+'</span>'+
     '<div class="tt-grad"></div>'+
+    (jeTT
+      ? '<div class="tt-side">'+
+          '<span><svg viewBox="0 0 24 24"><path d="M20.8 8.6c0 5.2-8.8 10.4-8.8 10.4S3.2 13.8 3.2 8.6A4.6 4.6 0 0 1 12 6.8a4.6 4.6 0 0 1 8.8 1.8z"/></svg>2143</span>'+
+          '<span><svg viewBox="0 0 24 24"><path d="M20 11.5a7.5 7.5 0 0 1-10.9 6.7L4 19.5l1.4-4.4A7.5 7.5 0 1 1 20 11.5z"/></svg>86</span>'+
+          '<span><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 3v12M8 7l4-4 4 4"/></svg>Deli</span>'+
+        '</div>'
+      : '')+
     '<div class="tt-b">'+
-      '<b>@'+esc(String(ime).toLowerCase().replace(/\s+/g,""))+'</b>'+
+      '<b>'+(jeTT?"@"+esc(String(ime).toLowerCase().replace(/[^\wčšžćđ]+/gi,"")):esc(ime))+'</b>'+
       (telo?'<span class="txt">'+esc(telo)+'</span>':'')+
-      '<span class="tt-cta">'+esc(k.cta||"Kupi zdaj")+'</span>'+
+      '<span class="tt-cta">'+esc(k.cta||"Kupi zdaj")+
+        '<svg viewBox="0 0 24 24" style="width:14px;height:14px;margin-left:6px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>'+
     '</div>'+
   '</div>';
 }
@@ -2007,11 +2139,18 @@ function paint(){
   else if(view==="kalkulator")paintKalk();
   else if(view==="pregled")paintPregled();
 }
+var IMENA={projekti:"Projekti",pregled:"Pregled",ekonomika:"Ekonomika",kreative:"Kreative",
+  kalkulator:"Kalkulator",vodnik:"Vodnik",podatki:"Podatki"};
 function nastaviView(v){
   view=v;if(view!=="kreative")odprtaKreativa=null;
   render();window.scrollTo(0,0);
+  var mt=el("mobTitle");if(mt)mt.textContent=IMENA[v]||"Oglasni list";
+  zapriMeni();
   try{location.hash=v;}catch(err){}
 }
+/* stranski meni na telefonu */
+function odpriMeni(){document.body.classList.add("menu");el("sideVeil").hidden=false;}
+function zapriMeni(){document.body.classList.remove("menu");el("sideVeil").hidden=true;}
 function polniIzbirnik(){
   el("prsel").innerHTML=S.projekti.map(function(x){return '<option value="'+x.id+'"'+(x.id===S.aktivenProjekt?" selected":"")+'>'+esc(x.ime)+'</option>';}).join("");
   var izd=izdelkiVProjektu();
@@ -2050,6 +2189,9 @@ el("tema").addEventListener("click",function(){
 el("rail").addEventListener("click",function(ev){
   var t=ev.target.closest(".tab");if(!t)return;nastaviView(t.dataset.v);
 });
+el("sideOpen").addEventListener("click",odpriMeni);
+el("sideClose").addEventListener("click",zapriMeni);
+el("sideVeil").addEventListener("click",zapriMeni);
 el("prsel").addEventListener("change",function(){
   S.aktivenProjekt=this.value;S.aktiven=null;odprtaKreativa=null;
   shrani();polniIzbirnik();render();
@@ -2116,7 +2258,9 @@ document.addEventListener("change",function(ev){
   }else if(t.dataset.c!=null&&t.tagName==="SELECT"){
     var k2=K();if(!k2)return;
     set(k2,t.dataset.c,t.value);shrani();
-    if(t.dataset.c==="platforma")renderEditor();else paintKreativa();
+    /* platforma zamenja tudi polja, format in CTA pa samo predogled */
+    if(t.dataset.c==="platforma")renderEditor();
+    else{paintKreativa();risiPredogled();}
   }
 });
 
