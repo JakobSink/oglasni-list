@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Oglasni list — kreative, budget in izračun profita</title>
 <meta name="description" content="Delovni prostor za pisanje oglasnih kreativ za Facebook in Google, načrtovanje budgeta ter izračun marže, CPA in profita na naročilo.">
-<meta name="theme-color" content="#F4F5F7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0F1116" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F1F2F6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B0D12" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
@@ -18,30 +18,47 @@ try{var t=localStorage.getItem("oglasni-list-tema");if(t==="dark"||t==="light")d
 </head>
 <body>
 
-<div class="top">
+<header class="top">
   <div class="top-in">
-    <div class="brand"><b>Oglasni list</b><span>kreative · budget · profit</span></div>
+    <a class="brand" href="#projekti" aria-label="Oglasni list, na začetek">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8"/><path d="M9 10h9M9 15h14M9 20h11" stroke-linecap="round"/><circle cx="23" cy="20" r="2.5"/></svg>
+      </span>
+      <span class="brand-t"><b>Oglasni list</b><em>kreative · budget · profit</em></span>
+    </a>
+
+    <div class="switch no-print">
+      <label class="sw">
+        <span>Mapa</span>
+        <select id="prsel" aria-label="Izbrani projekt"></select>
+      </label>
+      <label class="sw">
+        <span>Izdelek</span>
+        <select id="psel" aria-label="Izbrani izdelek"></select>
+      </label>
+    </div>
+
     <div class="tools no-print">
-      <select id="prsel" class="head" aria-label="Izbrani projekt"></select>
-      <select id="psel" class="head" aria-label="Izbrani izdelek"></select>
-      <button class="btn btn-s" id="pnew">+ Izdelek</button>
-      <button class="btn btn-s" id="tema" aria-label="Preklopi svetlo/temno">Tema</button>
+      <button class="btn btn-soft" id="pnew">+ Izdelek</button>
+      <button class="btn btn-ghost btn-ico" id="tema" aria-label="Preklopi svetlo in temno temo" title="Svetlo / temno">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6.3 6.3 4.9 4.9M19.1 19.1l-1.4-1.4M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/><circle cx="12" cy="12" r="4"/></svg>
+      </button>
       <span class="saved" id="saved">shranjeno</span>
     </div>
   </div>
-</div>
 
-<div class="rail no-print">
-  <div class="rail-in" role="tablist" id="rail">
-    <button class="tab" role="tab" data-v="projekti">Projekti</button>
-    <button class="tab" role="tab" data-v="pregled">Pregled</button>
-    <button class="tab" role="tab" data-v="ekonomika">Ekonomika izdelka</button>
-    <button class="tab" role="tab" data-v="kreative">Kreative</button>
-    <button class="tab" role="tab" data-v="kalkulator">Kalkulator oglasa</button>
-    <button class="tab" role="tab" data-v="vodnik">Vodnik</button>
-    <button class="tab" role="tab" data-v="podatki">Podatki</button>
-  </div>
-</div>
+  <nav class="rail" aria-label="Razdelki">
+    <div class="rail-in" role="tablist" id="rail">
+      <button class="tab" role="tab" data-v="projekti">Projekti</button>
+      <button class="tab" role="tab" data-v="pregled">Pregled</button>
+      <button class="tab" role="tab" data-v="ekonomika">Ekonomika</button>
+      <button class="tab" role="tab" data-v="kreative">Kreative</button>
+      <button class="tab" role="tab" data-v="kalkulator">Kalkulator</button>
+      <button class="tab" role="tab" data-v="vodnik">Vodnik</button>
+      <button class="tab" role="tab" data-v="podatki">Podatki</button>
+    </div>
+  </nav>
+</header>
 
 <main>
   <section class="view" id="v-projekti" hidden></section>
@@ -54,6 +71,11 @@ try{var t=localStorage.getItem("oglasni-list-tema");if(t==="dark"||t==="light")d
 </main>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="lb" id="lb" hidden>
+  <button class="lb-x" id="lb-x" aria-label="Zapri predogled">✕</button>
+  <div class="lb-in" id="lb-in"></div>
+</div>
 
 <script src="config.js"></script>
 <script src="app.js"></script>

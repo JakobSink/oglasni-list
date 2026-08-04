@@ -35,7 +35,7 @@ function cas(iso){
 /* ============ model ============ */
 function novProjekt(ime){return {id:uid(),ime:ime||"Nov projekt",opis:""};}
 function novIzdelek(ime,projekt){
-  return {id:uid(),projekt:projekt||null,ime:ime||"Nov izdelek",opis:"",
+  return {id:uid(),projekt:projekt||null,ime:ime||"Nov izdelek",opis:"",znamka:"",domena:"",
     cena:"",ddv:"22",ddvVkljucen:true,posiljanjePlaca:"",
     nabavna:"",posiljanje:"",embalaza:"",provizijaPct:"2,9",provizijaFix:"0,25",ostalo:"",vracilaPct:"5",
     fiksniMesecni:"",dnevniBudget:"",predvidenCPA:"",
@@ -43,46 +43,83 @@ function novIzdelek(ime,projekt){
 }
 function novaKreativa(pl){
   return {id:uid(),naslov:"Nova kreativa",platforma:pl||"facebook",format:"slika",status:"ideja",
-    kot:"",publika:"",hook:"",primarni:"",naslovi:["","","","",""],opisi:["","",""],cta:"Kupi zdaj",
-    kljucneBesede:"",url:"",design:"",opombe:"",stDatotek:0,
+    kot:"",publika:"",tagi:"",
+    hooki:[""],primarna:[""],naslovi:[""],opisi:[""],cta:"Kupi zdaj",
+    kljucneBesede:"",url:"",design:"",izvajalec:"",rok:"",opombe:"",stDatotek:0,
     budget:"",cpm:"",ctr:"",cvr:"",
     rSpend:"",rImpr:"",rClicks:"",rOrders:""};
 }
+/* status = korak v procesu, od ideje do oglasa, ki teče */
+var STATUSI=[
+  ["ideja","ideja"],
+  ["brief","sestavi brief"],
+  ["snemanje","daj snemat"],
+  ["montaza","sestavi kreativo"],
+  ["pregled","za pregled"],
+  ["pripravljeno","pripravljeno za objavo"],
+  ["aktivna","aktivna"],
+  ["zmagovalka","zmagovalka"],
+  ["pavza","pavza"],
+  ["ubita","ubita"]
+];
+var STATUS_STARI={produkcija:"montaza"};
+function statusIme(s){
+  var f=STATUSI.filter(function(x){return x[0]===s;})[0];
+  return f?f[1]:s;
+}
+function jeVZraku(k){return k.status==="aktivna"||k.status==="zmagovalka";}
+/* koraki, ki čakajo na delo — za opozorilo na pregledu */
+var VDELU=["brief","snemanje","montaza","pregled"];
 function seed(){
   var pr=novProjekt("Moja trgovina");
   pr.opis="Prvi projekt. Mape uporabi za stranke, blagovne znamke ali sezone.";
   var p=novIzdelek("PRIMER — Masažna pištola",pr.id);
   p.opis="Testni izdelek, da vidiš kako se štejejo številke. Prepiši ali izbriši.";
+  p.znamka="Moja trgovina";p.domena="primer.si";
   p.cena="79,90";p.posiljanjePlaca="3,90";p.nabavna="21,50";p.posiljanje="4,20";p.embalaza="1,10";
   p.ostalo="0,80";p.fiksniMesecni="250";p.dnevniBudget="40";p.predvidenCPA="22";
   var f=novaKreativa("facebook");
   f.naslov="FB · UGC — 3 dni brez bolečin";f.format="UGC video";f.status="aktivna";
+  f.tagi="UGC, boleča točka, zima";
   f.kot="Boleča točka: vztrajna bolečina v hrbtu po sedenju za računalnikom";
   f.publika="M+Ž 28–50, pisarniško delo, fitnes, široko targetiranje";
-  f.hook="Tri leta sem plačeval masaže. Potem sem to naredil sam, doma, v 10 minutah.";
-  f.primarni="Tri leta sem plačeval masaže po 45 € na uro.\n\nPotem sem kupil to pištolo in v 10 minutah zvečer naredim isto, kar mi je delal fizioterapevt na hrbtu.\n\n· 4 nastavki, 5 hitrosti\n· baterija zdrži 6 ur\n· 30 dni vračilo brez vprašanj\n\nDanes -30 % + brezplačna dostava.";
-  f.naslovi[0]="Bolečina v hrbtu? 10 minut na dan";
-  f.opisi[0]="Poslano v 24 urah iz Slovenije";
+  f.hooki=["Tri leta sem plačeval masaže. Potem sem to naredil sam, doma, v 10 minutah.",
+           "Fizioterapevt mi je pokazal en gib. Zdaj ga naredim sam vsak večer.",
+           "Če te hrbet zbudi ob treh zjutraj, poglej to."];
+  f.primarna=["Tri leta sem plačeval masaže po 45 € na uro.\n\nPotem sem kupil to pištolo in v 10 minutah zvečer naredim isto, kar mi je delal fizioterapevt na hrbtu.\n\n· 4 nastavki, 5 hitrosti\n· baterija zdrži 6 ur\n· 30 dni vračilo brez vprašanj\n\nDanes -30 % + brezplačna dostava.",
+              "Sedim 9 ur na dan. Hrbet me je ubijal.\n\nEna naprava, 10 minut zvečer, brez terminov in brez čakalnih vrst.\n\n30 dni vračilo, če ne pomaga."];
+  f.naslovi=["Bolečina v hrbtu? 10 minut na dan","Cenejše kot dva obiska masaže","-30 % + brezplačna dostava"];
+  f.opisi=["Poslano v 24 urah iz Slovenije","30 dni vračilo brez vprašanj"];
   f.design="Vertikalno 9:16, snemano s telefonom v domači sobi, brez studia. Prvi 2 s: roka prižge pištolo in jo prisloni na ramo, zvok naprave ostane. Podnapisi veliki, spodnja tretjina, rumeni highlight na „brez masaž“. Zadnje 3 s: izdelek na mizi + cena + gumb.";
   f.budget="20";f.cpm="9";f.ctr="1,8";f.cvr="2,4";
   f.rSpend="184";f.rImpr="21400";f.rClicks="392";f.rOrders="9";
+
   var g=novaKreativa("google");
-  g.naslov="Google · Search — masažna pištola";g.format="RSA";g.status="produkcija";
+  g.naslov="Google · Search — masažna pištola";g.format="RSA";g.status="montaza";
+  g.tagi="Search, exact, glavni izdelek";
+  g.izvajalec="jaz";g.rok="do petka";
   g.kot="Namera nakupa: išče konkreten izdelek, odloča se med ponudniki";
   g.publika="Iskanja v SLO, exact + phrase, izključi „popravilo“, „rabljeno“, „najem“";
-  g.naslovi[0]="Masažna pištola — zaloga SLO";g.naslovi[1]="Dostava v 24 urah";g.naslovi[2]="30 dni vračilo";
-  g.naslovi[3]="Od 79,90 € z garancijo";g.naslovi[4]="4 nastavki, 5 hitrosti";
-  g.opisi[0]="Profesionalna masažna pištola za doma. Slovenska zaloga, dostava v 24 urah, 2 leti garancije.";
-  g.opisi[1]="30 dni vračilo brez vprašanj. Plačilo po povzetju ali s kartico. Podpora v slovenščini.";
+  g.naslovi=["Masažna pištola — zaloga SLO","Dostava v 24 urah","30 dni vračilo",
+             "Od 79,90 € z garancijo","4 nastavki, 5 hitrosti"];
+  g.opisi=["Profesionalna masažna pištola za doma. Slovenska zaloga, dostava v 24 urah, 2 leti garancije.",
+           "30 dni vračilo brez vprašanj. Plačilo po povzetju ali s kartico. Podpora v slovenščini.",
+           "Tiho delovanje, 6 ur baterije, 4 nastavki za hrbet, noge in ramena."];
   g.kljucneBesede="masazna pistola, masažna pištola cena, theragun alternativa, pistola za masazo hrbta";
   g.url="https://primer.si/masazna-pistola";
   g.design="Search — brez vizuala. Sitelinki: Kako uporabljati / Vračila / Mnenja / Kontakt. Callout: Zaloga v SLO, 24 h dostava, 2 leti garancije.";
   g.budget="15";g.cpm="";g.ctr="6,5";g.cvr="3,5";
   p.kreative=[f,g];
-  return {v:2,projekti:[pr],aktivenProjekt:pr.id,izdelki:[p],aktiven:p.id,
-    kalk:{budget:"30",cpm:"9",ctr:"1,8",cvr:"2,5",cilj:"1"},spremenjeno:new Date().toISOString()};
+  return {v:3,projekti:[pr],aktivenProjekt:pr.id,izdelki:[p],aktiven:p.id,
+    kalk:privzetiKalk(),spremenjeno:new Date().toISOString()};
 }
-function privzetiKalk(){return {budget:"30",cpm:"9",ctr:"1,8",cvr:"2,5",cilj:"1"};}
+function privzetiKalk(){return {budget:"30",cpm:"9",ctr:"1,8",cvr:"2,5",cilj:"1",cena:"",marza:"",cpc:""};}
+/* seznam različic: brez praznih na koncu, vedno vsaj eno polje */
+function ocistiSeznam(a){
+  a=(Array.isArray(a)?a:[]).map(function(x){return x==null?"":String(x);});
+  while(a.length>1 && !a[a.length-1].trim())a.pop();
+  return a.length?a:[""];
+}
 
 /* Poskrbi, da je stanje veljavno tudi po uvozu ali starejši različici. */
 function migriraj(){
@@ -98,17 +135,26 @@ function migriraj(){
   var znani={};S.projekti.forEach(function(x){znani[x.id]=1;});
   S.izdelki.forEach(function(x){
     if(!x.projekt||!znani[x.projekt])x.projekt=S.projekti[0].id;
+    if(typeof x.znamka!=="string")x.znamka="";
+    if(typeof x.domena!=="string")x.domena="";
     if(!Array.isArray(x.kreative))x.kreative=[];
     x.kreative.forEach(function(k){
-      if(!Array.isArray(k.naslovi))k.naslovi=["","","","",""];
-      while(k.naslovi.length<5)k.naslovi.push("");
-      if(!Array.isArray(k.opisi))k.opisi=["","",""];
-      while(k.opisi.length<3)k.opisi.push("");
+      /* eno besedilo → seznam različic */
+      k.hooki   = ocistiSeznam(Array.isArray(k.hooki)?k.hooki:(k.hook?[k.hook]:[]));
+      k.primarna= ocistiSeznam(Array.isArray(k.primarna)?k.primarna:(k.primarni?[k.primarni]:[]));
+      k.naslovi = ocistiSeznam(k.naslovi);
+      k.opisi   = ocistiSeznam(k.opisi);
+      delete k.hook; delete k.primarni;
+      if(typeof k.tagi!=="string")k.tagi="";
+      if(typeof k.izvajalec!=="string")k.izvajalec="";
+      if(typeof k.rok!=="string")k.rok="";
       if(typeof k.stDatotek!=="number")k.stDatotek=0;
+      if(STATUS_STARI[k.status])k.status=STATUS_STARI[k.status];
+      if(!STATUSI.some(function(s){return s[0]===k.status;}))k.status="ideja";
     });
   });
   if(!S.aktivenProjekt||!znani[S.aktivenProjekt])S.aktivenProjekt=S.projekti[0].id;
-  S.v=2;
+  S.v=3;
 }
 
 var S;
@@ -219,11 +265,43 @@ function fld(path,label,unit,hint){
     (unit?'<span class="unit">'+unit+'</span>':'')+'</div>'+
     (hint?'<span class="hint">'+esc(hint)+'</span>':'')+'</div>';
 }
+function txtFld(path,label,hint,placeholder){
+  return '<div class="f"><label for="f-'+path+'">'+esc(label)+'</label>'+
+    '<input class="txt" id="f-'+path+'" type="text" data-p="'+path+'" value="'+esc(get(P(),path))+'"'+
+    (placeholder?' placeholder="'+esc(placeholder)+'"':'')+'>'+
+    (hint?'<span class="hint">'+esc(hint)+'</span>':'')+'</div>';
+}
+
+/* naslov pogleda z drobtinami */
+function glava(naslov,lede,akcije,drobtine){
+  var d=(drobtine||[]).map(function(x){
+    return x.v ? '<button data-goto="'+x.v+'">'+esc(x.t)+'</button>' : '<span>'+esc(x.t)+'</span>';
+  }).join('<i>/</i>');
+  return '<div class="head"><div class="head-t">'+
+    (d?'<div class="crumb">'+d+'</div>':'')+
+    '<h1>'+esc(naslov)+'</h1>'+
+    (lede?'<p class="lede">'+lede+'</p>':'')+
+  '</div>'+(akcije?'<div class="row no-print">'+akcije+'</div>':'')+'</div>';
+}
+function znamkaIme(p){return (p&&String(p.znamka||"").trim())||PR().ime;}
+function domenaIz(p,k){
+  var u=String((k&&k.url)||"").trim()||String((p&&p.domena)||"").trim();
+  if(!u)return "";
+  return u.replace(/^https?:\/\//i,"").replace(/^www\./i,"").replace(/\/.*$/,"");
+}
+function potIz(k){
+  var u=String((k&&k.url)||"").trim();
+  var m=u.replace(/^https?:\/\/[^\/]+/i,"").replace(/^\//,"").replace(/[?#].*$/,"");
+  return m?m.split("/").filter(Boolean).slice(0,2):[];
+}
+function zacetnice(s){
+  return String(s||"?").trim().split(/\s+/).slice(0,2).map(function(w){return w.charAt(0).toUpperCase();}).join("")||"?";
+}
 function praznoHtml(){
-  return '<div class="block"><header><h2>Projekt „'+esc(PR().ime)+'“ je še brez izdelkov</h2></header><div class="pad">'+
-    '<p class="note">Izdelek je nosilec cene, stroškov in kreativ. Dodaj prvega, potem se odprejo vsi izračuni.</p>'+
-    '<div class="row" style="margin-top:12px"><button class="btn btn-p" id="pnew3">+ Dodaj izdelek</button>'+
-    '<button class="btn" data-goto="projekti">Nazaj na projekte</button></div></div></div>';
+  return glava("Mapa „"+PR().ime+"“ je še brez izdelkov",
+    "Izdelek nosi ceno in stroške — iz njega pride marža in vse ostalo. Dodaj prvega, potem se odprejo vsi izračuni in kreative.",
+    '<button class="btn btn-p" id="pnew3">+ Dodaj izdelek</button>'+
+    '<button class="btn" data-goto="projekti">Nazaj na projekte</button>');
 }
 
 /* ============ datoteke (IndexedDB) ============ */
@@ -266,6 +344,15 @@ var Datoteke=(function(){
       });
     },
     zaKreativo:function(kid){return op("readonly",function(s){return s.index("kreativa").getAll(kid);});},
+    /* prva slika ali video kreative — za naslovnico kartice in predogled oglasa */
+    prviVizual:function(kid){
+      return op("readonly",function(s){return s.index("kreativa").getAll(kid);}).then(function(sez){
+        sez=(sez||[]).sort(function(a,b){return String(a.dodano).localeCompare(String(b.dodano));});
+        var slika=sez.filter(function(d){return /^image\//.test(d.tip);})[0];
+        var video=sez.filter(function(d){return /^video\//.test(d.tip);})[0];
+        return slika||video||null;
+      });
+    },
     steviloZa:function(kid){return op("readonly",function(s){return s.index("kreativa").count(kid);});},
     ena:function(id){return op("readonly",function(s){return s.get(id);});},
     brisi:function(id){return op("readwrite",function(s){return s.delete(id);});},
@@ -290,120 +377,283 @@ function brisiDatotekeKreativ(kreative){
 
 /* ============ POGLED: projekti ============ */
 function renderProjekti(){
-  var html=S.projekti.map(function(pr){
+  var vseIzd=S.izdelki.length;
+  var vseKre=S.izdelki.reduce(function(a,x){return a+x.kreative.length;},0);
+
+  var mape=S.projekti.map(function(pr){
     var izd=izdelkiVProjektu(pr.id);
     var stK=izd.reduce(function(a,x){return a+x.kreative.length;},0);
-    var vrstice=izd.map(function(p){
+    var aktivnih=izd.reduce(function(a,x){return a+budgetAktivnih(x);},0);
+    var najboljsa=izd.map(function(x){return ekon(x).marzaEf;}).sort(function(a,b){return b-a;})[0];
+    var jeZdaj=pr.id===S.aktivenProjekt;
+
+    var izdelki=izd.map(function(p){
       var ek=ekon(p);
-      var chips=p.kreative.map(function(k){
-        return '<button data-openk="'+k.id+'" title="'+esc(k.naslov)+'">'+
-          '<span class="pill st-'+k.status+'" style="border:0;padding:0">'+k.status.slice(0,3)+'</span>'+
-          '<span class="kn">'+esc(k.naslov)+'</span>'+
-          (k.stDatotek?'<span style="color:var(--ink3)">'+k.stDatotek+' dat.</span>':'')+
-        '</button>';
-      }).join("");
-      return '<div class="tree-i'+(p.id===S.aktiven&&pr.id===S.aktivenProjekt?" zdaj":"")+'">'+
-        '<span class="tree-in"><b>'+esc(p.ime)+'</b>'+(p.opis?' <span style="color:var(--ink3);font-size:12.5px">— '+esc(p.opis)+'</span>':'')+'</span>'+
-        '<span class="tree-num">marža '+e(ek.marzaEf)+' · BE CPA '+e(ek.beCPA)+'</span>'+
-        '<span class="tree-k">'+
-          (chips||'<span class="note">brez kreativ</span>')+
-          '<button data-addk="'+p.id+'" style="border-style:dashed">+ kreativa</button>'+
-        '</span>'+
-        '<span class="tree-k no-print" style="margin-top:2px">'+
-          '<button data-pick="'+p.id+'">odpri izdelek</button>'+
-          '<button data-prename="'+p.id+'">preimenuj</button>'+
-          (S.projekti.length>1?'<select class="btn btn-s" data-move="'+p.id+'" style="width:auto;padding:3px 6px">'+
-            '<option value="">premakni v mapo…</option>'+
-            S.projekti.filter(function(x){return x.id!==pr.id;}).map(function(x){return '<option value="'+x.id+'">'+esc(x.ime)+'</option>';}).join("")+
-            '</select>':'')+
-          '<button data-pdel="'+p.id+'" style="color:var(--neg)">izbriši</button>'+
-        '</span>'+
-      '</div>';
+      var aktKre=p.kreative.filter(function(k){return k.status==="aktivna"||k.status==="zmagovalka";}).length;
+      return '<button class="card'+(p.id===S.aktiven&&jeZdaj?" zdaj":"")+'" data-pick="'+p.id+'">'+
+        '<div class="card-b">'+
+          '<div class="row" style="gap:7px">'+
+            (p.id===S.aktiven&&jeZdaj?'<span class="pill st-aktivna">odprt</span>':'')+
+            (aktKre?'<span class="pill np" style="background:var(--pos-soft);color:var(--pos)">'+aktKre+' v zraku</span>':'')+
+          '</div>'+
+          '<span class="card-t">'+esc(p.ime)+'</span>'+
+          '<span class="card-s">'+esc(p.opis||"Brez opisa")+'</span>'+
+        '</div>'+
+        '<div class="card-f">'+
+          '<span>marža <b class="'+znak(ek.marzaEf)+'">'+e(ek.marzaEf)+'</b></span>'+
+          '<span class="sp"></span>'+
+          '<span>'+p.kreative.length+' kreativ</span>'+
+        '</div>'+
+      '</button>';
     }).join("");
-    return '<div class="tree-p">'+
-      '<div class="tree-ph">'+
-        '<h3>'+esc(pr.ime)+'</h3>'+
-        '<span class="tree-num">'+izd.length+' izdelkov · '+stK+' kreativ</span>'+
-        '<span class="tree-a no-print">'+
-          '<button class="btn btn-s" data-prpick="'+pr.id+'">izberi mapo</button>'+
-          '<button class="btn btn-s" data-addi="'+pr.id+'">+ izdelek</button>'+
-          '<button class="btn btn-s" data-prrename="'+pr.id+'">preimenuj</button>'+
-          (S.projekti.length>1?'<button class="btn btn-s btn-d" data-prdel="'+pr.id+'">izbriši</button>':'')+
-        '</span>'+
+
+    return '<div class="block">'+
+      '<header>'+
+        '<div class="head-t">'+
+          '<span class="eyebrow">Mapa'+(jeZdaj?" · izbrana":"")+'</span>'+
+          '<h2>'+esc(pr.ime)+'</h2>'+
+          (pr.opis?'<p style="margin-top:5px">'+esc(pr.opis)+'</p>':'')+
+        '</div>'+
+        '<span class="sp"></span>'+
+        '<div class="row no-print">'+
+          '<span class="pill np">'+izd.length+' izdelkov · '+stK+' kreativ'+(aktivnih>0?' · '+e(aktivnih)+'/dan':'')+'</span>'+
+          (jeZdaj?'':'<button class="btn btn-s btn-soft" data-prpick="'+pr.id+'">Izberi</button>')+
+          '<button class="btn btn-s" data-prrename="'+pr.id+'">Preimenuj</button>'+
+          (S.projekti.length>1?'<button class="btn btn-s btn-d" data-prdel="'+pr.id+'">Izbriši</button>':'')+
+        '</div>'+
+      '</header>'+
+      '<div class="pad">'+
+        '<div class="cards">'+izdelki+
+          '<button class="card card-add" data-addi="'+pr.id+'"><b>+ Izdelek</b><span>cena, stroški, kreative</span></button>'+
+        '</div>'+
+        (izd.length?'<p class="note" style="margin-top:14px">Klik na izdelek ga odpre. Za premik v drugo mapo odpri izdelek in spremeni polje <i>Mapa</i> v Ekonomiki.</p>':
+          '<p class="note" style="margin-top:14px">Mapa je prazna.</p>')+
       '</div>'+
-      (vrstice||'<div class="tree-empty">Mapa je prazna. Dodaj izdelek z gumbom zgoraj.</div>')+
     '</div>';
   }).join("");
 
   el("v-projekti").innerHTML=
-  '<div class="block">'+
-    '<header><h2>Projekti</h2><p>Mapa → izdelek → kreativa. Kliki na kreativo jo odprejo.</p>'+
-      '<span class="sp"></span><button class="btn btn-s no-print" id="prnew">+ Nova mapa</button></header>'+
-    html+
-  '</div>'+
-  '<div class="block"><header><h2>Kako je zloženo</h2></header><div class="pad"><ul class="check">'+
-    '<li><b>Mapa / projekt</b> — stranka, blagovna znamka ali sezona. Ločuje nepovezane stvari.</li>'+
-    '<li><b>Izdelek</b> — nosi ceno in stroške. Iz njega pride marža in break-even CPA.</li>'+
-    '<li><b>Kreativa</b> — en oglas: kot, tekst, design brief, budget, naložene slike in videi, rezultati.</li>'+
-    '<li>Zgoraj v glavi strani preklapljaš med mapo in izdelkom; vsi ostali zavihki delajo na izbranem izdelku.</li>'+
-  '</ul></div></div>';
+  glava("Projekti",
+    "Zloženo je v treh nivojih: <b>mapa</b> (stranka, znamka ali sezona) → <b>izdelek</b> (nosi ceno in stroške) → <b>kreativa</b> (en oglas). "+
+    "Trenutno imaš "+S.projekti.length+" map, "+vseIzd+" izdelkov in "+vseKre+" kreativ.",
+    '<button class="btn btn-p" id="prnew">+ Nova mapa</button>',
+    [{t:"Vse mape"}])+
+  mape+
+  '<div class="block"><header><div class="head-t"><h2>Kje se kaj vnaša</h2></div></header><div class="pad">'+
+    '<div class="split">'+
+      '<div class="kv"><h4>Mapa</h4><p>Samo ime in razdelitev. Nič se ne računa na tem nivoju — mapa obstaja, da ti stvari ne ležijo na kupu.</p></div>'+
+      '<div class="kv"><h4>Izdelek</h4><p>Prodajna cena, nabavna cena, dostava, provizije, vračila, fiksni mesečni stroški. Iz tega pride marža in break-even CPA.</p></div>'+
+      '<div class="kv"><h4>Kreativa</h4><p>Kot in publika, tekst, slike in videi, design brief, <b>dnevni budget tega oglasa</b> ter izmerjeni rezultati.</p></div>'+
+    '</div>'+
+  '</div></div>';
 }
 
 /* ============ POGLED: pregled ============ */
+function budgetAktivnih(p){
+  return p.kreative.reduce(function(a,k){
+    return a + ((k.status==="aktivna"||k.status==="zmagovalka") ? n(k.budget) : 0);
+  },0);
+}
 function renderPregled(){
   var p=P();
   if(!p){el("v-pregled").innerHTML=praznoHtml();return;}
+
+  el("v-pregled").innerHTML=
+  glava(p.ime,
+    "Vse na tej strani izhaja iz ene številke: koliko ti ostane od enega naročila. Spodaj lahko takoj spremeniš budget in pričakovani CPA in vidiš, kaj to naredi z mesečnim profitom.",
+    '<button class="btn" data-goto="ekonomika">Uredi ceno in stroške</button>'+
+    '<button class="btn btn-p" data-goto="kreative">Kreative</button>',
+    [{t:PR().ime,v:"projekti"},{t:p.ime}])+
+
+  /* 1 — ali izdelek prenese oglase */
+  '<div class="block">'+
+    '<header><div class="head-t"><span class="eyebrow">1 — Temelj</span>'+
+      '<h2>Ali izdelek prenese oglase?</h2></div>'+
+      '<p>Marža je edini denar, iz katerega lahko plačaš oglase.</p></header>'+
+    '<div class="ledger">'+
+      '<div class="cell hero"><span class="k">Marža na naročilo</span><span class="v" data-o="marza">—</span><span class="n" data-o="marzaN"></span></div>'+
+      '<div class="cell big"><span class="k">Break-even CPA</span><span class="v accv" data-o="becpa">—</span><span class="n">Toliko smeš največ plačati za eno naročilo. Vse nad tem je izguba.</span></div>'+
+      '<div class="cell big"><span class="k">Break-even ROAS</span><span class="v accv" data-o="beroas">—</span><span class="n">Najnižji ROAS, pri katerem nisi v minusu. Meta in Google ga poročata sama.</span></div>'+
+    '</div>'+
+    '<div class="pad pad-t" id="pr-verdict"></div>'+
+  '</div>'+
+
+  /* 2 — kam gre denar */
+  '<div class="block">'+
+    '<header><div class="head-t"><span class="eyebrow">2 — Razrez</span>'+
+      '<h2>Kam gre denar od enega naročila</h2></div>'+
+      '<p data-o="wbarSum"></p></header>'+
+    '<div class="pad" id="pr-wbar"></div>'+
+  '</div>'+
+
+  /* 3 — načrt z vzvodi */
+  '<div class="block">'+
+    '<header><div class="head-t"><span class="eyebrow">3 — Načrt</span>'+
+      '<h2>Koliko daš na dan in kaj od tega ostane</h2></div>'+
+      '<p>Spremeni številki in preostanek strani se preračuna.</p></header>'+
+    '<div class="pad">'+
+      '<div class="lever">'+
+        fld("dnevniBudget","Dnevni budget za oglase","€","Skupaj za vse platforme")+
+        fld("predvidenCPA","Predviden CPA","€","Kolikor pričakuješ, da te stane eno naročilo")+
+        '<div class="f"><span class="lbl">Vsota aktivnih kreativ</span>'+
+          '<div class="row"><span class="num" style="font-size:19px" data-o="bAkt">—</span>'+
+          '<button class="btn btn-s btn-soft no-print" id="prevzemiBudget">Prevzemi</button></div>'+
+          '<span class="hint" data-o="bAktN"></span></div>'+
+      '</div>'+
+      '<p class="note" style="margin-top:14px"><b>Kje se budget dejansko vnese:</b> na posamezni kreativi (zavihek Kreative → odpri kreativo → razdelek <i>Načrt</i>). '+
+      'Tam vpisana številka je tista, ki jo nastaviš tudi v Meta ali Google. Polje zgoraj je samo skupni načrt za ta izdelek; gumb <i>Prevzemi</i> vanj prepiše vsoto kreativ s statusom <i>aktivna</i> ali <i>zmagovalka</i>.</p>'+
+    '</div>'+
+    '<div class="ledger">'+
+      '<div class="cell"><span class="k">Naročila / dan</span><span class="v" data-o="narocil">—</span><span class="n">budget ÷ CPA</span></div>'+
+      '<div class="cell"><span class="k">Profit / dan</span><span class="v" data-o="profitD">—</span><span class="n">brez fiksnih stroškov</span></div>'+
+      '<div class="cell"><span class="k">Profit / mesec</span><span class="v" data-o="profitM">—</span><span class="n" data-o="profitMN"></span></div>'+
+      '<div class="cell"><span class="k">Pri 1 prodaji / dan</span><span class="v" data-o="ena">—</span><span class="n" data-o="enaN"></span></div>'+
+    '</div>'+
+    '<div class="pad pad-t"><p class="note" data-o="stavek"></p></div>'+
+  '</div>'+
+
+  /* 4 — kreative */
+  '<div class="block">'+
+    '<header><div class="head-t"><span class="eyebrow">4 — Oglasi</span><h2>Kreative</h2></div>'+
+      '<p data-o="krN"></p><span class="sp"></span>'+
+      '<button class="btn btn-s no-print" data-goto="kreative">Odpri vse</button></header>'+
+    '<div class="pad" id="pr-kre"></div>'+
+  '</div>'+
+
+  /* 5 — kaj izboljšati */
+  '<div class="block">'+
+    '<header><div class="head-t"><span class="eyebrow">5 — Vzvodi</span><h2>Kaj premakne to številko najhitreje</h2></div></header>'+
+    '<div class="pad" id="pr-vzvodi"></div>'+
+  '</div>';
+
+  paintPregled();
+}
+function paintPregled(){
+  var p=P();if(!p||!el("pr-verdict"))return;
   var ek=ekon(p);
   var cpa=n(p.predvidenCPA)||ek.beCPA*0.7;
   var budget=n(p.dnevniBudget);
+  var bAkt=budgetAktivnih(p);
   var prodajDan = cpa>0 ? budget/cpa : 0;
   var profitDan = prodajDan*ek.marzaEf - budget;
   var profitMesec = profitDan*30 - n(p.fiksniMesecni);
   var enaNaDan = ek.marzaEf - cpa;
-  var st={};p.kreative.forEach(function(k){st[k.status]=(st[k.status]||0)+1;});
-  var stHtml=["aktivna","zmagovalka","produkcija","ideja","pavza","ubita"].filter(function(s){return st[s];})
-    .map(function(s){return '<span class="pill st-'+s+'">'+s+' '+st[s]+'</span>';}).join(" ")||'<span class="note">Ni še nobene kreative.</span>';
 
-  el("v-pregled").innerHTML=
-  '<div class="block">'+
-    '<header><h2>'+esc(p.ime)+'</h2><p>'+esc(PR().ime)+(p.opis?' · '+esc(p.opis):'')+'</p></header>'+
-    '<div class="ledger">'+
-      '<div class="cell big"><span class="k">Marža na naročilo</span><span class="v '+znak(ek.marzaEf)+'">'+e(ek.marzaEf)+'</span><span class="n">po vračilih ('+p1(ek.vracila*100)+')</span></div>'+
-      '<div class="cell big"><span class="k">Break-even CPA</span><span class="v accv">'+e(ek.beCPA)+'</span><span class="n">nad tem izgubljaš</span></div>'+
-      '<div class="cell big"><span class="k">Break-even ROAS</span><span class="v accv">'+x2(ek.beROAS)+'</span><span class="n">minimum, da si na ničli</span></div>'+
-      '<div class="cell big"><span class="k">Profit pri 1 prodaji / dan</span><span class="v '+znak(enaNaDan)+'">'+e(enaNaDan)+'</span><span class="n">'+e(enaNaDan*30)+' / mesec</span></div>'+
-    '</div>'+
-    '<div class="ledger">'+
-      '<div class="cell"><span class="k">Prodajna cena</span><span class="v">'+e(ek.bruto)+'</span><span class="n">z poštnino, ki jo plača stranka</span></div>'+
-      '<div class="cell"><span class="k">Stroški / naročilo</span><span class="v">'+e(ek.stroski)+'</span><span class="n">izdelek + dostava + provizija</span></div>'+
-      '<div class="cell"><span class="k">Bruto marža</span><span class="v">'+p1(ek.marzaPct)+'</span><span class="n">od neto prihodka</span></div>'+
-      '<div class="cell"><span class="k">Dnevni budget</span><span class="v">'+e(budget)+'</span><span class="n">pri CPA '+e(cpa)+'</span></div>'+
-    '</div>'+
-    '<div class="ledger">'+
-      '<div class="cell"><span class="k">Pričakovane prodaje / dan</span><span class="v">'+(isFinite(prodajDan)?nf1.format(prodajDan):"—")+'</span><span class="n">budget ÷ CPA</span></div>'+
-      '<div class="cell"><span class="k">Profit / dan</span><span class="v '+znak(profitDan)+'">'+e(profitDan)+'</span><span class="n">brez fiksnih stroškov</span></div>'+
-      '<div class="cell"><span class="k">Profit / mesec</span><span class="v '+znak(profitMesec)+'">'+e(profitMesec)+'</span><span class="n">minus fiksni '+e(n(p.fiksniMesecni))+'</span></div>'+
-      '<div class="cell"><span class="k">Kreative</span><span class="v">'+i0(p.kreative.length)+'</span><span class="n">'+stHtml+'</span></div>'+
-    '</div>'+
-  '</div>'+
-  verdictHtml(ek,cpa)+
-  '<div class="block"><header><h2>Kaj naredi to številko boljšo</h2></header><div class="pad">'+
-    '<ul class="check">'+
-      '<li>Marža na naročilo je tvoja edina zaloga za oglase. Vsak evro nad break-even CPA jemlješ iz svojega žepa.</li>'+
-      '<li>Dvig cene za 10 € gre skoraj v celoti v maržo — hitrejši učinek kot znižanje CPA za 10 €.</li>'+
-      '<li>Poštnina, ki jo plača stranka, in upsell dvigneta break-even CPA, ne da bi se dotaknil oglasov.</li>'+
-      '<li>Vračila jedo maržo dvakrat: izgubiš prihodek in plačaš dostavo. Pri '+p1(ek.vracila*100)+' te stanejo '+e(ek.marza-ek.marzaEf)+' na naročilo.</li>'+
-    '</ul>'+
-  '</div></div>';
+  function put(key,val,cls){
+    var t=q('[data-o="'+key+'"]');if(!t)return;
+    t.textContent=val;
+    if(t.classList.contains("v"))t.className="v "+(cls||"");
+  }
+  put("marza",e(ek.marzaEf),znak(ek.marzaEf));
+  var mn=q('[data-o="marzaN"]');
+  if(mn)mn.textContent="Od "+e(ek.bruto)+", ki jih plača stranka, ti po vseh stroških in "+p1(ek.vracila*100)+" vračil ostane toliko.";
+  put("becpa",e(ek.beCPA));
+  put("beroas",x2(ek.beROAS));
+  el("pr-verdict").innerHTML=verdictHtml(ek,cpa);
+
+  /* razrez v pas */
+  var dostava=n(p.posiljanje)+n(p.embalaza)+n(p.ostalo);
+  var seg=[
+    ["c-izd","Nabavna cena izdelka",n(p.nabavna),"kar plačaš dobavitelju"],
+    ["c-dos","Dostava, embalaža, ostalo",dostava,"strošek izvedbe naročila"],
+    ["c-pro","Provizija plačila",ek.provizija,"kartica ali ponudnik plačil"],
+    ["c-ddv","DDV",ek.ddv,"gre državi, ni tvoj prihodek"],
+    [ek.marza>=0?"c-mar":"c-min",ek.marza>=0?"Marža — s tem plačaš oglase":"Primanjkljaj",Math.abs(ek.marza),
+      ek.marza>=0?"pred odbitkom vračil":"stroški presegajo ceno"]
+  ];
+  var vsota=seg.reduce(function(a,s){return a+Math.max(0,s[2]);},0);
+  var wb=el("pr-wbar");
+  if(wb){
+    wb.innerHTML=vsota>0
+      ? '<div class="wbar">'+seg.map(function(s){
+          var w=Math.max(0,s[2])/vsota*100;
+          return w>0?'<i class="'+s[0]+'" style="width:'+w.toFixed(2)+'%" title="'+esc(s[1])+' '+e(s[2])+'"></i>':'';
+        }).join("")+'</div>'+
+        '<div class="wleg">'+seg.map(function(s){
+          return '<span><em class="'+s[0]+'"></em>'+esc(s[1])+' <i>'+esc(s[3])+'</i> <b>'+e(s[2])+'</b></span>';
+        }).join("")+'</div>'
+      : '<p class="note">Vpiši prodajno ceno v zavihku Ekonomika, da se razrez izriše.</p>';
+  }
+  var ws=q('[data-o="wbarSum"]');
+  if(ws)ws.textContent=vsota>0?"Od "+e(ek.bruto)+" plačila ti ostane "+e(ek.marza)+" ("+p1(ek.bruto>0?ek.marza/ek.bruto*100:NaN)+" cene).":"";
+
+  /* načrt */
+  put("bAkt",e(bAkt));
+  var ba=q('[data-o="bAktN"]');
+  if(ba){
+    var stA=p.kreative.filter(function(k){return k.status==="aktivna"||k.status==="zmagovalka";}).length;
+    ba.textContent=stA?stA+" kreativ teče":"Nobena kreativa ni označena kot aktivna";
+  }
+  put("narocil",isFinite(prodajDan)&&prodajDan>0?nf1.format(prodajDan):"—");
+  put("profitD",e(profitDan),znak(profitDan));
+  put("profitM",e(profitMesec),znak(profitMesec));
+  var pmn=q('[data-o="profitMN"]');
+  if(pmn)pmn.textContent="30 dni, minus fiksni "+e(n(p.fiksniMesecni));
+  put("ena",e(enaNaDan),znak(enaNaDan));
+  var en=q('[data-o="enaN"]');
+  if(en)en.textContent=e(enaNaDan*30)+" na mesec, če prodaš en kos dnevno";
+
+  var st=q('[data-o="stavek"]');
+  if(st){
+    st.innerHTML = budget>0&&cpa>0
+      ? "Pri <b>"+e(budget)+"</b> na dan in CPA <b>"+e(cpa)+"</b> pričakuj <b>"+nf1.format(prodajDan)+"</b> naročil dnevno. "+
+        "To je "+e(prodajDan*ek.bruto)+" prometa in "+(profitDan>=0?"<b>"+e(profitDan)+"</b> profita":"<b>"+e(-profitDan)+"</b> izgube")+
+        " na dan, torej "+(profitMesec>=0?e(profitMesec)+" na mesec":"minus "+e(-profitMesec)+" na mesec")+" po fiksnih stroških."
+      : "Vpiši dnevni budget in predviden CPA zgoraj, da dobiš napoved.";
+  }
+
+  /* kreative */
+  var kn=q('[data-o="krN"]');
+  if(kn)kn.textContent=p.kreative.length?p.kreative.length+" kreativ · "+e(bAkt)+" dnevno v aktivnih":"Ni še nobene kreative";
+  var kc=el("pr-kre");
+  if(kc){
+    if(!p.kreative.length){
+      kc.innerHTML='<p class="note">Kreativa je en oglas: kot, tekst, slika ali video, budget in rezultati. '+
+        '<button class="btn btn-s btn-soft no-print" data-goto="kreative">Naredi prvo</button></p>';
+    }else{
+      var sk={};p.kreative.forEach(function(k){sk[k.status]=(sk[k.status]||0)+1;});
+      var caka=p.kreative.filter(function(k){return VDELU.indexOf(k.status)>=0;}).length;
+      kc.innerHTML='<div class="row" style="margin-bottom:14px">'+
+        STATUSI.filter(function(s){return sk[s[0]];}).map(function(s){
+          return '<span class="pill st-'+s[0]+'">'+s[1]+' · '+sk[s[0]]+'</span>';}).join("")+
+        (caka?'<span class="sp"></span><span class="note"><b>'+caka+'</b> čaka na delo</span>':'')+'</div>'+
+        '<div class="scroll"><table><thead><tr><th>Kreativa</th><th>Status</th><th>Budget / dan</th><th>CPA</th><th>Profit</th></tr></thead><tbody>'+
+        p.kreative.map(function(k){
+          var r=rezultat(k,ek), l=lijak(k.budget,k.cpm,k.ctr,k.cvr,ek);
+          var cpaK=r.imaPodatke&&r.narocil>0?r.cpa:l.cpa;
+          var prof=r.imaPodatke?r.profit:l.profit;
+          return '<tr data-open="'+k.id+'" style="cursor:pointer"><td>'+esc(k.naslov)+'</td>'+
+            '<td style="text-align:left"><span class="pill st-'+k.status+'">'+esc(statusIme(k.status))+'</span></td>'+
+            '<td>'+e(n(k.budget))+'</td>'+
+            '<td class="'+(isFinite(cpaK)?(cpaK<=ek.beCPA?"pos":"neg"):"")+'">'+e(cpaK)+'</td>'+
+            '<td class="'+znak(prof)+'">'+e(prof)+'</td></tr>';
+        }).join("")+'</tbody></table></div>'+
+        '<p class="note" style="margin-top:10px">Stolpec CPA in Profit sta iz izmerjenih rezultatov, kjer so vpisani, drugače iz napovedi. Klik na vrstico odpre kreativo.</p>';
+    }
+  }
+
+  /* vzvodi */
+  var vz=el("pr-vzvodi");
+  if(vz){
+    var novaCena=ek.bruto*1.1;
+    var ddvF=p.ddvVkljucen?(1+n(p.ddv)/100):1;
+    var marzaPri10=ek.marzaEf + (novaCena-ek.bruto)/ddvF*(1-ek.vracila) - (novaCena-ek.bruto)*n(p.provizijaPct)/100;
+    vz.innerHTML='<ul class="check">'+
+      '<li><b>Cena je najmočnejši vzvod.</b> 10 % višja cena ('+e(novaCena)+') dvigne maržo na '+e(marzaPri10)+' — to je '+e(marzaPri10-ek.marzaEf)+' več na vsako naročilo, brez dotika oglasov.</li>'+
+      '<li><b>Vračila jedo dvakrat.</b> Pri '+p1(ek.vracila*100)+' te stanejo '+e(ek.marza-ek.marzaEf)+' na naročilo. Boljše fotografije, jasne mere in poštena dostavna doba to znižajo bolj kot kakršno koli optimiziranje oglasov.</li>'+
+      '<li><b>Poštnina in upsell dvigneta strop.</b> Vsak evro, ki ga stranka plača povrh, gre skoraj cel v maržo in s tem v break-even CPA — torej si lahko privoščiš dražje klike od konkurence.</li>'+
+      '<li><b>Ne skaliraj negativnega.</b> Če je CPA nad '+e(ek.beCPA)+', večji budget samo hitreje izgublja. Najprej popravi kreativo, ceno ali stran, potem dodaj budget.</li>'+
+    '</ul>';
+  }
 }
 function verdictHtml(ek,cpa){
   var d=ek.marzaEf-cpa, cls, txt;
-  if(!isFinite(ek.marzaEf)||ek.marzaEf===0){cls="mid";txt="<b>Vnesi ceno in stroške</b> v zavihku Ekonomika izdelka — brez tega so vsi ostali izračuni prazni.";}
+  if(!isFinite(ek.marzaEf)||ek.marzaEf===0){cls="mid";txt="<b>Vnesi ceno in stroške</b> v zavihku Ekonomika — brez tega so vsi ostali izračuni prazni.";}
   else if(ek.marzaEf<=0){cls="bad";txt="<b>Marža je negativna.</b> Izdelek izgublja denar že pred prvim oglasom. Popravi ceno ali stroške, preden zapraviš en evro za oglase.";}
-  else if(d<=0){cls="bad";txt="<b>Predvideni CPA "+e(cpa)+" je nad break-even "+e(ek.beCPA)+".</b> Vsako naročilo te stane "+e(-d)+". Več budgeta = večja izguba, ne večji profit.";}
-  else if(d<ek.marzaEf*0.25){cls="mid";txt="<b>Tanka rezerva.</b> Pri CPA "+e(cpa)+" ti ostane "+e(d)+" na naročilo — to je "+p1(d/ek.marzaEf*100)+" marže. Eno slabše tedno in si na ničli. Cilj: CPA pod "+e(ek.beCPA*0.6)+".";}
-  else{cls="ok";txt="<b>Prostor je.</b> Pri CPA "+e(cpa)+" ti ostane "+e(d)+" na naročilo, break-even je pri "+e(ek.beCPA)+". Skaliraj budget, dokler CPA ne zleze proti "+e(ek.beCPA*0.8)+".";}
-  return '<div class="verdict '+cls+'">'+txt+'</div>';
+  else if(d<=0){cls="bad";txt="<b>Predvideni CPA "+e(cpa)+" je nad break-even "+e(ek.beCPA)+".</b> Vsako naročilo te stane "+e(-d)+" preveč. Več budgeta pomeni večjo izgubo, ne večji profit.";}
+  else if(d<ek.marzaEf*0.25){cls="mid";txt="<b>Tanka rezerva.</b> Pri CPA "+e(cpa)+" ti ostane "+e(d)+" na naročilo, kar je "+p1(d/ek.marzaEf*100)+" marže. En slabši teden in si na ničli. Cilj: CPA pod "+e(ek.beCPA*0.6)+".";}
+  else{cls="ok";txt="<b>Prostor je.</b> Pri CPA "+e(cpa)+" ti ostane "+e(d)+" na naročilo, break-even pa je pri "+e(ek.beCPA)+". Budget lahko dvigaš, dokler CPA ne zleze proti "+e(ek.beCPA*0.8)+".";}
+  return '<div class="verdict '+cls+'"><div>'+txt+'</div></div>';
 }
 
 /* ============ POGLED: ekonomika ============ */
@@ -411,44 +661,57 @@ function renderEkon(){
   var p=P();
   if(!p){el("v-ekonomika").innerHTML=praznoHtml();return;}
   el("v-ekonomika").innerHTML=
-  '<div class="block">'+
-    '<header><h2>Ekonomika izdelka</h2><p>Vse na eno naročilo. Številke se preračunajo med tipkanjem.</p></header>'+
-    '<div class="pad" id="ekon-form">'+
-      '<div class="grid" style="margin-bottom:16px">'+
-        '<div class="f" style="grid-column:1/-1"><label for="f-ime">Ime izdelka</label><input class="txt" id="f-ime" type="text" data-p="ime" value="'+esc(p.ime)+'"></div>'+
-        '<div class="f" style="grid-column:1/-1"><label for="f-opis">Kratek opis / ponudba</label><input class="txt" id="f-opis" type="text" data-p="opis" value="'+esc(p.opis)+'"></div>'+
-        '<div class="f"><label for="f-projekt">Mapa / projekt</label><select id="f-projekt" data-p="projekt">'+
+  glava("Ekonomika izdelka",
+    "Vse na <b>eno naročilo</b>. Vpiši, kar stranka plača, in vse, kar ti to naročilo vzame — od nabavne cene do provizije in vračil. Številke spodaj se preračunajo med tipkanjem.",
+    "",[{t:PR().ime,v:"projekti"},{t:p.ime}])+
+  '<div class="block" id="ekon-form">'+
+    '<fieldset class="sect"><div class="lg"><h3>Izdelek</h3><p>Ime in kam sodi</p></div>'+
+      '<div class="grid">'+
+        txtFld("ime","Ime izdelka")+
+        '<div class="f"><label for="f-projekt">Mapa / projekt</label><select class="txt" id="f-projekt" data-p="projekt">'+
           S.projekti.map(function(x){return '<option value="'+x.id+'"'+(p.projekt===x.id?" selected":"")+'>'+esc(x.ime)+'</option>';}).join("")+
-        '</select></div>'+
+        '</select><span class="hint">Sprememba izdelek takoj prestavi v drugo mapo.</span></div>'+
+        txtFld("opis","Kratek opis / ponudba","Pokaže se na Pregledu in v briefu.")+
+        txtFld("znamka","Ime strani / znamke","Uporabi se kot ime oglaševalca v predogledu oglasa.","npr. Moja trgovina")+
+        txtFld("domena","Domena","Prikaže se v predogledu FB in Google oglasa.","npr. mojatrgovina.si")+
       '</div>'+
-      '<fieldset><legend class="eyebrow">Prihodek</legend><div class="grid">'+
-        fld("cena","Prodajna cena","€","Kar stranka plača za izdelek")+
+    '</fieldset>'+
+    '<fieldset class="sect"><div class="lg"><h3>Prihodek</h3><p>Kar stranka plača</p></div>'+
+      '<div class="grid">'+
+        fld("cena","Prodajna cena","€","Cena izdelka, kot jo vidi stranka")+
         fld("posiljanjePlaca","Poštnina, ki jo plača stranka","€","0, če je dostava brezplačna")+
-        fld("ddv","DDV","%","")+
-        '<div class="f"><label>&nbsp;</label><label class="chk"><input type="checkbox" data-p="ddvVkljucen" '+(p.ddvVkljucen?"checked":"")+'> Cena je z vključenim DDV</label></div>'+
-      '</div></fieldset>'+
-      '<fieldset><legend class="eyebrow">Stroški na naročilo</legend><div class="grid">'+
-        fld("nabavna","Nabavna cena izdelka","€","Kar plačaš dobavitelju")+
-        fld("posiljanje","Naša dostava / fulfillment","€","")+
+        fld("ddv","DDV","%","V Sloveniji 22 %, za nekatere izdelke 9,5 %")+
+        '<div class="f"><span class="lbl">&nbsp;</span><label class="chk"><input type="checkbox" data-p="ddvVkljucen" '+(p.ddvVkljucen?"checked":"")+'> Cena je z vključenim DDV</label>'+
+          '<span class="hint">Če nisi zavezanec za DDV, odkljukaj in pusti DDV na 0.</span></div>'+
+      '</div>'+
+    '</fieldset>'+
+    '<fieldset class="sect"><div class="lg"><h3>Stroški na naročilo</h3><p>Vse, kar odide pri enem prodanem kosu</p></div>'+
+      '<div class="grid">'+
+        fld("nabavna","Nabavna cena izdelka","€","Kar plačaš dobavitelju, s carino in prevozom do tebe")+
+        fld("posiljanje","Dostava do stranke","€","Kar plačaš pošti ali kurirju")+
         fld("embalaza","Embalaža in pakiranje","€","")+
-        fld("provizijaPct","Provizija plačila","%","Stripe/PayPal/banka")+
-        fld("provizijaFix","Fiksna provizija na transakcijo","€","")+
-        fld("ostalo","Ostalo na naročilo","€","Podpora, darilo, kuverta …")+
-        fld("vracilaPct","Vračila in neprevzeti paketi","%","Delež naročil, ki se ne obnesejo")+
-      '</div></fieldset>'+
-      '<fieldset><legend class="eyebrow">Budget in fiksni stroški</legend><div class="grid">'+
-        fld("dnevniBudget","Načrtovan dnevni budget","€","Vse platforme skupaj")+
+        fld("provizijaPct","Provizija plačila","%","Stripe, PayPal, banka — običajno 1,5–3 %")+
+        fld("provizijaFix","Fiksni del provizije","€","Na transakcijo, npr. 0,25 €")+
+        fld("ostalo","Ostalo na naročilo","€","Podpora, darilo, listek, odpadek")+
+        fld("vracilaPct","Vračila in neprevzeti paketi","%","Delež naročil, ki se ne obnesejo. Pri povzetju v SLO pogosto 5–15 %.")+
+      '</div>'+
+    '</fieldset>'+
+    '<fieldset class="sect"><div class="lg"><h3>Budget in fiksni stroški</h3><p>Za napoved profita</p></div>'+
+      '<div class="grid">'+
+        fld("dnevniBudget","Načrtovan dnevni budget","€","Skupni načrt za ta izdelek. Dejanski budget vnašaš na posamezni kreativi.")+
         fld("predvidenCPA","Predviden CPA","€","Kolikor pričakuješ, da te stane eno naročilo")+
-        fld("fiksniMesecni","Fiksni mesečni stroški","€","Shopify, orodja, agencija, tvoja plača …")+
-      '</div></fieldset>'+
-    '</div>'+
+        fld("fiksniMesecni","Fiksni mesečni stroški","€","Shopify, orodja, agencija, tvoja plača — vse, kar teče ne glede na prodajo")+
+      '</div>'+
+    '</fieldset>'+
   '</div>'+
   '<div class="block">'+
-    '<header><h2>Razrez enega naročila</h2><p>Od tega, kar stranka plača, do tega, kar ti ostane.</p></header>'+
+    '<header><div class="head-t"><span class="eyebrow">Razrez</span><h2>Od plačila do marže</h2></div>'+
+      '<p>Vrstica za vrstico, kaj se odšteje.</p></header>'+
     '<div class="scroll"><table><thead><tr><th>Postavka</th><th>Znesek</th><th>Delež plačila</th></tr></thead><tbody id="razrez"></tbody></table></div>'+
   '</div>'+
   '<div class="block">'+
-    '<header><h2>Scenariji prodaje</h2><p id="scen-note"></p></header>'+
+    '<header><div class="head-t"><span class="eyebrow">Scenariji</span><h2>Koliko moraš prodati</h2></div>'+
+      '<p id="scen-note"></p></header>'+
     '<div class="scroll"><table><thead><tr><th>Prodaj / dan</th><th>Budget / dan</th><th>Prihodek / dan</th><th>Profit / dan</th><th>Profit / mesec</th><th>Po fiksnih</th><th>ROAS</th></tr></thead><tbody id="scen"></tbody></table></div>'+
     '<div class="pad" id="scen-info"></div>'+
   '</div>';
@@ -496,7 +759,6 @@ function paintEkon(){
 var CTA=["Kupi zdaj","Nakupuj zdaj","Izvedi več","Naroči zdaj","Prijavi se","Pošlji sporočilo","Rezerviraj","Prenesi"];
 var PLATFORME=[["facebook","Facebook"],["instagram","Instagram"],["google","Google"],["tiktok","TikTok"],["youtube","YouTube"],["drugo","Drugo"]];
 var FORMATI=["slika","UGC video","video 9:16","karusel","kolekcija","RSA","Performance Max","zgodba","besedilo"];
-var STATUSI=["ideja","produkcija","aktivna","pavza","zmagovalka","ubita"];
 var LIM={facebook:{primarni:125,naslov:40,opis:30},instagram:{primarni:125,naslov:40,opis:30},
   tiktok:{primarni:100,naslov:40,opis:30},youtube:{primarni:100,naslov:40,opis:30},
   google:{primarni:90,naslov:30,opis:90},drugo:{primarni:200,naslov:60,opis:90}};
@@ -519,30 +781,73 @@ function renderKreative(){
   var p=P();
   if(!p){el("v-kreative").innerHTML=praznoHtml();return;}
   if(odprtaKreativa && K()) return renderEditor();
+  pocistiUrlje();
   var ek=ekon(p);
-  var seznam=p.kreative.map(function(k){
+  var bAkt=budgetAktivnih(p);
+
+  var kartice=p.kreative.map(function(k){
     var l=lijak(k.budget,k.cpm,k.ctr,k.cvr,ek), r=rezultat(k,ek);
-    var num = r.imaPodatke
-      ? '<span class="'+znak(r.profit)+'">'+e(r.profit)+'</span><br><span style="color:var(--ink3)">dejansko · ROAS '+x2(r.roas)+'</span>'
-      : (isFinite(l.profit) ? '<span class="'+znak(l.profit)+'">'+e(l.profit)+'</span><br><span style="color:var(--ink3)">načrt / dan</span>' : '<span style="color:var(--ink3)">brez številk</span>');
+    var jeDej=r.imaPodatke&&r.narocil>0;
+    var prof=r.imaPodatke?r.profit:l.profit;
+    var cpaK=jeDej?r.cpa:l.cpa;
     var plat=(PLATFORME.filter(function(x){return x[0]===k.platforma;})[0]||["","?"])[1];
-    return '<button class="cre" data-open="'+k.id+'">'+
-      '<span class="cre-t">'+esc(k.naslov)+'</span>'+
-      '<span class="cre-n">'+num+'</span>'+
-      '<span class="cre-m"><span class="pill st-'+k.status+'">'+k.status+'</span> &nbsp;'+esc(plat)+' · '+esc(k.format)+
-        ' · budget '+e(n(k.budget))+'/dan'+(k.stDatotek?' · '+k.stDatotek+' datotek':'')+'</span>'+
+    return '<button class="card" data-open="'+k.id+'">'+
+      '<div class="cover" data-cover="'+k.id+'">'+
+        '<span class="none">'+(k.stDatotek?"nalagam …":"brez materiala")+'</span>'+
+        (k.stDatotek>1?'<span class="cnt">'+k.stDatotek+' datotek</span>':'')+
+      '</div>'+
+      '<div class="card-b">'+
+        '<div class="row" style="gap:6px">'+
+          '<span class="pill st-'+k.status+'">'+esc(statusIme(k.status))+'</span>'+
+          '<span class="pill plat np">'+esc(plat)+'</span>'+
+          (k.izvajalec&&VDELU.indexOf(k.status)>=0?'<span class="pill np">'+esc(k.izvajalec)+(k.rok?" · "+esc(k.rok):"")+'</span>':'')+
+        '</div>'+
+        '<span class="card-t">'+esc(k.naslov)+'</span>'+
+        '<span class="card-s">'+esc(k.kot||prvi(k.hooki)||prvi(k.naslovi)||"Brez kota — odpri in napiši, kaj ta oglas obljublja.")+'</span>'+
+        (String(k.tagi||"").trim()?'<span class="tags">'+String(k.tagi).split(",").slice(0,4).map(function(x){x=x.trim();return x?'<span>'+esc(x)+'</span>':'';}).join("")+'</span>':'')+
+      '</div>'+
+      '<div class="card-f">'+
+        '<span>'+esc(k.format)+'</span>'+
+        '<span>'+(k.hooki.filter(function(x){return String(x).trim();}).length||k.naslovi.filter(function(x){return String(x).trim();}).length)+' različic</span>'+
+        '<span class="sp"></span>'+
+        '<span>'+e(n(k.budget))+'/dan</span>'+
+        (isFinite(cpaK)?'<span>CPA <b class="'+(cpaK<=ek.beCPA?"pos":"neg")+'">'+e(cpaK)+'</b></span>':'')+
+        (isFinite(prof)?'<span><b class="'+znak(prof)+'">'+e(prof)+'</b>'+(jeDej?"":" napoved")+'</span>':'')+
+      '</div>'+
     '</button>';
   }).join("");
+
   el("v-kreative").innerHTML=
-  '<div class="block">'+
-    '<header><h2>Kreative</h2><p>'+esc(PR().ime)+' → '+esc(p.ime)+'</p>'+
-      '<span class="sp"></span><span class="row no-print">'+
-      '<button class="btn btn-s" data-add="facebook">+ Facebook</button>'+
-      '<button class="btn btn-s" data-add="google">+ Google</button>'+
-      '<button class="btn btn-s" data-add="tiktok">+ TikTok</button></span>'+
-    '</header>'+
-    (seznam?'<div class="cre-list">'+seznam+'</div>':'<div class="pad note">Ni še kreativ. Dodaj prvo z gumbi zgoraj.</div>')+
+  glava("Kreative",
+    p.kreative.length
+      ? "Vsaka kartica je en oglas. Klik odpre tekst, material, budget in izračun. Trenutno je v zraku <b>"+e(bAkt)+" na dan</b> pri break-even CPA "+e(ek.beCPA)+"."
+      : "Kreativa je en oglas: kot, tekst, slika ali video, budget in rezultati. Izberi platformo — vsaka ima svoja polja in svoj predogled.",
+    '<button class="btn btn-p" data-add="facebook">+ Facebook</button>'+
+    '<button class="btn btn-soft" data-add="google">+ Google</button>'+
+    '<button class="btn btn-soft" data-add="tiktok">+ TikTok</button>',
+    [{t:PR().ime,v:"projekti"},{t:p.ime,v:"pregled"},{t:"Kreative"}])+
+  '<div class="cards">'+kartice+
+    '<button class="card card-add" data-add="facebook"><b>+ Nova kreativa</b><span>privzeto Facebook, platformo lahko zamenjaš</span></button>'+
   '</div>';
+
+  narisiNaslovnice();
+}
+/* naslovnice kartic — prva slika ali video iz kreative */
+function narisiNaslovnice(){
+  if(!Datoteke.naVoljo)return;
+  qa("[data-cover]").forEach(function(box){
+    var kid=box.dataset.cover;
+    Datoteke.prviVizual(kid).then(function(d){
+      if(!d||!box.parentNode)return;
+      var u;
+      try{u=URL.createObjectURL(d.blob);odprtiUrlji.push(u);}catch(err){return;}
+      var prazno=q(".none",box);if(prazno)prazno.remove();
+      var vsebina=/^video\//.test(d.tip)
+        ? '<video src="'+u+'" muted preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>'
+        : '<img src="'+u+'" alt="">';
+      box.insertAdjacentHTML("afterbegin",vsebina);
+    },function(){});
+  });
 }
 
 var odprtiUrlji=[];
@@ -551,101 +856,215 @@ function pocistiUrlje(){
   odprtiUrlji=[];
 }
 
+/* ---- kaj kje velja po platformah ---- */
+var CFG={
+  facebook:{predogled:"feed",lede:"Facebook feed: prvi dve vrstici besedila in slika odločita, ali kdo neha scrollati. Naslov in opis se pokažeta pod sliko, ob gumbu.",
+    merila:"CPM v Sloveniji običajno 5–15 €, CTR 1–3 %. Če je CTR pod 1 %, je težava v kreativi; če je CTR dober, nakupov pa ni, je težava na strani izdelka.",
+    seznam:["Vertikalno 4:5 ali 9:16 — v feedu zasede več zaslona kot kvadrat.",
+      "Prve 3 sekunde videa: gibanje, obraz ali izdelek v uporabi. Brez logotipa na začetku.",
+      "Podnapisi vedno — večina gleda brez zvoka.",
+      "Cena ali popust naj bo viden na sliki, ne samo v tekstu.",
+      "Dokaz: mnenje, število kupcev, garancija.",
+      "Zadnje 2–3 sekunde: izdelek, cena, gumb."]},
+  instagram:{predogled:"feed",kvadrat:true,lede:"Instagram: slika je vse, besedilo je za pod njo. Naslov se pokaže manj izrazito kot na Facebooku.",
+    merila:"CPM podoben Facebooku. Reels je običajno cenejši od feeda, a manj kupne namere.",
+    seznam:["Kvadrat 1:1 za feed, 9:16 za Reels in zgodbe.",
+      "Estetika mora zdržati ob organskih objavah — preveč 'oglasno' izgubi.",
+      "Prvi kader brez teksta preko obraza.",
+      "Če je Reels: hitri rezi na 1–2 sekundi.",
+      "Blagovna znamka naj bo prepoznavna v prvem kadru."]},
+  google:{predogled:"search",lede:"Google Search: ni slike. Vse nosi besedilo, ki ga Google sam kombinira iz tvojih naslovov in opisov. Zato jih napiši tako, da vsaka kombinacija zveni smiselno.",
+    merila:"Tu ne kupuješ pozornosti, ampak namero — človek je izdelek že iskal. CTR 4–8 % je normalen, CPC je odvisen od konkurence. CVR je običajno višji kot na Facebooku.",
+    seznam:["Naslov 1 naj vsebuje ključno besedo, ki jo človek išče.",
+      "Naslov 2 naj nosi razlikovalno prednost: zaloga v SLO, 24 h dostava, garancija.",
+      "Naslov 3 naj bo ponudba ali cena.",
+      "Opisi naj odgovorijo na zadržke: vračila, plačilo, podpora.",
+      "Dodaj negativne ključne besede (rabljeno, popravilo, najem, zastonj).",
+      "Ciljna stran mora ponoviti obljubo iz naslova, drugače Google zniža oceno."]},
+  tiktok:{predogled:"vertikala",lede:"TikTok: celozaslonski vertikalni video. Deluje samo, če ne izgleda kot oglas — snemano s telefonom, prvi kader brez uvoda.",
+    merila:"CPM je nižji od Facebooka, a promet hladnejši. Pričakuj slabši CVR in računaj na nižji CPC, da se izide.",
+    seznam:["9:16, posneto s telefonom, brez studia.",
+      "Prva sekunda: obraz ali roka, ki nekaj naredi. Nič logotipov.",
+      "Govori v kamero, kot da razlagaš prijatelju.",
+      "Besedilo na zaslonu naj bo veliko in v spodnji tretjini, nad gumbom.",
+      "Dolžina 15–30 sekund.",
+      "Zvok: govor ali trenutno popularna glasba."]},
+  youtube:{predogled:"splosno",lede:"YouTube: gledalec je prišel gledat nekaj drugega. Prvih 5 sekund je vse, kar imaš zagotovljeno.",
+    merila:"Merilo je cena ogleda in nato CPA. Za prodajo izdelka deluje bolje kot remarketing kot pa za hladno publiko.",
+    seznam:["Prvih 5 sekund pove, za kaj gre, in imenuje problem.",
+      "Vodoravno 16:9 za in-stream, 9:16 za Shorts.",
+      "Blagovna znamka in izdelek vidna v prvih 5 sekundah.",
+      "Jasen poziv na koncu in v opisu."]},
+  drugo:{predogled:"splosno",lede:"Splošna kreativa. Polja uporabi po svoje, izračun deluje enako.",merila:"",seznam:[]}
+};
+function cfg(k){return CFG[k.platforma]||CFG.drugo;}
+
+/* katera različica gre v predogled */
+var predIzbor={hooki:0,primarna:0,naslovi:0,opisi:0};
+function izbor(polje,dolzina){
+  var i=predIzbor[polje]||0;
+  return i<dolzina?i:0;
+}
+/* seznam različic z gumbi za dodajanje, brisanje in izbiro v predogled */
+function varList(k,polje,label,limit,hint,vrstic){
+  var arr=k[polje]||[""];
+  var izb=izbor(polje,arr.length);
+  var h='<div class="f"><span class="lbl">'+esc(label)+'<em class="cnt-b">'+arr.length+'</em></span><div class="vlist">';
+  arr.forEach(function(v,i){
+    var val=v==null?"":String(v);
+    var over=val.length>limit;
+    h+='<div class="vrow">'+
+      '<label class="vpick" title="Pokaži to različico v predogledu">'+
+        '<input type="radio" name="pv-'+polje+'" data-pv="'+polje+'" data-i="'+i+'"'+(i===izb?" checked":"")+'>'+
+        '<span>'+(i+1)+'</span></label>'+
+      (vrstic
+        ? '<textarea data-c="'+polje+'.'+i+'" data-limit="'+limit+'" rows="'+vrstic+'">'+esc(val)+'</textarea>'
+        : '<input class="txt" type="text" data-c="'+polje+'.'+i+'" data-limit="'+limit+'" value="'+esc(val)+'">')+
+      '<span class="vend">'+
+        '<span class="counter'+(over?" over":"")+'" data-cnt="'+polje+'.'+i+'">'+val.length+' / '+limit+'</span>'+
+        (arr.length>1?'<button class="vx no-print" data-vdel="'+polje+'.'+i+'" title="Odstrani to različico" aria-label="Odstrani">✕</button>':'')+
+      '</span>'+
+    '</div>';
+  });
+  h+='</div><div class="row no-print" style="margin-top:9px">'+
+    '<button class="btn btn-s btn-soft" data-vadd="'+polje+'">+ Dodaj različico</button>'+
+    (hint?'<span class="hint" style="flex:1;min-width:150px">'+esc(hint)+'</span>':'')+
+  '</div></div>';
+  return h;
+}
+function prvi(arr,i){
+  arr=Array.isArray(arr)?arr:[];
+  var v=arr[i!=null?i:0];
+  if(v!=null&&String(v).trim())return String(v);
+  var f=arr.filter(function(x){return x!=null&&String(x).trim();})[0];
+  return f?String(f):"";
+}
+
 function renderEditor(){
   var p=P(),k=K(),ek=ekon(p),lim=LIM[k.platforma]||LIM.drugo;
   var jeGoogle=k.platforma==="google";
+  var c=cfg(k);
+  var jeVideoPlat=k.platforma==="tiktok"||k.platforma==="youtube";
   pocistiUrlje();
-  function ta(path,label,limit,rows,hint){
-    var val=get(k,path);
-    return '<div class="f"><label for="c-'+path+'">'+esc(label)+'</label>'+
-      '<textarea id="c-'+path+'" data-c="'+path+'" data-limit="'+limit+'" rows="'+(rows||4)+'">'+esc(val)+'</textarea>'+
-      '<span class="counter'+(String(val).length>limit?" over":"")+'" data-cnt="'+path+'">'+String(val).length+" / "+limit+'</span>'+
-      (hint?'<span class="hint">'+esc(hint)+'</span>':'')+'</div>';
-  }
-  function line(path,label,limit){
-    var val=get(k,path);
-    return '<div class="f"><label for="c-'+path+'">'+esc(label)+'</label><input class="txt" id="c-'+path+'" type="text" data-c="'+path+'" data-limit="'+limit+'" value="'+esc(val)+'">'+
-      '<span class="counter'+(String(val).length>limit?" over":"")+'" data-cnt="'+path+'">'+String(val).length+" / "+limit+'</span></div>';
-  }
-  function slots(arr,path,label,limit){
-    var h='<div class="f"><label>'+esc(label)+'</label><div class="slots">';
-    for(var i=0;i<arr.length;i++){
-      var val=arr[i]==null?"":arr[i];
-      h+='<div class="slot"><span class="idx">'+(i+1)+'</span>'+
-        '<input class="txt" type="text" data-c="'+path+'.'+i+'" data-limit="'+limit+'" value="'+esc(val)+'">'+
-        '<span class="counter'+(String(val).length>limit?" over":"")+'" data-cnt="'+path+'.'+i+'">'+String(val).length+" / "+limit+'</span></div>';
-    }
-    return h+'</div></div>';
-  }
   function nf(path,label,unit,hint){
     return '<div class="f"><label for="c-'+path+'">'+esc(label)+'</label>'+
       '<div class="wrap"><input id="c-'+path+'" type="text" inputmode="decimal" data-c="'+path+'" value="'+esc(get(k,path))+'">'+
       (unit?'<span class="unit">'+unit+'</span>':'')+'</div>'+(hint?'<span class="hint">'+esc(hint)+'</span>':'')+'</div>';
   }
 
+  var platIme=(PLATFORME.filter(function(x){return x[0]===k.platforma;})[0]||["","?"])[1];
+
   el("v-kreative").innerHTML=
-  '<div class="row no-print"><button class="btn btn-s" id="back">← Vse kreative</button><span class="sp"></span>'+
-    '<button class="btn btn-s" id="copy">Kopiraj brief</button>'+
-    '<button class="btn btn-s" id="dup">Podvoji</button>'+
-    '<button class="btn btn-s btn-d" id="delk">Izbriši</button></div>'+
-  '<div class="block">'+
-    '<header><h2>Kreativa</h2><p>'+esc(PR().ime)+' → '+esc(p.ime)+'</p></header>'+
-    '<div class="pad" id="cre-form">'+
+  glava(k.naslov||"Kreativa", c.lede,
+    '<button class="btn" id="copy">Kopiraj brief</button>'+
+    '<button class="btn" id="dup">Podvoji</button>'+
+    '<button class="btn btn-d" id="delk">Izbriši</button>',
+    [{t:PR().ime,v:"projekti"},{t:p.ime,v:"pregled"},{t:"Kreative",v:"kreative"},{t:platIme}])+
+
+  /* 1 — osnova */
+  '<div class="block" id="cre-form">'+
+    '<fieldset class="sect"><div class="lg"><h3>Osnova</h3><p>Platforma določi polja, omejitve znakov in predogled</p></div>'+
       '<div class="grid">'+
-        '<div class="f" style="grid-column:1/-1"><label for="c-naslov">Ime kreative (za tvojo evidenco)</label><input class="txt" id="c-naslov" type="text" data-c="naslov" value="'+esc(k.naslov)+'"></div>'+
-        '<div class="f"><label for="c-platforma">Platforma</label><select id="c-platforma" data-c="platforma">'+PLATFORME.map(function(x){return '<option value="'+x[0]+'"'+(k.platforma===x[0]?" selected":"")+'>'+x[1]+'</option>';}).join("")+'</select></div>'+
-        '<div class="f"><label for="c-format">Format</label><select id="c-format" data-c="format">'+FORMATI.map(function(x){return '<option'+(k.format===x?" selected":"")+'>'+x+'</option>';}).join("")+'</select></div>'+
-        '<div class="f"><label for="c-status">Status</label><select id="c-status" data-c="status">'+STATUSI.map(function(x){return '<option'+(k.status===x?" selected":"")+'>'+x+'</option>';}).join("")+'</select></div>'+
+        '<div class="f full"><label for="c-naslov">Ime kreative (za tvojo evidenco)</label>'+
+          '<input class="txt" id="c-naslov" type="text" data-c="naslov" value="'+esc(k.naslov)+'" placeholder="npr. FB · UGC — bolečina v hrbtu"></div>'+
+        '<div class="f"><label for="c-platforma">Platforma</label><select class="txt" id="c-platforma" data-c="platforma">'+PLATFORME.map(function(x){return '<option value="'+x[0]+'"'+(k.platforma===x[0]?" selected":"")+'>'+x[1]+'</option>';}).join("")+'</select></div>'+
+        '<div class="f"><label for="c-format">Format</label><select class="txt" id="c-format" data-c="format">'+FORMATI.map(function(x){return '<option'+(k.format===x?" selected":"")+'>'+x+'</option>';}).join("")+'</select></div>'+
+        '<div class="f"><label for="c-status">Kje je v procesu</label><select class="txt" id="c-status" data-c="status">'+
+          STATUSI.map(function(x){return '<option value="'+x[0]+'"'+(k.status===x[0]?" selected":"")+'>'+x[1]+'</option>';}).join("")+'</select>'+
+          '<span class="hint">Samo <i>aktivna</i> in <i>zmagovalka</i> se štejeta v dnevni budget izdelka.</span></div>'+
+        '<div class="f full"><label for="c-tagi">Oznake</label>'+
+          '<input class="txt" id="c-tagi" type="text" data-c="tagi" value="'+esc(k.tagi)+'" placeholder="UGC, boleča točka, zima — ločeno z vejico">'+
+          '<span class="hint">Za tvoje razvrščanje: tip kreative, kot, sezona, kdo jo je naredil.</span>'+
+          (String(k.tagi||"").trim()?'<span class="tags">'+String(k.tagi).split(",").map(function(t){t=t.trim();return t?'<span>'+esc(t)+'</span>':'';}).join("")+'</span>':'')+
+        '</div>'+
       '</div>'+
-      '<fieldset><legend class="eyebrow">Kot in publika</legend><div class="two">'+
-        '<div class="f"><label for="c-kot">Kot / obljuba oglasa</label><textarea id="c-kot" data-c="kot" rows="3">'+esc(k.kot)+'</textarea><span class="hint">Ena misel. Boleča točka, primerjava, cena, dokaz, strah, status.</span></div>'+
-        '<div class="f"><label for="c-publika">Publika in targetiranje</label><textarea id="c-publika" data-c="publika" rows="3">'+esc(k.publika)+'</textarea><span class="hint">Kdo, kje, kaj izključiš.</span></div>'+
-      '</div></fieldset>'+
-      '<fieldset><legend class="eyebrow">Tekst</legend>'+
+    '</fieldset>'+
+
+    /* 2 — kot in publika */
+    '<fieldset class="sect"><div class="lg"><h3>Kot in publika</h3><p>Kaj obljubljaš in komu</p></div>'+
+      '<div class="two">'+
+        '<div class="f"><label for="c-kot">Kot / obljuba oglasa</label><textarea id="c-kot" data-c="kot" rows="3" placeholder="Ena misel, ne pet.">'+esc(k.kot)+'</textarea>'+
+          '<span class="hint">Izberi eno: boleča točka, primerjava s starim načinom, cena, dokaz drugih kupcev, strah pred zamujeno priložnostjo, status.</span></div>'+
+        '<div class="f"><label for="c-publika">Publika in targetiranje</label><textarea id="c-publika" data-c="publika" rows="3">'+esc(k.publika)+'</textarea>'+
+          '<span class="hint">'+(jeGoogle?"Katera iskanja loviš, kaj izključiš, kateri tipi ujemanja.":"Starost, lokacija, interesi ali široko targetiranje. Zapiši tudi, kaj izključiš.")+'</span></div>'+
+      '</div>'+
+    '</fieldset>'+
+
+    /* 3 — material */
+    '<fieldset class="sect"><div class="lg"><h3>Material</h3>'+
+      '<p>'+(jeGoogle?"Search oglasi ne uporabljajo slik — sem naloži material za morebitni Display ali Performance Max."
+                     :"Slike in videi tega oglasa. Prva slika se prikaže v predogledu spodaj in na kartici kreative.")+'</p></div>'+
+      (Datoteke.naVoljo
+        ? '<div class="drop no-print" id="drop">'+
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>'+
+            '<b>Naloži slike in videe</b>'+
+            '<span>Klikni, povleci sem ali prilepi s Ctrl+V. Shrani se v to napravo, zato gre lahko tudi za velike video datoteke.</span>'+
+          '</div>'+
+          '<input type="file" id="dfile" multiple accept="image/*,video/*,.pdf" hidden>'+
+          '<div class="files" id="datoteke"></div>'
+        : '<p class="note">Ta brskalnik ne dovoli shranjevanja datotek (IndexedDB ni na voljo). Besedila in izračuni delajo normalno.</p>')+
+    '</fieldset>'+
+
+    /* 4 — tekst in predogled */
+    '<fieldset class="sect"><div class="lg"><h3>Tekst in predogled</h3>'+
+      '<p>Desno je videti tako, kot bo oglas izgledal '+(jeGoogle?"v Google iskanju":"v aplikaciji")+'. Osvežuje se med tipkanjem.</p></div>'+
+      '<div class="two">'+
+        '<div style="display:flex;flex-direction:column;gap:20px">'+
         (jeGoogle
-          ? '<div class="grid">'+slots(k.naslovi,"naslovi","Naslovi (RSA)",30)+slots(k.opisi,"opisi","Opisi (RSA)",90)+'</div>'+
-            '<div class="grid" style="margin-top:14px">'+
-            '<div class="f"><label for="c-kljucneBesede">Ključne besede</label><textarea id="c-kljucneBesede" data-c="kljucneBesede" rows="3">'+esc(k.kljucneBesede)+'</textarea><span class="hint">Ločeno z vejico. Spodaj napiši tudi negativne.</span></div>'+
-            '<div class="f"><label for="c-url">Ciljni URL</label><input class="txt" id="c-url" type="text" data-c="url" value="'+esc(k.url)+'"></div>'+
-            '</div>'
-          : '<div class="two">'+
-            '<div>'+ta("hook","Hook — prva vrstica / prve 3 sekunde",80,3,"To odloči vse. Nič uvodov.")+
-              '<div style="margin-top:12px">'+ta("primarni","Primarno besedilo",lim.primarni,9,"Nad "+lim.primarni+" znakov se skrajša v „Več …“ — najpomembnejše daj naprej.")+'</div></div>'+
-            '<div>'+line("naslovi.0","Naslov",lim.naslov)+
-              '<div style="margin-top:12px">'+line("opisi.0","Opis (pod naslovom)",lim.opis)+'</div>'+
-              '<div class="f" style="margin-top:12px"><label for="c-cta">Gumb (CTA)</label><select id="c-cta" data-c="cta">'+CTA.map(function(x){return '<option'+(k.cta===x?" selected":"")+'>'+x+'</option>';}).join("")+'</select></div>'+
-              '<div class="f" style="margin-top:12px"><label for="c-url">Ciljni URL</label><input class="txt" id="c-url" type="text" data-c="url" value="'+esc(k.url)+'"></div>'+
-            '</div></div>')+
-        '<div class="f no-print" style="margin-top:16px"><span class="eyebrow">Banka hookov — klikni, da vstaviš</span><div class="bank">'+
-          HOOKI.map(function(h,idx){return '<button type="button" data-hook="'+idx+'">'+esc(h)+'</button>';}).join("")+
+          ? varList(k,"naslovi","Naslovi",30,"Google jih sam kombinira po tri, zato mora vsak zveneti smiselno tudi sam. Priporočeno 5–10 različic.")+
+            varList(k,"opisi","Opisi",90,"Prikažeta se do dva. Napiši 3–4 različice.",3)+
+            '<div class="f"><label for="c-kljucneBesede">Ključne besede</label>'+
+              '<textarea id="c-kljucneBesede" data-c="kljucneBesede" rows="3" placeholder="masazna pistola, masažna pištola cena, …">'+esc(k.kljucneBesede)+'</textarea>'+
+              '<span class="hint">Ločeno z vejico. Negativne ključne besede zapiši v Opombe spodaj.</span></div>'+
+            '<div class="f"><label for="c-url">Ciljni URL</label>'+
+              '<input class="txt" id="c-url" type="text" data-c="url" value="'+esc(k.url)+'" placeholder="https://'+esc(p.domena||"tvoja-domena.si")+'/izdelek"></div>'
+          : varList(k,"hooki","Hooki — prva vrstica"+(jeVideoPlat?" / prve 3 sekunde":""),80,
+              "Napiši 3–5 različic in testiraj. Hook je edina stvar, ki se je vredno lotiti prvič.",2)+
+            varList(k,"primarna","Primarno besedilo",lim.primarni,
+              "Nad "+lim.primarni+" znakov se skrajša v „Več …“, zato najpomembnejše daj naprej.",7)+
+            (jeVideoPlat?'':varList(k,"naslovi","Naslovi (pod sliko, ob gumbu)",lim.naslov,"2–3 različice."))+
+            (k.platforma==="facebook"||k.platforma==="drugo"?varList(k,"opisi","Opisi (drobno pod naslovom)",lim.opis,""):'')+
+            '<div class="grid">'+
+              '<div class="f"><label for="c-cta">Gumb (CTA)</label><select class="txt" id="c-cta" data-c="cta">'+CTA.map(function(x){return '<option'+(k.cta===x?" selected":"")+'>'+x+'</option>';}).join("")+'</select></div>'+
+              '<div class="f"><label for="c-url">Ciljni URL</label><input class="txt" id="c-url" type="text" data-c="url" value="'+esc(k.url)+'" placeholder="https://'+esc(p.domena||"tvoja-domena.si")+'"></div>'+
+            '</div>')+
+          '<div class="f no-print"><span class="lbl">Banka hookov — klikni, da dodaš novo različico</span><div class="bank">'+
+            HOOKI.map(function(h,idx){return '<button type="button" data-hook="'+idx+'">'+esc(h)+'</button>';}).join("")+
+          '</div></div>'+
+        '</div>'+
+        '<div><div class="prev-wrap">'+
+          '<div class="prev-lab"><span class="eyebrow">Predogled</span><span class="sp"></span><span class="pill plat np">'+esc(platIme)+'</span></div>'+
+          '<div id="predogled" style="width:100%;display:flex;justify-content:center"></div>'+
+          '<p class="note" style="align-self:stretch">Približek, ne posnetek. Platforme besedilo krajšajo različno na različnih napravah.</p>'+
         '</div></div>'+
-      '</fieldset>'+
-      '<fieldset><legend class="eyebrow">Material — slike in videi</legend>'+
-        (Datoteke.naVoljo
-          ? '<div class="drop no-print" id="drop">Klikni ali povleci sem slike in videe. Lahko tudi prilepiš iz odložišča (Ctrl+V).<br>'+
-            '<span style="font-size:11.5px">Shrani se v to napravo, zato gre lahko tudi za velike datoteke.</span></div>'+
-            '<input type="file" id="dfile" multiple accept="image/*,video/*,.pdf" hidden>'+
-            '<div class="files" id="datoteke"></div>'
-          : '<p class="note">Ta brskalnik ne dovoli shranjevanja datotek (IndexedDB ni na voljo). Besedila in izračuni delajo normalno.</p>')+
-      '</fieldset>'+
-      '<fieldset><legend class="eyebrow">Design brief</legend>'+
-        '<div class="f"><label for="c-design">Kaj naj se vidi in sliši</label><textarea id="c-design" data-c="design" rows="6">'+esc(k.design)+'</textarea></div>'+
-        '<div style="padding-top:12px"><ul class="check">'+
-          '<li><b>Format in razmerje:</b> 9:16 za zgodbe/Reels, 4:5 za feed, 1:1 za Google display.</li>'+
-          '<li><b>Prve 3 sekunde:</b> kaj se premakne, kaj se sliši, kdaj se prvič vidi izdelek.</li>'+
-          '<li><b>Podnapisi:</b> vedno. 80 % gleda brez zvoka.</li>'+
-          '<li><b>Kaj je v kadru:</b> obraz, roke, izdelek v uporabi, prej/potem, cenovka.</li>'+
-          '<li><b>Dokaz:</b> mnenje, število kupcev, garancija, logotip medija.</li>'+
-          '<li><b>Zaključek:</b> izdelek + cena + gumb, 2–3 sekunde.</li>'+
-        '</ul></div>'+
-      '</fieldset>'+
-      '<fieldset><legend class="eyebrow">Načrt — predvidevanja</legend><div class="grid">'+
-        nf("budget","Dnevni budget","€","")+
-        nf("cpm","CPM — cena 1000 prikazov","€",jeGoogle?"Pri Search pusti prazno in računaj prek CPC":"FB SLO: 5–15 €")+
-        nf("ctr","CTR — delež klikov","%","FB: 1–3 %, Google Search: 4–8 %")+
-        nf("cvr","CVR — delež nakupov iz klikov","%","Spletna trgovina: 1–4 %")+
       '</div>'+
-      '<div class="ledger" style="margin-top:16px;border-top:1px solid var(--rule)">'+
+    '</fieldset>'+
+
+    /* 5 — design brief in predaja v delo */
+    '<fieldset class="sect"><div class="lg"><h3>Brief za izdelavo</h3>'+
+      '<p>Navodilo zase ali za tistega, ki bo snemal in sestavljal</p><span class="sp"></span>'+
+      '<button class="btn btn-s no-print" id="copybrief">Kopiraj brief</button></div>'+
+      '<div class="f"><label for="c-design">Kaj naj se vidi in sliši</label>'+
+        '<textarea id="c-design" data-c="design" rows="6" placeholder="Format, prvi kader, kaj je v roki, kaj piše na zaslonu, kaj se sliši, kako se konča …">'+esc(k.design)+'</textarea></div>'+
+      '<div class="grid" style="margin-top:16px">'+
+        '<div class="f"><label for="c-izvajalec">Kdo dela</label>'+
+          '<input class="txt" id="c-izvajalec" type="text" data-c="izvajalec" value="'+esc(k.izvajalec)+'" placeholder="jaz / Ana / agencija"></div>'+
+        '<div class="f"><label for="c-rok">Rok</label>'+
+          '<input class="txt" id="c-rok" type="text" data-c="rok" value="'+esc(k.rok)+'" placeholder="do petka / 12. 8."></div>'+
+      '</div>'+
+      (c.seznam.length?'<div style="margin-top:18px"><span class="lbl" style="font-size:12.5px;color:var(--ink2);font-weight:500">Kontrolni seznam za '+esc(platIme)+'</span>'+
+        '<ul class="check" style="margin-top:9px">'+c.seznam.map(function(x){return '<li>'+x+'</li>';}).join("")+'</ul></div>':'')+
+    '</fieldset>'+
+
+    /* 6 — načrt */
+    '<fieldset class="sect"><div class="lg"><h3>Načrt</h3><p>Koliko daš na dan in kaj pričakuješ — <b>tukaj se vnese budget tega oglasa</b></p></div>'+
+      '<div class="grid">'+
+        nf("budget","Dnevni budget tega oglasa","€","Ista številka, kot jo nastaviš v "+(jeGoogle?"Google Ads":"Meta Ads Manager")+".")+
+        nf("cpm",jeGoogle?"CPM (če ga imaš)":"CPM — cena 1000 prikazov","€",jeGoogle?"Pri Search raje računaj prek CPC: CPM = CPC × CTR × 10.":"V Sloveniji običajno 5–15 €.")+
+        nf("ctr","CTR — delež klikov","%",jeGoogle?"Search: 4–8 %":"Feed: 1–3 %")+
+        nf("cvr","CVR — delež nakupov iz klikov","%","Spletna trgovina običajno 1–4 %.")+
+      '</div>'+
+      '<div class="ledger" style="padding:16px 0 0">'+
         '<div class="cell"><span class="k">Prikazi / dan</span><span class="v" data-o="impr">—</span></div>'+
         '<div class="cell"><span class="k">Kliki / dan</span><span class="v" data-o="kliki">—</span></div>'+
         '<div class="cell"><span class="k">Naročila / dan</span><span class="v" data-o="narocil">—</span></div>'+
@@ -655,12 +1074,17 @@ function renderEditor(){
         '<div class="cell"><span class="k">Profit / dan</span><span class="v" data-o="profit">—</span></div>'+
         '<div class="cell"><span class="k">Profit / mesec</span><span class="v" data-o="profitM">—</span></div>'+
       '</div>'+
-      '<div id="cre-verdict" style="margin-top:14px"></div>'+
-      '</fieldset>'+
-      '<fieldset><legend class="eyebrow">Rezultati — kar je dejansko izmerjeno</legend><div class="grid">'+
-        nf("rSpend","Poraba","€","")+nf("rImpr","Prikazi","","")+nf("rClicks","Kliki","","")+nf("rOrders","Naročila","","")+
+      '<div id="cre-verdict" style="margin-top:16px"></div>'+
+      (c.merila?'<p class="note" style="margin-top:12px"><b>Za '+esc(platIme)+':</b> '+c.merila+'</p>':'')+
+    '</fieldset>'+
+
+    /* 7 — rezultati */
+    '<fieldset class="sect"><div class="lg"><h3>Rezultati</h3><p>Prepiši iz oglasnega računa, ko oglas teče</p></div>'+
+      '<div class="grid">'+
+        nf("rSpend","Poraba","€","Skupaj od začetka")+nf("rImpr","Prikazi","","")+
+        nf("rClicks","Kliki","","")+nf("rOrders","Naročila","","Konverzije, ne dodajanja v košarico")+
       '</div>'+
-      '<div class="ledger" style="margin-top:16px;border-top:1px solid var(--rule)">'+
+      '<div class="ledger" style="padding:16px 0 0">'+
         '<div class="cell"><span class="k">Dejanski CPM</span><span class="v" data-o="rcpm">—</span></div>'+
         '<div class="cell"><span class="k">Dejanski CTR</span><span class="v" data-o="rctr">—</span></div>'+
         '<div class="cell"><span class="k">Dejanski CPC</span><span class="v" data-o="rcpc">—</span></div>'+
@@ -670,15 +1094,136 @@ function renderEditor(){
         '<div class="cell"><span class="k">Prihodek</span><span class="v" data-o="rprih">—</span></div>'+
         '<div class="cell"><span class="k">Profit</span><span class="v" data-o="rprofit">—</span></div>'+
       '</div>'+
-      '<div id="cre-verdict2" style="margin-top:14px"></div>'+
-      '</fieldset>'+
-      '<fieldset><legend class="eyebrow">Opombe</legend>'+
-        '<div class="f"><textarea data-c="opombe" rows="3" aria-label="Opombe">'+esc(k.opombe)+'</textarea></div>'+
-      '</fieldset>'+
+      '<div id="cre-verdict2" style="margin-top:16px"></div>'+
+    '</fieldset>'+
+
+    /* 8 — opombe */
+    '<fieldset class="sect"><div class="lg"><h3>Opombe</h3><p>Kar si ugotovil med testiranjem</p></div>'+
+      '<div class="f"><textarea data-c="opombe" rows="3" aria-label="Opombe" placeholder="'+(jeGoogle?"Negativne ključne besede, kaj je delalo, kaj ne …":"Katera različica je zmagala, kaj bi naslednjič spremenil …")+'">'+esc(k.opombe)+'</textarea></div>'+
+    '</fieldset>'+
+  '</div>'+
+  '<div class="row no-print"><button class="btn" id="back">← Vse kreative</button></div>';
+
+  paintKreativa();
+  predVizual=null;
+  risiPredogled();
+  if(Datoteke.naVoljo){
+    narisiDatoteke();
+    Datoteke.prviVizual(k.id).then(function(d){
+      if(!d)return;
+      try{
+        var u=URL.createObjectURL(d.blob);odprtiUrlji.push(u);
+        predVizual={url:u,tip:d.tip};
+        risiPredogled();
+      }catch(err){}
+    },function(){});
+  }
+}
+
+/* ============ predogled oglasa ============ */
+var predVizual=null;
+function medij(razred){
+  if(!predVizual)return null;
+  return /^video\//.test(predVizual.tip)
+    ? '<video src="'+predVizual.url+'" controls preload="metadata"'+(razred?' class="'+razred+'"':'')+'></video>'
+    : '<img src="'+predVizual.url+'" alt=""'+(razred?' class="'+razred+'"':'')+'>';
+}
+function skrajsaj(s,limit){
+  s=String(s||"");
+  if(s.length<=limit)return esc(s);
+  return esc(s.slice(0,limit))+'… <span class="more">Več</span>';
+}
+function risiPredogled(){
+  var cilj=el("predogled");if(!cilj)return;
+  var p=P(),k=K();if(!p||!k)return;
+  var c=cfg(k);
+  cilj.innerHTML =
+    c.predogled==="search"   ? predSearch(p,k) :
+    c.predogled==="feed"     ? predFeed(p,k,!!c.kvadrat) :
+    c.predogled==="vertikala"? predVert(p,k) : predSplosno(p,k);
+}
+function predFeed(p,k,kvadrat){
+  var lim=LIM[k.platforma]||LIM.drugo;
+  var ime=znamkaIme(p);
+  var telo=[prvi(k.hooki,predIzbor.hooki).trim(),prvi(k.primarna,predIzbor.primarna).trim()].filter(Boolean).join("\n\n");
+  var dom=domenaIz(p,k);
+  var m=medij();
+  var naslov=prvi(k.naslovi,predIzbor.naslovi), opis=(k.platforma==="facebook"||k.platforma==="drugo")?prvi(k.opisi,predIzbor.opisi):"";
+  return '<div class="fb">'+
+    '<div class="fb-h">'+
+      '<span class="fb-av">'+esc(zacetnice(ime))+'</span>'+
+      '<span class="fb-hn"><b>'+esc(ime)+'</b><span>Sponzorirano · <svg viewBox="0 0 24 24" style="width:11px;height:11px"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></span></span>'+
+      '<span class="fb-x">···</span>'+
+    '</div>'+
+    (telo?'<div class="fb-t">'+skrajsaj(telo,lim.primarni)+'</div>':'')+
+    '<div class="fb-m'+(kvadrat?" kvadrat":"")+'">'+
+      (m||'<div class="ph">Ni naložene slike ali videa<br>Naloži material zgoraj in pokaže se tu</div>')+
+    '</div>'+
+    (naslov||opis||dom
+      ? '<div class="fb-f">'+
+          '<span class="fb-fn">'+
+            (dom?'<span class="u">'+esc(dom)+'</span>':'')+
+            '<b>'+esc(naslov||"Naslov oglasa")+'</b>'+
+            (opis?'<span class="d">'+esc(opis)+'</span>':'')+
+          '</span>'+
+          '<span class="fb-cta">'+esc(k.cta||"Izvedi več")+'</span>'+
+        '</div>'
+      : '')+
+    '<div class="fb-a"><span>Všeč mi je</span><span>Komentiraj</span><span>Deli</span></div>'+
+  '</div>';
+}
+function predSearch(p,k){
+  var nas=k.naslovi.filter(function(x){return String(x||"").trim();});
+  var opi=k.opisi.filter(function(x){return String(x||"").trim();});
+  var dom=domenaIz(p,k)||"tvoja-domena.si";
+  var pot=potIz(k);
+  if(!nas.length&&!opi.length){
+    return '<div class="gg"><p class="gg-empty">Vpiši vsaj en naslov, da se predogled izriše. Google iz tvojih naslovov sam sestavlja kombinacije — zato mora vsak zveneti smiselno tudi sam.</p></div>';
+  }
+  function vrstica(nabor,opisi){
+    return '<div class="gg-r">'+
+      '<div class="gg-top"><span class="gg-ad">Sponzorirano</span></div>'+
+      '<div class="gg-u">'+esc(dom)+(pot.length?' <i>› '+pot.map(esc).join(" › ")+'</i>':'')+'</div>'+
+      '<span class="gg-t">'+esc(nabor.join(" | "))+'</span>'+
+      '<p class="gg-d">'+esc(opisi.join(" "))+'</p>'+
+    '</div>';
+  }
+  var a=vrstica(nas.slice(0,3),opi.slice(0,2));
+  var b="";
+  if(nas.length>3||opi.length>2){
+    var nb=nas.slice(3).concat(nas.slice(0,1)).slice(0,3);
+    var ob=opi.slice(2).concat(opi.slice(0,1)).slice(0,2);
+    b=vrstica(nb.length?nb:nas.slice(0,3),ob.length?ob:opi.slice(0,2));
+  }
+  return '<div class="gg">'+a+b+'</div>'+
+    (b?'<p class="note" style="margin-top:10px;text-align:center">Dve od možnih kombinacij — Google jih rotira sam.</p>':'');
+}
+function predVert(p,k){
+  var ime=znamkaIme(p);
+  var telo=[prvi(k.hooki,predIzbor.hooki).trim(),prvi(k.primarna,predIzbor.primarna).trim()].filter(Boolean).join(" ");
+  var m=medij();
+  return '<div class="tt">'+
+    (m||'<div class="ph">Ni naloženega videa<br><br>Naloži 9:16 material zgoraj</div>')+
+    '<span class="tt-ov">Sponzorirano</span>'+
+    '<div class="tt-grad"></div>'+
+    '<div class="tt-b">'+
+      '<b>@'+esc(String(ime).toLowerCase().replace(/\s+/g,""))+'</b>'+
+      (telo?'<span class="txt">'+esc(telo)+'</span>':'')+
+      '<span class="tt-cta">'+esc(k.cta||"Kupi zdaj")+'</span>'+
     '</div>'+
   '</div>';
-  paintKreativa();
-  if(Datoteke.naVoljo)narisiDatoteke();
+}
+function predSplosno(p,k){
+  var m=medij();
+  var telo=[prvi(k.hooki,predIzbor.hooki).trim(),prvi(k.primarna,predIzbor.primarna).trim()].filter(Boolean).join("\n\n");
+  var nas=prvi(k.naslovi,predIzbor.naslovi);
+  return '<div class="gen">'+
+    (m||'')+
+    (nas?'<b style="font-family:var(--serif);font-size:17px">'+esc(nas)+'</b>':'')+
+    (telo?'<p style="font-size:13.5px;color:var(--ink2);white-space:pre-wrap">'+esc(telo)+'</p>':'')+
+    '<div class="row"><span class="pill np" style="background:var(--brand);color:var(--brand-on)">'+esc(k.cta||"Izvedi več")+'</span>'+
+      (domenaIz(p,k)?'<span class="note">'+esc(domenaIz(p,k))+'</span>':'')+'</div>'+
+  '</div>';
 }
 
 function narisiDatoteke(){
@@ -688,15 +1233,15 @@ function narisiDatoteke(){
     sez=(sez||[]).sort(function(a,b){return String(a.dodano).localeCompare(String(b.dodano));});
     if(k.stDatotek!==sez.length){k.stDatotek=sez.length;shrani();}
     if(!sez.length){cilj.innerHTML='';return;}
-    pocistiUrlje();
     cilj.innerHTML=sez.map(function(d){
       var u="";
       try{u=URL.createObjectURL(d.blob);odprtiUrlji.push(u);}catch(err){}
-      var prev;
-      if(/^image\//.test(d.tip)&&u)prev='<img src="'+u+'" alt="'+esc(d.ime)+'">';
-      else if(/^video\//.test(d.tip)&&u)prev='<video src="'+u+'" controls preload="metadata"></video>';
-      else prev='<span class="ikona">'+esc((d.ime.split(".").pop()||"datoteka").slice(0,8))+'</span>';
-      return '<div class="file"><div class="prev">'+prev+'</div>'+
+      var jeSlika=/^image\//.test(d.tip)&&u, jeVideo=/^video\//.test(d.tip)&&u;
+      var prev = jeSlika ? '<img src="'+u+'" alt="'+esc(d.ime)+'">'
+        : jeVideo ? '<video src="'+u+'" muted preload="metadata"></video><span class="tag">video</span>'
+        : '<span class="ikona">'+esc((d.ime.split(".").pop()||"datoteka").slice(0,8))+'</span>';
+      return '<div class="file">'+
+        '<div class="prev"'+((jeSlika||jeVideo)?' data-zoom="'+d.id+'" title="Klikni za povečavo"':'')+'>'+prev+'</div>'+
         '<div class="meta"><span class="fn">'+esc(d.ime)+'</span><span class="fs">'+mb(d.velikost)+'</span></div>'+
         '<div class="fa no-print"><button data-dl="'+d.id+'">prenesi</button><button class="d" data-ddel="'+d.id+'">izbriši</button></div>'+
       '</div>';
@@ -718,11 +1263,23 @@ function dodajDatoteke(files){
   });
   prva.then(function(){
     toast(uspelo===1?"Datoteka dodana.":uspelo+" datotek dodanih.");
-    narisiDatoteke();
+    narisiDatoteke();osveziPredVizual();
   },function(err){
-    narisiDatoteke();
+    narisiDatoteke();osveziPredVizual();
     toast("Shranjevanje ni uspelo"+(uspelo?" po "+uspelo+" datotekah":"")+": "+(err&&err.message||"shramba je zavrnila zapis"));
   });
+}
+/* po dodajanju ali brisanju osveži sliko v predogledu oglasa */
+function osveziPredVizual(){
+  var k=K();if(!k||!Datoteke.naVoljo)return;
+  Datoteke.prviVizual(k.id).then(function(d){
+    if(!d){predVizual=null;risiPredogled();return;}
+    try{
+      var u=URL.createObjectURL(d.blob);odprtiUrlji.push(u);
+      predVizual={url:u,tip:d.tip};
+    }catch(err){predVizual=null;}
+    risiPredogled();
+  },function(){});
 }
 function prenesiDatoteko(id){
   Datoteke.ena(id).then(function(d){
@@ -731,6 +1288,25 @@ function prenesiDatoteko(id){
     a.href=u;a.download=d.ime;document.body.appendChild(a);a.click();
     setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(u);},1000);
   });
+}
+/* povečava slike ali videa */
+function pokaziPovecano(id){
+  Datoteke.ena(id).then(function(d){
+    if(!d)return;
+    var u;
+    try{u=URL.createObjectURL(d.blob);}catch(err){return;}
+    el("lb-in").innerHTML = /^video\//.test(d.tip)
+      ? '<video src="'+u+'" controls autoplay></video>'
+      : '<img src="'+u+'" alt="'+esc(d.ime)+'">';
+    el("lb").hidden=false;
+    el("lb")._u=u;
+  });
+}
+function zapriPovecano(){
+  var lb=el("lb");if(!lb||lb.hidden)return;
+  lb.hidden=true;
+  el("lb-in").innerHTML="";
+  if(lb._u){try{URL.revokeObjectURL(lb._u);}catch(err){}lb._u=null;}
 }
 
 function paintKreativa(){
@@ -766,39 +1342,98 @@ function paintKreativa(){
 }
 
 /* ============ POGLED: kalkulator ============ */
+/* Kalkulator stoji sam: dela iz treh vnesenih številk, izdelek je le vir privzetih vrednosti. */
+function kalkOsnova(){
+  var p=P(), ek=p?ekon(p):null;
+  var cena=n(S.kalk.cena)||(ek?ek.bruto:0);
+  var marza=n(S.kalk.marza)||(ek?ek.marzaEf:0);
+  return {bruto:cena,marzaEf:marza,cena:cena,marza:marza,
+    beCPA:marza,beROAS:marza>0?cena/marza:Infinity};
+}
 function renderKalk(){
-  var p=P();
-  if(!p){el("v-kalkulator").innerHTML=praznoHtml();return;}
-  var kk=S.kalk;
-  function nf(path,label,unit,hint){
+  var p=P(),kk=S.kalk;
+  function nf(path,label,unit,hint,velik){
     return '<div class="f"><label for="k-'+path+'">'+esc(label)+'</label>'+
-      '<div class="wrap"><input id="k-'+path+'" type="text" inputmode="decimal" data-k="'+path+'" value="'+esc(kk[path]==null?"":kk[path])+'">'+
+      '<div class="wrap"><input id="k-'+path+'" type="text" inputmode="decimal" data-k="'+path+'" value="'+esc(kk[path]==null?"":kk[path])+'"'+
+      (velik?' style="font-size:18px;padding:11px"':'')+'>'+
       (unit?'<span class="unit">'+unit+'</span>':'')+'</div>'+(hint?'<span class="hint">'+esc(hint)+'</span>':'')+'</div>';
   }
   el("v-kalkulator").innerHTML=
+  glava("Koliko rabim, da sem v plusu",
+    "Vpiši <b>prodajno ceno</b>, <b>maržo na en kos</b> in <b>koliko daš na dan</b> za oglase. Spodaj dobiš, kakšen CPA, ROAS, CTR in CVR moraš doseči, da ne izgubljaš — in koliko kosov moraš prodati.",
+    p?'<button class="btn btn-soft" id="kalkPrevzemi">Prevzemi iz „'+esc(p.ime)+'“</button>':"",
+    [{t:"Kalkulator"}])+
+
   '<div class="block">'+
-    '<header><h2>Kalkulator oglasa</h2><p>Hitri what-if za '+esc(p.ime)+'. Marža se vzame iz Ekonomike izdelka.</p></header>'+
-    '<div class="pad" id="kalk-form"><div class="grid">'+
-      nf("budget","Dnevni budget","€","")+nf("cpm","CPM","€","")+nf("ctr","CTR","%","")+nf("cvr","CVR","%","")+
+    '<header><div class="head-t"><span class="eyebrow">Vnos</span><h2>Tri številke</h2></div>'+
+      '<p>Nič drugega ni treba.</p></header>'+
+    '<div class="pad" id="kalk-form">'+
+      '<div class="grid">'+
+        nf("cena","Prodajna cena","€","Kar stranka plača skupaj, s poštnino.",true)+
+        nf("marza","Marža na en kos","€","Cena minus nabavna, dostava, embalaža in provizija — pred oglasi.",true)+
+        nf("budget","Dnevni budget za oglase","€","Kolikor si pripravljen zapraviti na dan.",true)+
+      '</div>'+
+      '<p class="note" style="margin-top:14px" id="kalk-osnova"></p>'+
+    '</div>'+
+  '</div>'+
+
+  '<div class="block">'+
+    '<header><div class="head-t"><span class="eyebrow">Zahteve</span><h2>Kaj moraš doseči</h2></div>'+
+      '<p>Meje, pod katerimi si v izgubi.</p></header>'+
+    '<div class="ledger">'+
+      '<div class="cell hero"><span class="k">Največ za eno naročilo (CPA)</span><span class="v accv" data-o="zCPA">—</span><span class="n">Če te naročilo stane več, izgubljaš.</span></div>'+
+      '<div class="cell big"><span class="k">Najnižji ROAS</span><span class="v accv" data-o="zROAS">—</span><span class="n">Toliko prometa na vsak vložen evro.</span></div>'+
+      '<div class="cell big"><span class="k">Naročil na dan za ničlo</span><span class="v" data-o="zNaDan">—</span><span class="n" data-o="zNaMesec"></span></div>'+
+      '<div class="cell big"><span class="k">Promet na dan za ničlo</span><span class="v" data-o="zPromet">—</span><span class="n">pri tvojem budgetu</span></div>'+
+    '</div>'+
+    '<div class="pad pad-t" id="kalk-stavek"></div>'+
+  '</div>'+
+
+  '<div class="block">'+
+    '<header><div class="head-t"><span class="eyebrow">Matrika</span><h2>Kakšen CTR in CVR to zahteva</h2></div>'+
+      '<p>Pri danem CPM in budgetu: koliko klikov dobiš in kakšen delež jih mora kupiti.</p></header>'+
+    '<div class="pad">'+
+      '<div class="grid" style="max-width:520px">'+
+        nf("cpm","CPM — cena 1000 prikazov","€","Facebook v SLO 5–15 €. Google Search pusti prazno in vpiši CPC.")+
+        nf("cpc","ali CPC — cena klika","€","Če vpišeš CPC, se CPM prezre.")+
+      '</div>'+
+      '<div class="scroll" style="margin-top:18px"><table class="mtx"><thead><tr>'+
+        '<th>Če je CTR</th><th>Klikov / dan</th><th>CPC</th><th>Potreben CVR</th><th>Realnost</th>'+
+      '</tr></thead><tbody id="mtx"></tbody></table></div>'+
+      '<div class="legend">'+
+        '<span><em class="m-ok"></em>lahko dosegljivo (CVR do 2 %)</span>'+
+        '<span><em class="m-mid"></em>zahtevno (2–4 %)</span>'+
+        '<span><em class="m-bad"></em>nerealno (nad 4 %)</span>'+
+      '</div>'+
+      '<p class="note" style="margin-top:12px" id="mtx-note"></p>'+
+    '</div>'+
+  '</div>'+
+
+  '<div class="block">'+
+    '<header><div class="head-t"><span class="eyebrow">Napoved</span><h2>Pri tvojih predvidevanjih</h2></div>'+
+      '<p>Vpiši, kar pričakuješ, in poglej, ali se izide.</p></header>'+
+    '<div class="pad"><div class="grid">'+
+      nf("ctr","CTR — delež klikov","%","")+
+      nf("cvr","CVR — delež nakupov iz klikov","%","")+
     '</div></div>'+
-    '<div class="ledger" style="border-top:1px solid var(--rule)">'+
+    '<div class="ledger">'+
       '<div class="cell"><span class="k">Prikazi / dan</span><span class="v" data-o="kimpr">—</span></div>'+
       '<div class="cell"><span class="k">Kliki / dan</span><span class="v" data-o="kkliki">—</span></div>'+
       '<div class="cell"><span class="k">Naročila / dan</span><span class="v" data-o="knarocil">—</span></div>'+
       '<div class="cell"><span class="k">CPC</span><span class="v" data-o="kcpc">—</span></div>'+
-    '</div>'+
-    '<div class="ledger">'+
       '<div class="cell big"><span class="k">CPA</span><span class="v" data-o="kcpa">—</span><span class="n" data-o="kcpaN"></span></div>'+
       '<div class="cell big"><span class="k">ROAS</span><span class="v" data-o="kroas">—</span><span class="n" data-o="kroasN"></span></div>'+
       '<div class="cell big"><span class="k">Profit / dan</span><span class="v" data-o="kprofit">—</span></div>'+
       '<div class="cell big"><span class="k">Profit / mesec</span><span class="v" data-o="kprofitM">—</span></div>'+
     '</div>'+
-    '<div class="pad" id="kalk-verdict"></div>'+
+    '<div class="pad pad-t" id="kalk-verdict"></div>'+
   '</div>'+
+
   '<div class="block">'+
-    '<header><h2>Obrnjen izračun</h2><p>Koliko budgeta rabim za toliko prodaj na dan.</p></header>'+
-    '<div class="pad"><div class="grid">'+nf("cilj","Želim prodaj / dan","kos","")+'</div>'+
-      '<div class="ledger" style="margin-top:16px;border:1px solid var(--rule)">'+
+    '<header><div class="head-t"><span class="eyebrow">Obrnjeno</span><h2>Hočem toliko prodaj na dan</h2></div>'+
+      '<p>Koliko budgeta to zahteva.</p></header>'+
+    '<div class="pad"><div class="grid" style="max-width:300px">'+nf("cilj","Želim prodaj / dan","kos","")+'</div>'+
+      '<div class="ledger" style="padding:16px 0 0">'+
         '<div class="cell"><span class="k">Potreben budget / dan</span><span class="v" data-o="obudget">—</span></div>'+
         '<div class="cell"><span class="k">Potrebni kliki / dan</span><span class="v" data-o="okliki">—</span></div>'+
         '<div class="cell"><span class="k">Potrebni prikazi / dan</span><span class="v" data-o="oimpr">—</span></div>'+
@@ -807,62 +1442,226 @@ function renderKalk(){
       '<p class="note" style="margin-top:14px" id="obr-note"></p>'+
     '</div>'+
   '</div>'+
+
   '<div class="block">'+
-    '<header><h2>Občutljivost — kaj se zgodi, če se CPA premakne</h2><p>Isti budget, drugačna cena naročila.</p></header>'+
+    '<header><div class="head-t"><span class="eyebrow">Občutljivost</span><h2>Kaj se zgodi, če se CPA premakne</h2></div>'+
+      '<p>Isti budget, drugačna cena naročila.</p></header>'+
     '<div class="scroll"><table><thead><tr><th>CPA</th><th>Naročila / dan</th><th>Profit / dan</th><th>Profit / mesec</th><th>ROAS</th></tr></thead><tbody id="obc"></tbody></table></div>'+
   '</div>';
   paintKalk();
 }
 function paintKalk(){
-  var p=P();if(!p||!el("kalk-verdict"))return;
-  var ek=ekon(p),kk=S.kalk;
-  var l=lijak(kk.budget,kk.cpm,kk.ctr,kk.cvr,ek);
-  function put(key,val,cls){var t=q('[data-o="'+key+'"]');if(!t)return;t.textContent=val;t.className=(t.classList.contains("v")?"v ":"n ")+(cls||"");}
-  put("kimpr",i0(l.impr));put("kkliki",i0(l.kliki));put("knarocil",isFinite(l.narocil)?nf1.format(l.narocil):"—");put("kcpc",e(l.cpc));
-  put("kcpa",e(l.cpa),isFinite(l.cpa)?(l.cpa<=ek.beCPA?"pos":"neg"):"");
-  put("kroas",x2(l.roas),isFinite(l.roas)?(l.roas>=ek.beROAS?"pos":"neg"):"");
-  put("kprofit",e(l.profit),znak(l.profit));put("kprofitM",e(l.profit*30),znak(l.profit*30));
-  var a=q('[data-o="kcpaN"]');if(a)a.textContent="break-even "+e(ek.beCPA);
-  var b=q('[data-o="kroasN"]');if(b)b.textContent="break-even "+x2(ek.beROAS);
-  el("kalk-verdict").innerHTML=isFinite(l.profit)
-    ? '<p class="note"><b>Marža na naročilo:</b> '+e(ek.marzaEf)+'. <b>Največ za klik:</b> '+e(l.maxCPC)+' pri CVR '+p1(n(kk.cvr))+'. '+
-      (l.profit>0?'Pri teh predvidevanjih zaslužiš '+e(l.profit)+' na dan.':'Pri teh predvidevanjih izgubiš '+e(-l.profit)+' na dan — popravi CVR, CPC ali ceno izdelka.')+'</p>'
-    : '<p class="note">Vpiši budget, CPM, CTR in CVR. Če imaš samo CPC: CPM = CPC × CTR × 10.</p>';
+  if(!el("kalk-verdict"))return;
+  var p=P(),kk=S.kalk,o=kalkOsnova();
+  var budget=n(kk.budget);
+  var fiks=p?n(p.fiksniMesecni):0;
+  function put(key,val,cls){
+    var t=q('[data-o="'+key+'"]');if(!t)return;
+    t.textContent=val;
+    if(t.classList.contains("v"))t.className="v "+(cls||"");
+  }
 
+  /* od kod prihajata cena in marža */
+  var os=el("kalk-osnova");
+  if(os){
+    if(o.cena<=0||o.marza<=0){
+      os.innerHTML='<b>Vpiši ceno in maržo</b>, drugače ni kaj računati.'+
+        (p?' Ali klikni „Prevzemi iz '+esc(p.ime)+'“ zgoraj — prenese ceno '+e(ekon(p).bruto)+' in maržo '+e(ekon(p).marzaEf)+'.':'');
+    }else{
+      var kjeC=n(kk.cena)?"vnesena":"iz izdelka", kjeM=n(kk.marza)?"vnesena":"iz izdelka";
+      os.innerHTML='Računam s ceno <b>'+e(o.cena)+'</b> ('+kjeC+') in maržo <b>'+e(o.marza)+'</b> ('+kjeM+') na kos. '+
+        'To pomeni, da ti od vsakega prodanega kosa ostane '+p1(o.cena>0?o.marza/o.cena*100:NaN)+' cene.';
+    }
+  }
+
+  /* zahteve */
+  var naDan = o.marza>0 ? budget/o.marza : NaN;
+  put("zCPA",e(o.beCPA));
+  put("zROAS",x2(o.beROAS));
+  put("zNaDan",isFinite(naDan)&&naDan>0?nf1.format(naDan):"—");
+  var zm=q('[data-o="zNaMesec"]');
+  if(zm)zm.textContent=isFinite(naDan)?nf0.format(Math.ceil(naDan*30))+" kosov na mesec":"";
+  put("zPromet",e(isFinite(naDan)?naDan*o.cena:NaN));
+
+  var ks=el("kalk-stavek");
+  if(ks){
+    ks.innerHTML = (budget>0&&o.marza>0)
+      ? '<div class="verdict '+(naDan<=1?"ok":naDan<=5?"mid":"bad")+'"><div>'+
+        'Če daš <b>'+e(budget)+' na dan</b>, moraš prodati vsaj <b>'+nf1.format(naDan)+' kosov dnevno</b> ('+nf0.format(Math.ceil(naDan*30))+' na mesec), '+
+        'da si na ničli. Vsako naročilo te sme stati največ <b>'+e(o.beCPA)+'</b>, ROAS pa mora biti vsaj <b>'+x2(o.beROAS)+'</b>. '+
+        (naDan<=1?'To je nizka letvica — en kos na dan že pokrije porabo.'
+         :naDan<=5?'Dosegljivo, a nič ni podarjeno.'
+         :'To je veliko kosov na dan za tak budget. Ali dvigni ceno, ali zniža budget, dokler ne najdeš delujoče kreative.')+
+        '</div></div>'
+      : '';
+  }
+
+  /* matrika */
+  var cpcVnos=n(kk.cpc), cpm=n(kk.cpm);
+  var impr = cpm>0 ? budget/cpm*1000 : NaN;
+  var vrstice=[0.5,0.75,1,1.5,2,3,4,6];
+  var mt=el("mtx");
+  if(mt){
+    if(budget<=0||o.marza<=0||(!cpm&&!cpcVnos)){
+      mt.innerHTML='<tr><td colspan="5" style="text-align:left;font-family:var(--sans);color:var(--ink3)">'+
+        'Za matriko rabim budget, maržo in CPM (ali CPC).</td></tr>';
+    }else if(cpcVnos>0){
+      /* poznan CPC: CTR ne rabimo, potreben CVR je enolicen */
+      var klikov=budget/cpcVnos;
+      var potrCVR=klikov>0?(budget/o.marza)/klikov*100:NaN;
+      var cl=potrCVR<=2?"m-ok":potrCVR<=4?"m-mid":"m-bad";
+      mt.innerHTML='<tr class="mark"><td>CPC je vnesen</td><td>'+i0(klikov)+'</td><td>'+e(cpcVnos)+'</td>'+
+        '<td class="'+cl+'">'+p1(potrCVR)+'</td><td class="'+cl+'">'+(potrCVR<=2?"dosegljivo":potrCVR<=4?"zahtevno":"nerealno")+'</td></tr>';
+    }else{
+      mt.innerHTML=vrstice.map(function(ctr){
+        var klikov=impr*ctr/100;
+        var cpc=klikov>0?budget/klikov:NaN;
+        var potrCVR=klikov>0?(budget/o.marza)/klikov*100:NaN;
+        var cl=potrCVR<=2?"m-ok":potrCVR<=4?"m-mid":"m-bad";
+        var jeMoj=Math.abs(ctr-n(kk.ctr))<0.26;
+        return '<tr'+(jeMoj?' class="mark"':'')+'><td>'+nf1.format(ctr)+' %'+(jeMoj?" (tvoj)":"")+'</td>'+
+          '<td>'+i0(klikov)+'</td><td>'+e(cpc)+'</td>'+
+          '<td class="'+cl+'">'+p1(potrCVR)+'</td>'+
+          '<td class="'+cl+'">'+(potrCVR<=2?"dosegljivo":potrCVR<=4?"zahtevno":"nerealno")+'</td></tr>';
+      }).join("");
+    }
+  }
+  var mn=el("mtx-note");
+  if(mn){
+    mn.innerHTML = (budget>0&&cpm>0&&o.marza>0&&!cpcVnos)
+      ? 'Pri CPM <b>'+e(cpm)+'</b> in budgetu <b>'+e(budget)+'</b> dobiš '+i0(impr)+' prikazov na dan. '+
+        'Boljši CTR pomeni več klikov za isti denar, zato lahko CVR pade in si še vedno na ničli. '+
+        'Največ, kar smeš plačati za klik pri CVR '+p1(n(kk.cvr))+', je <b>'+e(o.marza*n(kk.cvr)/100)+'</b>.'
+      : (cpcVnos>0&&o.marza>0
+          ? 'Pri CPC <b>'+e(cpcVnos)+'</b> je največji dopustni CPC za ničlo <b>'+e(o.marza*n(kk.cvr)/100)+'</b> pri CVR '+p1(n(kk.cvr))+'.'
+          : '');
+  }
+
+  /* napoved */
+  var l=lijak(budget,kk.cpm,kk.ctr,kk.cvr,o);
+  if(cpcVnos>0){
+    /* če je vnesen CPC, prevozi lijak prek klikov */
+    var kl=budget/cpcVnos;
+    l={budget:budget,impr:NaN,kliki:kl,narocil:kl*n(kk.cvr)/100,cpc:cpcVnos,
+       cpa:(kl*n(kk.cvr)/100)>0?budget/(kl*n(kk.cvr)/100):NaN,
+       prihodek:kl*n(kk.cvr)/100*o.cena,
+       roas:budget>0?kl*n(kk.cvr)/100*o.cena/budget:NaN,
+       profit:kl*n(kk.cvr)/100*o.marza-budget,
+       maxCPC:o.marza*n(kk.cvr)/100};
+  }
+  put("kimpr",i0(l.impr));put("kkliki",i0(l.kliki));
+  put("knarocil",isFinite(l.narocil)&&l.narocil>0?nf1.format(l.narocil):"—");put("kcpc",e(l.cpc));
+  put("kcpa",e(l.cpa),isFinite(l.cpa)?(l.cpa<=o.beCPA?"pos":"neg"):"");
+  put("kroas",x2(l.roas),isFinite(l.roas)?(l.roas>=o.beROAS?"pos":"neg"):"");
+  put("kprofit",e(l.profit),znak(l.profit));put("kprofitM",e(l.profit*30),znak(l.profit*30));
+  var a=q('[data-o="kcpaN"]');if(a)a.textContent="največ "+e(o.beCPA);
+  var b=q('[data-o="kroasN"]');if(b)b.textContent="najmanj "+x2(o.beROAS);
+  el("kalk-verdict").innerHTML=isFinite(l.profit)
+    ? '<div class="verdict '+(l.profit>0?"ok":"bad")+'"><div>'+
+      (l.profit>0
+        ? 'Izide se. Naročilo te stane '+e(l.cpa)+', smeš pa plačati '+e(o.beCPA)+'. Na dan ostane <b>'+e(l.profit)+'</b>, na mesec '+e(l.profit*30)+
+          (fiks?' oziroma '+e(l.profit*30-fiks)+' po fiksnih stroških.':'.')
+        : 'Ne izide se. Naročilo te stane '+e(l.cpa)+', smeš pa največ '+e(o.beCPA)+'. Na dan izgubiš <b>'+e(-l.profit)+'</b>. '+
+          'Rabiš CVR vsaj '+p1(o.marza>0&&isFinite(l.cpc)?l.cpc/o.marza*100:NaN)+' ali CPC pod '+e(l.maxCPC)+'.')+
+      '</div></div>'
+    : '<p class="note">Vpiši CTR in CVR (ter CPM ali CPC), da dobiš napoved.</p>';
+
+  /* obrnjeno */
   var cilj=Math.max(0,n(kk.cilj));
-  var cpaZa=isFinite(l.cpa)&&l.cpa>0?l.cpa:(n(p.predvidenCPA)||ek.beCPA*0.7);
+  var cpaZa=isFinite(l.cpa)&&l.cpa>0?l.cpa:(p&&n(p.predvidenCPA)?n(p.predvidenCPA):o.beCPA*0.7);
   var oB=cilj*cpaZa;
   var oK=n(kk.cvr)>0?cilj/(n(kk.cvr)/100):NaN;
   var oI=isFinite(oK)&&n(kk.ctr)>0?oK/(n(kk.ctr)/100):NaN;
-  var oP=cilj*(ek.marzaEf-cpaZa);
+  var oP=cilj*(o.marza-cpaZa);
   put("obudget",e(oB));put("okliki",i0(oK));put("oimpr",i0(oI));put("oprofit",e(oP),znak(oP));
   el("obr-note").innerHTML=cilj>0
     ? 'Za <b>'+nf1.format(cilj)+'</b> prodaj na dan pri CPA '+e(cpaZa)+' rabiš '+e(oB)+' budgeta dnevno, kar je '+e(oB*30)+' na mesec. '+
-      'Mesečni profit: <b>'+e(oP*30-n(p.fiksniMesecni))+'</b> (po fiksnih stroških '+e(n(p.fiksniMesecni))+').'
+      'Mesečni profit: <b>'+e(oP*30-fiks)+'</b>'+(fiks?' (po fiksnih stroških '+e(fiks)+')':'')+'.'
     : 'Vpiši, koliko kosov na dan želiš prodati.';
 
+  /* občutljivost */
   el("obc").innerHTML=[0.5,0.75,1,1.25,1.5,2].map(function(m){
-    var cpa=cpaZa*m, budget=n(kk.budget)||n(p.dnevniBudget);
-    var nar=cpa>0?budget/cpa:NaN, pd=isFinite(nar)?nar*(ek.marzaEf-cpa):NaN;
+    var cpa=cpaZa*m;
+    var nar=cpa>0?budget/cpa:NaN, pd=isFinite(nar)?nar*(o.marza-cpa):NaN;
     return '<tr'+(m===1?' class="mark"':'')+'><td>'+e(cpa)+(m===1?" (zdaj)":"")+'</td><td>'+(isFinite(nar)?nf1.format(nar):"—")+'</td>'+
-      '<td class="'+znak(pd)+'">'+e(pd)+'</td><td class="'+znak(pd*30)+'">'+e(pd*30)+'</td><td>'+x2(cpa>0?ek.bruto/cpa:NaN)+'</td></tr>';
+      '<td class="'+znak(pd)+'">'+e(pd)+'</td><td class="'+znak(pd*30)+'">'+e(pd*30)+'</td><td>'+x2(cpa>0?o.cena/cpa:NaN)+'</td></tr>';
   }).join("");
 }
 
 /* ============ POGLED: vodnik ============ */
 function renderVodnik(){
   el("v-vodnik").innerHTML=
-  '<div class="block"><header><h2>Kako se uporablja</h2><p>Petminutno branje, potem ti ni več treba.</p></header><div class="pad">'+
-    '<ul class="check">'+
-      '<li><b>1 — Projekti.</b> Naredi mapo za stranko ali znamko, v njej izdelke. Vse ostalo dela na izdelku, ki ga izbereš zgoraj.</li>'+
-      '<li><b>2 — Ekonomika izdelka.</b> Vpiši ceno in vse stroške na eno naročilo. Dobiš maržo, break-even CPA in break-even ROAS. Brez teh treh številk je vse ostalo ugibanje.</li>'+
-      '<li><b>3 — Kreative.</b> Za vsako idejo svoja kreativa: kot, publika, hook, tekst, naložene slike in videi, design brief, budget. Števci znakov povedo, kdaj se tekst skrajša.</li>'+
-      '<li><b>4 — Načrt.</b> Vpiši CPM, CTR in CVR, ki jih pričakuješ. Vidiš, ali bi kreativa sploh lahko bila dobičkonosna, še preden jo posnameš.</li>'+
-      '<li><b>5 — Rezultati.</b> Ko oglas teče, prepiši porabo, prikaze, klike in naročila. Aplikacija primerja dejanski CPA z break-even in ti reče, ali skalirati ali ubiti.</li>'+
-      '<li><b>6 — Kalkulator.</b> Hitri what-if in obrnjeno vprašanje: koliko budgeta za X prodaj na dan.</li>'+
-    '</ul>'+
+  glava("Vodnik","Kje se kaj vnaša, kaj pomenijo številke in kako se Facebook razlikuje od Googla.",
+    "",[{t:"Vodnik"}])+
+
+  '<div class="block"><header><div class="head-t"><span class="eyebrow">Prvo vprašanje</span>'+
+    '<h2>Kje vnesem budget?</h2></div></header><div class="pad">'+
+    '<div class="split">'+
+      '<div class="kv"><h4>Na kreativi — pravo mesto</h4>'+
+        '<p>Zavihek <b>Kreative</b> → odpri kreativo → razdelek <b>Načrt</b> → <i>Dnevni budget tega oglasa</i>. '+
+        'To je ista številka, ki jo nastaviš v Meta Ads Manager ali Google Ads. Vsak oglas ima svojo.</p></div>'+
+      '<div class="kv"><h4>Na izdelku — skupni načrt</h4>'+
+        '<p>Zavihek <b>Ekonomika</b> → <i>Načrtovan dnevni budget</i>. Samo za napoved profita na Pregledu. '+
+        'Z gumbom <i>Prevzemi</i> na Pregledu vanj prepišeš vsoto vseh aktivnih kreativ.</p></div>'+
+      '<div class="kv"><h4>V kalkulatorju — poigravanje</h4>'+
+        '<p>Zavihek <b>Kalkulator</b>. Vpišeš ceno, maržo in dnevni budget in dobiš, kakšen CTR, CVR in ROAS moraš doseči. '+
+        'Nič se ne prenese v izdelek, to je peskovnik.</p></div>'+
+    '</div>'+
+    '<p class="note" style="margin-top:16px"><b>Praktično pravilo za testni budget:</b> na kreativo dnevno vsaj 2× break-even CPA, 3–4 dni. '+
+    'Pri marži 36 € to pomeni okoli 70 € na dan na kreativo, da v testu pride dovolj podatkov. '+
+    'Če je to preveč, testiraj eno kreativo naenkrat, ne pet po 15 €.</p>'+
   '</div></div>'+
-  '<div class="block"><header><h2>Kaj pomeni katera številka</h2></header><div class="scroll"><table>'+
+
+  '<div class="block"><header><div class="head-t"><span class="eyebrow">Razlika</span>'+
+    '<h2>Facebook proti Googlu</h2></div>'+
+    '<p>Nista dva kanala za isto stvar. Lovita človeka na dveh različnih mestih.</p></header><div class="pad">'+
+    '<div class="two">'+
+      '<div class="kv"><h4 class="mark-fb">Facebook in Instagram — ustvarjaš povpraševanje</h4>'+
+        '<p>Človek ni iskal tvojega izdelka. Scrollal je in ga je nekaj ustavilo. Zato mora kreativa opraviti vse delo: '+
+        'ustaviti, pojasniti problem in prepričati, vse v nekaj sekundah.</p>'+
+        '<ul>'+
+          '<li><b>Kaj odloča:</b> kreativa in kot. Targetiranje je danes drugotnega pomena, algoritem najde kupca sam.</li>'+
+          '<li><b>Koliko kreativ:</b> veliko. Računaj, da 4 od 5 ne bodo delovale, in da se dobre iztrošijo v nekaj tednih.</li>'+
+          '<li><b>Merila v SLO:</b> CPM 5–15 €, CTR 1–3 %, CVR 1–3 %.</li>'+
+          '<li><b>Struktura:</b> ena kampanja, 1–3 oglasne skupine, v vsaki 3–6 kreativ. Ne drobi budgeta na deset skupin.</li>'+
+          '<li><b>Kaj testiraš:</b> najprej kot in hook, šele nato barve, glasbo in gumbe.</li>'+
+          '<li><b>Pogosta napaka:</b> preveč skupin z majhnim budgetom. Algoritem ne dobi dovolj podatkov, da bi se naučil.</li>'+
+        '</ul></div>'+
+      '<div class="kv"><h4 class="mark-gg">Google Search — pobiraš obstoječe povpraševanje</h4>'+
+        '<p>Človek je izdelek že iskal. Ne rabiš ga prepričevati, da ga potrebuje — prepričati ga moraš, '+
+        'da ga kupi pri tebi in ne pri nekom drugem, ki je v istem seznamu rezultatov.</p>'+
+        '<ul>'+
+          '<li><b>Kaj odloča:</b> ključne besede in ciljna stran. Slike ni, tekst je edino orodje.</li>'+
+          '<li><b>Koliko besedila:</b> 5–10 naslovov po 30 znakov in 3–4 opisi po 90. Google jih kombinira sam.</li>'+
+          '<li><b>Merila:</b> CTR 4–8 %, CVR pogosto 2–5 % — višje kot na Facebooku, ker je namera močnejša.</li>'+
+          '<li><b>Struktura:</b> kampanja po tipu izdelka, oglasne skupine po ozkih skupinah ključnih besed.</li>'+
+          '<li><b>Nujno:</b> negativne ključne besede. Brez njih plačuješ klike za „rabljeno“, „popravilo“, „zastonj“, „navodila“.</li>'+
+          '<li><b>Pogosta napaka:</b> samo široko ujemanje in Performance Max brez izključitev — porabi budget na poizvedbah, ki nič ne prodajo.</li>'+
+        '</ul></div>'+
+    '</div>'+
+    '<p class="note" style="margin-top:16px"><b>Kaj najprej, če imaš en budget:</b> če izdelek ljudje že iščejo po imenu, začni z Google Search — '+
+    'promet je dražji po kliku, a bližje nakupu. Če gre za nov ali impulzni izdelek, ki ga nihče ne išče, začni s Facebookom. '+
+    'Oba hkrati z majhnim budgetom pomenita, da nobeden ne dobi dovolj podatkov.</p>'+
+  '</div></div>'+
+
+  '<div class="block"><header><div class="head-t"><span class="eyebrow">Postopek</span>'+
+    '<h2>Od ideje do oglasa, ki teče</h2></div>'+
+    '<p>Statusi na kreativi so ti koraki — po vrsti.</p></header><div class="pad">'+
+    '<ul class="check">'+
+      '<li><b>ideja</b> — zapisan kot in publika, nič drugega. Tu naj jih bo veliko.</li>'+
+      '<li><b>sestavi brief</b> — napiši design brief, določi kdo dela in rok. Gumb <i>Kopiraj brief</i> ti vse skupaj pripravi za pošiljanje.</li>'+
+      '<li><b>daj snemat</b> — brief je oddan, čakaš material.</li>'+
+      '<li><b>sestavi kreativo</b> — material je tu, sestavlja se video ali slika. Naloži ga v razdelek Material.</li>'+
+      '<li><b>za pregled</b> — pripravljeno, čaka tvojo potrditev. Predogled pokaže, kako bo izgledalo.</li>'+
+      '<li><b>pripravljeno za objavo</b> — tekst in material sta potrjena, čaka na vklop.</li>'+
+      '<li><b>aktivna</b> — teče. Od tu naprej vpisuj rezultate. Šteje se v dnevni budget izdelka.</li>'+
+      '<li><b>zmagovalka</b> — CPA je pod break-even in drži. To je tista, ki jo skaliraš in iz katere delaš nove različice.</li>'+
+      '<li><b>pavza / ubita</b> — ustavljena. V opombe zapiši, zakaj, da iste napake ne ponoviš.</li>'+
+    '</ul>'+
+    '<p class="note" style="margin-top:16px"><b>Kdaj ubiti:</b> ko poraba doseže 3× break-even CPA brez enega samega naročila, ali ko je CPA po vsaj 10 naročilih trdno nad break-even. '+
+    '<b>Kdaj skalirati:</b> ko je CPA vsaj 20 % pod break-even. Budget dvigaj po 20–30 % na 2–3 dni, ne podvajaj naenkrat.</p>'+
+  '</div></div>'+
+  '<div class="block"><header><div class="head-t"><span class="eyebrow">Slovarček</span><h2>Kaj pomeni katera številka</h2></div></header><div class="scroll"><table class="plain">'+
     '<thead><tr><th>Kratica</th><th>Kaj je</th><th>Kako se izračuna</th></tr></thead><tbody>'+
     [["CPM","Cena za 1000 prikazov","poraba ÷ prikazi × 1000"],
      ["CTR","Delež ljudi, ki klikne","kliki ÷ prikazi"],
@@ -875,13 +1674,15 @@ function renderVodnik(){
      ["Break-even ROAS","Najnižji ROAS, pri katerem nisi v minusu","cena ÷ marža"]
     ].map(function(r){return '<tr><td style="font-family:var(--mono)">'+r[0]+'</td><td>'+r[1]+'</td><td style="font-family:var(--mono);text-align:left">'+r[2]+'</td></tr>';}).join("")+
     '</tbody></table></div></div>'+
-  '<div class="block"><header><h2>Omejitve besedila po platformah</h2><p>Priporočene dolžine, preden se tekst skrajša.</p></header><div class="scroll"><table>'+
+  '<div class="block"><header><div class="head-t"><span class="eyebrow">Dolžine</span><h2>Omejitve besedila po platformah</h2></div>'+
+    '<p>Priporočene dolžine, preden se tekst skrajša.</p></header><div class="scroll"><table class="plain">'+
     '<thead><tr><th>Platforma</th><th>Glavno besedilo</th><th>Naslov</th><th>Opis</th></tr></thead><tbody>'+
     [["Facebook / Instagram","125","40","30"],["TikTok","100","—","—"],["YouTube","100","—","—"],["Google Search (RSA)","—","30 × do 15","90 × do 4"]]
-    .map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>';}).join("")+
+    .map(function(r){return '<tr><td>'+r[0]+'</td><td class="n">'+r[1]+'</td><td class="n">'+r[2]+'</td><td class="n">'+r[3]+'</td></tr>';}).join("")+
     '</tbody></table></div>'+
-    '<div class="pad"><p class="note">Platforme te omejitve občasno spremenijo. Če ti vmesnik pokaže drugo številko, velja njegova.</p></div></div>'+
-  '<div class="block"><header><h2>Kako se štejejo vračila</h2></header><div class="pad"><p class="note">'+
+    '<div class="pad"><p class="note">Platforme te omejitve občasno spremenijo. Če ti vmesnik pokaže drugo številko, velja njegova. '+
+    'Števci v urejevalniku uporabljajo te vrednosti in zasvetijo rdeče, ko jih presežeš.</p></div></div>'+
+  '<div class="block"><header><div class="head-t"><span class="eyebrow">Metoda</span><h2>Kako se štejejo vračila</h2></div></header><div class="pad"><p class="note">'+
     'Pri vračilu izgubiš prihodek naročila, dostavo, embalažo in provizijo pa si že plačal. Zato je efektivna marža '+
     '<b>marža × (1 − stopnja vračil) − stopnja vračil × (dostava + embalaža + provizija)</b>. Nabavna cena se pri vračilu ne šteje kot izguba, ker izdelek dobiš nazaj. '+
     'Če pri tebi izdelek ni več prodajen (higiena, poškodba), prištej nabavno ceno v polje „Ostalo na naročilo“.'+
@@ -1060,9 +1861,11 @@ function renderOblakPanel(){
 /* ============ POGLED: podatki ============ */
 function renderPodatki(){
   el("v-podatki").innerHTML=
-  '<div class="block" id="cloud-block"><header><h2>Oblačno shranjevanje</h2><p>Isti podatki na telefonu in računalniku.</p></header>'+
+  glava("Podatki","Kje so shranjeni, kako jih preneseš na drugo napravo in kako vklopiš sinhronizacijo.","",[{t:"Podatki"}])+
+  '<div class="block" id="cloud-block"><header><div class="head-t"><span class="eyebrow">Oblak</span><h2>Sinhronizacija med napravami</h2></div>'+
+    '<p>Neobvezno, potrebuje svoj Supabase projekt.</p></header>'+
     '<div class="pad" id="cloud-body"></div></div>'+
-  '<div class="block"><header><h2>Ta naprava</h2></header><div class="pad">'+
+  '<div class="block"><header><div class="head-t"><span class="eyebrow">Lokalno</span><h2>Ta naprava</h2></div></header><div class="pad">'+
     '<p class="note">Besedila in izračuni se samodejno shranijo v brskalnik, naložene slike in videi pa v ločeno shrambo iste naprave. Deluje tudi brez interneta. '+
     'Če pobrišeš podatke brskalnika ali odpreš stran v anonimnem oknu, je vse to izgubljeno — zato občasno izvozi.<br>'+
     '<b>Zadnja sprememba:</b> '+cas(S.spremenjeno)+'</p>'+
@@ -1078,11 +1881,11 @@ function renderPodatki(){
       '<textarea id="paste" rows="4" placeholder=\'{"v":2,"projekti":[…]}\'></textarea>'+
       '<div class="row" style="margin-top:8px"><button class="btn" id="impPaste">Uvozi prilepljeno</button></div></div>'+
   '</div></div>'+
-  '<div class="block"><header><h2>Namesti na telefon</h2></header><div class="pad">'+
+  '<div class="block"><header><div class="head-t"><span class="eyebrow">Telefon</span><h2>Namesti kot aplikacijo</h2></div></header><div class="pad">'+
     '<p class="note"><b>Android / Chrome:</b> meni ⋮ → „Dodaj na začetni zaslon“. <b>iPhone / Safari:</b> gumb za deljenje → „Dodaj na domači zaslon“. '+
     'Odpre se kot aplikacija, brez naslovne vrstice, in dela tudi brez signala.</p>'+
   '</div></div>'+
-  '<div class="block"><header><h2>Počisti</h2></header><div class="pad">'+
+  '<div class="block"><header><div class="head-t"><span class="eyebrow">Nevarno</span><h2>Počisti vse</h2></div></header><div class="pad">'+
     '<p class="note">Izbriše vse projekte, izdelke, kreative in naložene datoteke iz te naprave. Prej izvozi, če želiš obdržati. Če je vklopljen oblak, se prazno stanje pošlje tudi tja.</p>'+
     '<div class="row" style="margin-top:12px"><button class="btn btn-d" id="reset">Pobriši vse in začni znova</button></div>'+
   '</div></div>';
@@ -1136,29 +1939,41 @@ function uvozi(txt){
 function briefText(k){
   var p=P(),plat=(PLATFORME.filter(function(x){return x[0]===k.platforma;})[0]||["","?"])[1];
   var L=[];
-  L.push(k.naslov);L.push("Mapa: "+PR().ime+" · Izdelek: "+p.ime);
-  L.push("Platforma: "+plat+" · Format: "+k.format+" · Status: "+k.status);L.push("");
-  if(k.kot)L.push("KOT: "+k.kot);
+  function seznam(naslov,arr,pripis){
+    var v=(arr||[]).filter(function(s){return s&&String(s).trim();});
+    if(!v.length)return;
+    L.push("");L.push(naslov+" ("+v.length+(pripis?", "+pripis:"")+"):");
+    v.forEach(function(s,i){L.push("  "+(i+1)+". "+String(s).replace(/\n/g,"\n     "));});
+  }
+  L.push("═══ "+k.naslov+" ═══");
+  L.push(PR().ime+" · "+p.ime);
+  L.push(plat+" · "+k.format+" · "+statusIme(k.status));
+  if(k.tagi)L.push("Oznake: "+k.tagi);
+  if(k.izvajalec||k.rok)L.push("Dela: "+(k.izvajalec||"—")+(k.rok?" · rok: "+k.rok:""));
+  if(k.kot){L.push("");L.push("KOT: "+k.kot);}
   if(k.publika)L.push("PUBLIKA: "+k.publika);
-  L.push("");
+
+  var lim=LIM[k.platforma]||LIM.drugo;
   if(k.platforma==="google"){
-    L.push("NASLOVI:");k.naslovi.forEach(function(s,i){if(s)L.push("  "+(i+1)+". "+s);});
-    L.push("OPISI:");k.opisi.forEach(function(s,i){if(s)L.push("  "+(i+1)+". "+s);});
-    if(k.kljucneBesede)L.push("KLJUČNE BESEDE: "+k.kljucneBesede);
+    seznam("NASLOVI",k.naslovi,"do 30 znakov");
+    seznam("OPISI",k.opisi,"do 90 znakov");
+    if(k.kljucneBesede){L.push("");L.push("KLJUČNE BESEDE: "+k.kljucneBesede);}
   }else{
-    if(k.hook)L.push("HOOK: "+k.hook);
-    if(k.primarni){L.push("");L.push("PRIMARNO BESEDILO:");L.push(k.primarni);}
-    if(k.naslovi[0])L.push("NASLOV: "+k.naslovi[0]);
-    if(k.opisi[0])L.push("OPIS: "+k.opisi[0]);
-    L.push("CTA: "+k.cta);
+    seznam("HOOKI",k.hooki,"prva vrstica");
+    seznam("PRIMARNO BESEDILO",k.primarna,"do "+lim.primarni+" znakov");
+    seznam("NASLOVI",k.naslovi,"do "+lim.naslov+" znakov");
+    seznam("OPISI",k.opisi,"do "+lim.opis+" znakov");
+    L.push("");L.push("CTA: "+k.cta);
   }
   if(k.url)L.push("URL: "+k.url);
-  if(k.design){L.push("");L.push("DESIGN BRIEF:");L.push(k.design);}
-  if(k.stDatotek)L.push("MATERIAL: "+k.stDatotek+" naloženih datotek");
-  L.push("");L.push("BUDGET: "+e(n(k.budget))+" / dan");
+  if(k.design){L.push("");L.push("── DESIGN BRIEF ──");L.push(k.design);}
+  if(k.stDatotek)L.push("MATERIAL: "+k.stDatotek+" naloženih datotek v aplikaciji");
+
   var ek=ekon(p),l=lijak(k.budget,k.cpm,k.ctr,k.cvr,ek);
-  L.push("NAČRT: CPM "+e(n(k.cpm))+" · CTR "+p1(n(k.ctr))+" · CVR "+p1(n(k.cvr))+" → CPA "+e(l.cpa)+" · profit/dan "+e(l.profit));
-  L.push("BREAK-EVEN: CPA "+e(ek.beCPA)+" · ROAS "+x2(ek.beROAS));
+  L.push("");L.push("── ŠTEVILKE ──");
+  L.push("Budget: "+e(n(k.budget))+" / dan");
+  L.push("Načrt: CPM "+e(n(k.cpm))+" · CTR "+p1(n(k.ctr))+" · CVR "+p1(n(k.cvr))+" → CPA "+e(l.cpa)+" · profit/dan "+e(l.profit));
+  L.push("Break-even: CPA "+e(ek.beCPA)+" · ROAS "+x2(ek.beROAS));
   if(k.opombe){L.push("");L.push("OPOMBE: "+k.opombe);}
   return L.join("\n");
 }
@@ -1190,7 +2005,7 @@ function paint(){
   if(view==="ekonomika")paintEkon();
   else if(view==="kreative"&&odprtaKreativa&&K())paintKreativa();
   else if(view==="kalkulator")paintKalk();
-  else if(view==="pregled")renderPregled();
+  else if(view==="pregled")paintPregled();
 }
 function nastaviView(v){
   view=v;if(view!=="kreative")odprtaKreativa=null;
@@ -1260,13 +2075,18 @@ document.addEventListener("input",function(ev){
       if(c){var L=t.value.length,lim=parseInt(t.dataset.limit,10);
         c.textContent=L+" / "+lim;c.classList.toggle("over",L>lim);}
     }
-    shrani();paintKreativa();
+    shrani();paintKreativa();risiPredogled();
   }else if(t.dataset.k!=null){
     S.kalk[t.dataset.k]=t.value;shrani();paintKalk();
   }
 });
 document.addEventListener("change",function(ev){
   var t=ev.target;
+  /* radio pri različici → katera gre v predogled */
+  if(t.dataset.pv!=null){
+    predIzbor[t.dataset.pv]=parseInt(t.dataset.i,10)||0;
+    risiPredogled();return;
+  }
   if(t.id==="impFile"){
     var f=t.files&&t.files[0];if(!f)return;
     var r=new FileReader();
@@ -1330,16 +2150,42 @@ document.addEventListener("click",function(ev){
   var addi=t.closest("[data-addi]");
   if(addi){dodajIzdelek(addi.dataset.addi);return;}
 
+  /* banka hookov → nova različica */
   var hook=t.closest("[data-hook]");
   if(hook){
-    var kk=K();if(!kk)return;
+    var kh=K();if(!kh)return;
     var txt=HOOKI[parseInt(hook.dataset.hook,10)];
-    kk.hook=kk.hook?kk.hook+"\n"+txt:txt;
-    var fh=el("c-hook");
-    if(fh){fh.value=kk.hook;var c2=q('[data-cnt="hook"]');
-      if(c2){c2.textContent=kk.hook.length+" / 80";c2.classList.toggle("over",kk.hook.length>80);}
-      fh.focus();}
-    shrani();return;
+    if(!Array.isArray(kh.hooki))kh.hooki=[""];
+    if(kh.hooki.length===1&&!String(kh.hooki[0]).trim())kh.hooki[0]=txt;
+    else kh.hooki.push(txt);
+    predIzbor.hooki=kh.hooki.length-1;
+    shrani();renderEditor();toast("Hook dodan kot nova različica.");return;
+  }
+  /* + dodaj različico */
+  var vadd=t.closest("[data-vadd]");
+  if(vadd){
+    var kv=K();if(!kv)return;
+    var polje=vadd.dataset.vadd;
+    if(!Array.isArray(kv[polje]))kv[polje]=[""];
+    if(kv[polje].length>=25){toast("Dovolj različic — 25 je zgornja meja.");return;}
+    kv[polje].push("");
+    predIzbor[polje]=kv[polje].length-1;
+    shrani();renderEditor();
+    var vsi=qa('[data-c="'+polje+'.'+(kv[polje].length-1)+'"]');
+    if(vsi[0])vsi[0].focus();
+    return;
+  }
+  /* ✕ odstrani različico */
+  var vdel=t.closest("[data-vdel]");
+  if(vdel){
+    var kd2=K();if(!kd2)return;
+    var deli=vdel.dataset.vdel.split("."), pol=deli[0], idx=parseInt(deli[1],10);
+    if(!Array.isArray(kd2[pol])||kd2[pol].length<=1)return;
+    var vsebina=String(kd2[pol][idx]||"").trim();
+    if(vsebina&&!confirm("Odstranim to različico?"))return;
+    kd2[pol].splice(idx,1);
+    if(predIzbor[pol]>=kd2[pol].length)predIzbor[pol]=0;
+    shrani();renderEditor();return;
   }
   var pick=t.closest("[data-pick]");
   if(pick){
@@ -1392,6 +2238,9 @@ document.addEventListener("click",function(ev){
     if(S.aktivenProjekt===pid){S.aktivenProjekt=S.projekti[0].id;S.aktiven=null;}
     odprtaKreativa=null;shrani();polniIzbirnik();render();toast("Mapa izbrisana.");return;
   }
+  var zoom=t.closest("[data-zoom]");
+  if(zoom){pokaziPovecano(zoom.dataset.zoom);return;}
+  if(t.id==="lb-x"||t.id==="lb"){zapriPovecano();return;}
   var dl=t.closest("[data-dl]");
   if(dl){prenesiDatoteko(dl.dataset.dl);return;}
   var ddel=t.closest("[data-ddel]");
@@ -1407,7 +2256,23 @@ document.addEventListener("click",function(ev){
 
   switch(t.id){
     case "back": odprtaKreativa=null;pocistiUrlje();render();window.scrollTo(0,0);break;
-    case "copy": kopiraj(briefText(K()));break;
+    case "copy": case "copybrief": kopiraj(briefText(K()));break;
+    case "prevzemiBudget": {
+      var pp=P();if(!pp)break;
+      var vs=budgetAktivnih(pp);
+      if(vs<=0){toast("Nobena kreativa ni aktivna — najprej ji nastavi budget in status.");break;}
+      pp.dnevniBudget=nfE.format(vs);
+      shrani();renderPregled();toast("Budget prevzet: "+e(vs)+" na dan.");break;
+    }
+    case "kalkPrevzemi": {
+      var pk=P();if(!pk)break;
+      var ekk=ekon(pk);
+      if(ekk.bruto<=0){toast("Izdelek še nima cene.");break;}
+      S.kalk.cena=nfE.format(ekk.bruto);
+      S.kalk.marza=nfE.format(ekk.marzaEf);
+      if(!n(S.kalk.budget)&&n(pk.dnevniBudget))S.kalk.budget=nfE.format(n(pk.dnevniBudget));
+      shrani();renderKalk();toast("Prevzeto iz „"+pk.ime+"“.");break;
+    }
     case "dup": {
       var o=K();if(!o)break;
       var c3=JSON.parse(JSON.stringify(o));
@@ -1444,6 +2309,7 @@ document.addEventListener("click",function(ev){
   }
 });
 document.addEventListener("keydown",function(ev){
+  if(ev.key==="Escape"){zapriPovecano();return;}
   if(ev.key!=="Enter")return;
   var id=ev.target&&ev.target.id;
   if(id==="ob-mail"||id==="ob-geslo"){ev.preventDefault();Oblak.prijava(el("ob-mail").value.trim(),el("ob-geslo").value,false);}
