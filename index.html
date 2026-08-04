@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="sl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Oglasni list — kreative, budget in izračun profita</title>
+<meta name="description" content="Delovni prostor za pisanje oglasnih kreativ za Facebook in Google, načrtovanje budgeta ter izračun marže, CPA in profita na naročilo.">
+<meta name="theme-color" content="#F4F5F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1116" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="styles.css">
+<script>
+/* tema pred izrisom, da ne utripne */
+try{var t=localStorage.getItem("oglasni-list-tema");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}
+</script>
+</head>
+<body>
+
+<div class="top">
+  <div class="top-in">
+    <div class="brand"><b>Oglasni list</b><span>kreative · budget · profit</span></div>
+    <div class="tools no-print">
+      <select id="prsel" class="head" aria-label="Izbrani projekt"></select>
+      <select id="psel" class="head" aria-label="Izbrani izdelek"></select>
+      <button class="btn btn-s" id="pnew">+ Izdelek</button>
+      <button class="btn btn-s" id="tema" aria-label="Preklopi svetlo/temno">Tema</button>
+      <span class="saved" id="saved">shranjeno</span>
+    </div>
+  </div>
+</div>
+
+<div class="rail no-print">
+  <div class="rail-in" role="tablist" id="rail">
+    <button class="tab" role="tab" data-v="projekti">Projekti</button>
+    <button class="tab" role="tab" data-v="pregled">Pregled</button>
+    <button class="tab" role="tab" data-v="ekonomika">Ekonomika izdelka</button>
+    <button class="tab" role="tab" data-v="kreative">Kreative</button>
+    <button class="tab" role="tab" data-v="kalkulator">Kalkulator oglasa</button>
+    <button class="tab" role="tab" data-v="vodnik">Vodnik</button>
+    <button class="tab" role="tab" data-v="podatki">Podatki</button>
+  </div>
+</div>
+
+<main>
+  <section class="view" id="v-projekti" hidden></section>
+  <section class="view" id="v-pregled" hidden></section>
+  <section class="view" id="v-ekonomika" hidden></section>
+  <section class="view" id="v-kreative" hidden></section>
+  <section class="view" id="v-kalkulator" hidden></section>
+  <section class="view" id="v-vodnik" hidden></section>
+  <section class="view" id="v-podatki" hidden></section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

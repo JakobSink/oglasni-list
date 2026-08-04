@@ -1,0 +1,17 @@
+{
+  "name": "Oglasni list — kreative, budget, profit",
+  "short_name": "Oglasni list",
+  "description": "Načrtovanje oglasnih kreativ za Facebook in Google, budget in izračun marže, CPA in profita na naročilo.",
+  "lang": "sl",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F4F5F7",
+  "theme_color": "#1F35C4",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
