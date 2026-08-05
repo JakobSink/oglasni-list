@@ -1,16 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Oglasni list">
-  <rect width="512" height="512" fill="#1F35C4"/>
-  <rect x="96" y="72" width="320" height="368" fill="#F4F5F7"/>
-  <g fill="#C6CAD4">
-    <rect x="136" y="140" width="160" height="14"/>
-    <rect x="136" y="188" width="240" height="10"/>
-    <rect x="136" y="222" width="200" height="10"/>
-    <rect x="136" y="256" width="224" height="10"/>
-  </g>
-  <rect x="136" y="306" width="240" height="4" fill="#1F35C4"/>
-  <g fill="#171A21">
-    <rect x="136" y="336" width="104" height="22"/>
-    <rect x="272" y="336" width="104" height="22"/>
-    <rect x="136" y="386" width="152" height="30"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Oglaševalka">
+  <!-- Znak: govorni oblacek (oglas) z rastoco krivuljo (rezultat) in strešico
+       nad njim - iz besede Oglaševalka. Deluje tudi pri 32 px. -->
+  <rect width="512" height="512" rx="112" fill="#1F35C4"/>
+
+  <!-- oblacek -->
+  <path d="M104 128h304a40 40 0 0 1 40 40v168a40 40 0 0 1-40 40H236l-84 66a12 12 0 0 1-19-10v-56h-29a40 40 0 0 1-40-40V168a40 40 0 0 1 40-40z"
+        fill="#F4F5F7"/>
+
+  <!-- rastoca krivulja z zadnjo tocko -->
+  <path d="M148 300l68-64 46 38 76-92" fill="none" stroke="#1F35C4" stroke-width="26"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="338" cy="182" r="24" fill="#F2B417"/>
+
+  <!-- stresica: crka s iz Oglasevalka, hkrati kot znak "gor" -->
+  <path d="M186 106l26-30 26 30" fill="none" stroke="#F2B417" stroke-width="20"
+        stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

@@ -1,10 +1,15 @@
 /* Offline delovanje: omrežje najprej, predpomnilnik kot rezerva. */
-var CACHE="oglasni-list-v7";
+var CACHE="oglasni-list-v8";
 var DATOTEKE=["./","index.html","styles.css","app.js","config.js","manifest.webmanifest","icon.svg"];
 
 self.addEventListener("install",function(ev){
   ev.waitUntil(
-    caches.open(CACHE).then(function(c){return c.addAll(DATOTEKE);})
+    caches.open(CACHE).then(function(c){
+      /* cache:"reload" obide HTTP predpomnilnik brskalnika — brez tega si v
+         predpomnilnik lahko shranimo prav tisto staro kopijo, ki jo hočemo
+         zamenjati, in aplikacija tedne kaze staro razlicico.               */
+      return c.addAll(DATOTEKE.map(function(u){return new Request(u,{cache:"reload"});}));
+    })
       .catch(function(){})
       .then(function(){return self.skipWaiting();})
   );
@@ -24,7 +29,9 @@ self.addEventListener("fetch",function(ev){
   try{u=new URL(ev.request.url);}catch(err){return;}
   if(u.origin!==self.location.origin)return;   /* Supabase in CDN gredo mimo predpomnilnika */
   ev.respondWith(
-    fetch(ev.request).then(function(res){
+    /* Vedno vprasaj streznik in ne dovoli HTTP predpomnilniku, da odgovori
+       namesto njega. Ce ni povezave, gremo v spodnji catch na kopijo.      */
+    fetch(ev.request.url,{cache:"no-store",credentials:"same-origin"}).then(function(res){
       if(res&&res.ok){
         var kopija=res.clone();
         caches.open(CACHE).then(function(c){c.put(ev.request,kopija);}).catch(function(){});

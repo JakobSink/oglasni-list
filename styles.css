@@ -470,6 +470,31 @@ table.mtx th:first-child{text-align:left}
 /* stikala: vrednosti na kartici kreative in vrstica s filtrom nad seznamom */
 .tags.stik span{background:var(--surf2);border:1px solid var(--line2);color:var(--ink2)}
 .tags.stik span.vodi{border-color:var(--brand);color:var(--brand)}
+/* urejanje stikal: eno stikalo je ena kartica, moznosti so cipi */
+.sg-l{display:flex;flex-direction:column;gap:12px}
+.sg{border:1px solid var(--line2);border-radius:14px;padding:12px 14px;background:var(--surf2)}
+.sg-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sg-ime{flex:1 1 160px;min-width:0;font-weight:600}
+.sg-r{font-size:11.5px;color:var(--ink3)}
+.sg-x{
+  flex:none;border:1px solid var(--line2);background:var(--surf);color:var(--ink3);
+  border-radius:9px;width:30px;height:30px;font-size:12px;cursor:pointer;
+}
+.sg-x:hover{color:var(--neg);border-color:var(--neg)}
+.sg-m{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px;align-items:center}
+.sg-mo{display:inline-flex;align-items:stretch}
+.sg-mo input{
+  border:1px solid var(--line2);border-radius:999px;background:var(--surf);color:var(--ink);
+  padding:6px 12px;font:inherit;font-size:12.5px;font-weight:600;min-width:5ch;
+}
+.sg-mo input:focus{outline:2px solid var(--brand);outline-offset:1px}
+.sg-mo:has(.sg-mx) input{border-radius:999px 0 0 999px;border-right:none}
+.sg-mx{
+  border:1px solid var(--line2);border-left:none;background:var(--surf);color:var(--ink3);
+  border-radius:0 999px 999px 0;padding:0 9px;font:inherit;font-size:11px;cursor:pointer;
+}
+.sg-mx:hover{color:var(--neg)}
+
 /* brief po korakih: stevilka koraka ob polju */
 .korak{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-top:1px solid var(--line)}
 .korak:first-of-type{border-top:none;padding-top:2px}
@@ -478,13 +503,37 @@ table.mtx th:first-child{text-align:left}
   flex:none;width:24px;height:24px;border-radius:50%;background:var(--brand);color:var(--brand-on);
   display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;margin-top:2px;
 }
+/* mere, ki jih doloci umestitev */
+.mere{display:flex;flex-direction:column;gap:5px;background:var(--surf2);border:1px solid var(--line2);
+  border-radius:12px;padding:11px 13px;margin-bottom:14px}
+.mere-h{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.mere-v{font-size:12.5px;color:var(--ink2);line-height:1.5}
+.mere-v i{display:inline-block;min-width:96px;font-style:normal;font-weight:600;color:var(--ink)}
+
 /* referenca: seznam povezav */
 .ref-l{display:flex;flex-direction:column;gap:4px;margin:-4px 0 4px}
 .ref-l a,.ref-l span{font-size:12.5px;color:var(--brand);word-break:break-all}
 .ref-l span{color:var(--ink3)}
 
-/* banka hookov: vpis, kategorije, seznam z gumbom za brisanje */
+/* banka hookov: zaprta je ena vrstica, odprta drsi v svojem okvirju */
 .bank-w{margin-top:6px}
+.bank-t{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  border:1px solid var(--line2);background:var(--surf2);color:var(--ink);
+  border-radius:12px;padding:10px 13px;font:inherit;cursor:pointer;
+}
+.bank-t:hover{border-color:var(--brand)}
+.bank-t b{font-size:13px}
+.bank-t em{
+  font-style:normal;font-size:11.5px;font-weight:700;background:var(--brand);color:var(--brand-on);
+  border-radius:999px;padding:1px 8px;
+}
+.bank-t span{margin-left:auto;font-size:11.5px;color:var(--ink3)}
+.bank-t.on{border-radius:12px 12px 0 0;margin-bottom:10px}
+.bank-f{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.bank-f #bank-isk{flex:1 1 180px;min-width:0}
+.bank-f #bank-red{flex:0 0 auto;width:auto}
+.bank-s{max-height:210px;overflow-y:auto;padding-right:4px}
 .bank-add{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .bank-add #bank-nov{flex:1 1 240px;min-width:0}
 .bank-add #bank-kat{flex:0 0 auto;width:auto}
@@ -960,7 +1009,29 @@ pre{font-family:var(--mono);font-size:12px;background:var(--surf3);border-radius
   th:last-child,td:last-child{padding-right:18px}
   .cards{grid-template-columns:1fr}
   .vend{min-width:52px}
+
+  /* telefon: predogled naj se ne razteza cez zaslon in tipka ob strani naj
+     ne dela vodoravnega drsenja                                            */
+  .fon{max-width:100%;border-width:9px;border-radius:44px}
+  .fon::after{display:none}
+  .fon-b{max-height:none}
+  /* nove vrstice: vsak kos v svojo vrsto, da se nic ne stiska */
+  .stik-vrsta{gap:8px 10px}
+  .stik-vrsta .lbl{flex:1 1 100%;min-width:0}
+  .stik-loci{flex:1 1 100%}
+  .stik-filter .pad{gap:12px}
+  .stik-filter .f{flex:1 1 100%}
+  .bank-add,.bank-f{flex-direction:column;align-items:stretch}
+  .bank-add #bank-kat,.bank-f #bank-red{width:100%}
+  .bank-s{max-height:180px}
+  .sg-h{gap:8px}
+  .sg-ime{flex:1 1 100%}
+  .mere-v i{display:block;min-width:0}
+  .korak{gap:10px}
+  .korak-n{width:22px;height:22px;font-size:12px}
 }
+/* vodoravno drsenje cele strani ni nikoli v redu */
+html,body{max-width:100%;overflow-x:hidden}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 @media print{
