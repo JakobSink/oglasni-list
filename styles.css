@@ -484,6 +484,13 @@ table.mtx th:first-child{text-align:left}
 /* stikala: vrednosti na kartici kreative in vrstica s filtrom nad seznamom */
 .tags.stik span{background:var(--surf2);border:1px solid var(--line2);color:var(--ink2)}
 .tags.stik span.vodi{border-color:var(--brand);color:var(--brand)}
+/* CGP mape: vzorci barv */
+.cgp-sw{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.cgp-sw i{
+  width:26px;height:26px;border-radius:8px;border:1px solid var(--line2);
+  display:block;flex:none;
+}
+
 /* datoteka, ki je se v oblaku in se prenasa */
 .file.cakam{opacity:.62}
 .file.cakam .prev{display:flex;align-items:center;justify-content:center}

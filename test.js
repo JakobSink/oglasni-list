@@ -169,6 +169,26 @@ try {
   ok(izv.izdelki[0].kreative[0].umestitev != null, "umestitev se serializira");
 } catch (err) { ok(false, "serializacija", err.message); }
 
+console.log("\n== CGP na mapi ==");
+const prCgp = w.PR();
+prCgp.cgp.barve = "#1F35C4, #F2B417";
+prCgp.cgp.pisave = "Naslovi: Inter Bold";
+prCgp.cgp.pravila = "Logo vedno v kotu.";
+prCgp.zapiski = "Dostop do Drive ima Ana.";
+ok(w.cgpBarve("#1F35C4, #F2B417").length === 2, "barve se poberejo iz besedila",
+  w.cgpBarve("#1F35C4, #F2B417").join(" "));
+ok(w.cgpBarve("brez barv").length === 0, "besedilo brez barv ne da vzorcev");
+w.view = "projekti";
+w.render();
+ok(w.document.getElementById("v-projekti").textContent.indexOf("Celostna podoba") >= 0,
+  "razdelek Celostna podoba je v pogledu Projekti");
+ok(!!w.document.querySelector('[data-cgp="barve"]'), "polje za barve obstaja");
+ok(!!w.document.querySelector("[data-dropcgp]"), "nalaganje logotipov in pisav obstaja");
+const briefCgp = w.briefText(w.P().kreative[0]);
+ok(briefCgp.indexOf("CELOSTNA PODOBA") >= 0, "CGP gre v brief");
+ok(briefCgp.indexOf("#F2B417") >= 0, "z barvami vred");
+ok(briefCgp.indexOf("Dostop do Drive") >= 0, "zapiski mape gredo v brief");
+
 console.log("\n== stikala ==");
 ok(w.stikala().length === 0, "privzeto ni nobenega stikala — nič se ne spremeni");
 w.dodajStikalo("Trg", ["Slovenija", "Hrvaška", "Slovaška"]);

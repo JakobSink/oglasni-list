@@ -6,7 +6,7 @@
 
 /* Oznaka različice. Poveča jo vsaka objava — v stranski vrstici je vidna, da se
    na prvi pogled loči, ali brskalnik strežé svežo kopijo ali staro iz cache-a. */
-var RAZLICICA="različica 11 · prijava v stranski vrstici";
+var RAZLICICA="različica 11 · prijava v vrstici, CGP na mapi";
 
 /* ============ pomožne funkcije ============ */
 var LS="oglasni-list-v1", LS_TEMA="oglasni-list-tema";
@@ -390,6 +390,10 @@ function migriraj(){
   var znani={};S.projekti.forEach(function(x){
     znani[x.id]=1;
     if(typeof x.zapiski!=="string")x.zapiski="";
+    if(!x.cgp||typeof x.cgp!=="object")x.cgp={};
+    ["barve","pisave","pravila","povezave"].forEach(function(f){
+      if(typeof x.cgp[f]!=="string")x.cgp[f]="";
+    });
   });
   S.izdelki.forEach(function(x){
     if(!x.projekt||!znani[x.projekt])x.projekt=S.projekti[0].id;
@@ -825,6 +829,53 @@ function brisiDatotekeIzdelka(izd){
   });
 }
 
+/* ============ CGP mape ============
+   Celostna podoba je last mape (stranke ali znamke), ne izdelka: logotipi,
+   barve, pisave in pravila. Gre v brief vsake kreative v tej mapi, da izvajalec
+   ne ugiba in ne rabi ločenega PDF-ja.                                       */
+function datLastnikCgp(pr){return "cgp:"+(pr&&pr.id);}
+/* iz besedila poberemo barve, da jih lahko pokažemo kot vzorce */
+function cgpBarve(s){
+  return String(s||"").match(/#[0-9a-fA-F]{3,8}\b|\b(?:rgb|hsl)a?\([^)]+\)/g)||[];
+}
+function cgpHtml(pr){
+  var c=pr.cgp||{};
+  var barve=cgpBarve(c.barve);
+  return '<fieldset class="sect cgp" style="margin-top:18px"><div class="lg"><h3>Celostna podoba</h3>'+
+    '<p>Logotipi, barve, pisave in pravila te znamke. Gre v brief vsake kreative v tej mapi.</p></div>'+
+    '<div class="grid">'+
+      '<div class="f"><label for="cgp-b-'+pr.id+'">Barve</label>'+
+        '<input class="txt" id="cgp-b-'+pr.id+'" type="text" data-cgp="barve" data-pr="'+pr.id+'" value="'+esc(c.barve||"")+'" placeholder="#1F35C4, #F2B417, #F4F5F7">'+
+        (barve.length
+          ? '<span class="cgp-sw">'+barve.map(function(b){
+              return '<i style="background:'+esc(b)+'" title="'+esc(b)+'"></i>';
+            }).join("")+'</span>'
+          : '<span class="hint">Vpiši hex kode, ločene z vejico — pokazale se bodo kot vzorci.</span>')+
+      '</div>'+
+      '<div class="f"><label for="cgp-p-'+pr.id+'">Pisave</label>'+
+        '<input class="txt" id="cgp-p-'+pr.id+'" type="text" data-cgp="pisave" data-pr="'+pr.id+'" value="'+esc(c.pisave||"")+'" placeholder="Naslovi: Inter Bold · Besedilo: Inter Regular">'+
+        '<span class="hint">Kaj za naslove, kaj za besedilo, kaj za cene.</span></div>'+
+    '</div>'+
+    '<div class="f" style="margin-top:14px"><label for="cgp-t-'+pr.id+'">Pravila in ton</label>'+
+      '<textarea id="cgp-t-'+pr.id+'" data-cgp="pravila" data-pr="'+pr.id+'" rows="3" placeholder="Kaj se sme in kaj ne: logo vedno v kotu, brez senc, cene v rumeni, nagovor na ti, brez klicajev …">'+esc(c.pravila||"")+'</textarea></div>'+
+    '<div class="f"><label for="cgp-l-'+pr.id+'">Povezave</label>'+
+      '<input class="txt" id="cgp-l-'+pr.id+'" type="text" data-cgp="povezave" data-pr="'+pr.id+'" value="'+esc(c.povezave||"")+'" placeholder="Povezava do CGP dokumenta, Drive mape, Figme …">'+
+      (String(c.povezave||"").trim()&&/^https?:\/\//i.test(String(c.povezave).trim())
+        ? '<span class="ref-l"><a href="'+esc(String(c.povezave).trim())+'" target="_blank" rel="noopener">'+esc(String(c.povezave).trim().replace(/^https?:\/\//,"").slice(0,60))+'</a></span>'
+        : '')+
+    '</div>'+
+    (Datoteke.naVoljo
+      ? '<div class="drop no-print" id="drop-cgp-'+pr.id+'" data-dropcgp="'+pr.id+'" style="margin-top:14px">'+
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>'+
+          '<b>Naloži logotipe, pisave in CGP dokument</b>'+
+          '<span>SVG, PNG, PDF, datoteke pisav. Sinhronizira se z ekipo.</span>'+
+        '</div>'+
+        '<input type="file" id="dfile-cgp-'+pr.id+'" data-filecgp="'+pr.id+'" multiple hidden>'+
+        '<div class="files" id="datoteke-cgp-'+pr.id+'"></div>'
+      : '')+
+  '</fieldset>';
+}
+
 /* ============ POGLED: projekti ============ */
 function renderProjekti(){
   var vseIzd=S.izdelki.length;
@@ -880,7 +931,8 @@ function renderProjekti(){
         '<div class="f" style="margin-top:18px"><label for="pr-zap-'+pr.id+'">Zapiski o mapi</label>'+
           '<textarea id="pr-zap-'+pr.id+'" data-przap="'+pr.id+'" rows="4" placeholder="Kar velja za celo stranko ali sezono: dogovori, dostopi, kdo odloča, kaj je že bilo testirano, roki …">'+esc(pr.zapiski||"")+'</textarea>'+
           '<span class="hint">Shranjuje se med tipkanjem. Gre v brief vsake kreative v tej mapi.</span></div>'+
-        (izd.length?'<p class="note" style="margin-top:14px">Klik na izdelek ga odpre. Za premik v drugo mapo odpri izdelek in spremeni polje <i>Mapa</i> v Ekonomiki.</p>':
+        cgpHtml(pr)+
+        (izd.length?'<p class="note" style="margin-top:14px">Klik na izdelek odpre njegove <b>kreative</b>. Za premik v drugo mapo odpri izdelek in spremeni polje <i>Mapa</i> v Ekonomiki.</p>':
           '<p class="note" style="margin-top:14px">Mapa je prazna.</p>')+
       '</div>'+
     '</div>';
@@ -2340,6 +2392,11 @@ function datCilji(){
   if(el("datoteke-izd")&&p)out.push({cilj:"datoteke-izd",lastnik:datLastnikIzdelka(p),zapis:p});
   if(el("datoteke-logo")&&p)out.push({cilj:"datoteke-logo",lastnik:datLastnikLogo(p)});
   if(el("datoteke-ref")&&k)out.push({cilj:"datoteke-ref",lastnik:datLastnikRef(k)});
+  /* CGP je na vsaki mapi v pogledu Projekti, zato jih naštejemo iz DOM */
+  qa("[id^='datoteke-cgp-']").forEach(function(box){
+    var prid=box.id.replace("datoteke-cgp-","");
+    out.push({cilj:box.id,lastnik:"cgp:"+prid});
+  });
   return out;
 }
 function narisiDatoteke(){
@@ -3414,7 +3471,15 @@ function briefText(k){
   if(k.izvajalec||k.rok)L.push("Dela: "+(k.izvajalec||"—")+(k.rok?" · rok: "+k.rok:""));
   if(k.kot){L.push("");L.push("KOT: "+k.kot);}
   if(k.publika)L.push("PUBLIKA: "+k.publika);
-  if(String(PR().zapiski||"").trim()){L.push("");L.push("── O MAPI ──");L.push(PR().zapiski);}
+  var prb=PR(), cgp=prb.cgp||{};
+  if(String(prb.zapiski||"").trim()){L.push("");L.push("── O MAPI ──");L.push(prb.zapiski);}
+  if(cgp.barve||cgp.pisave||cgp.pravila||cgp.povezave){
+    L.push("");L.push("── CELOSTNA PODOBA ──");
+    if(cgp.barve)L.push("Barve: "+cgp.barve);
+    if(cgp.pisave)L.push("Pisave: "+cgp.pisave);
+    if(cgp.pravila)L.push("Pravila: "+cgp.pravila);
+    if(cgp.povezave)L.push("CGP dokument: "+cgp.povezave);
+  }
   if(String(p.zapiski||"").trim()){L.push("");L.push("── O IZDELKU ──");L.push(p.zapiski);}
 
   var lim=LIM[k.platforma]||LIM.drugo;
@@ -3975,6 +4040,20 @@ document.addEventListener("input",function(ev){
       });
     }
     t.selectionStart=t.selectionEnd=pos;
+  }else if(t.dataset.cgp!=null){
+    var prc=S.projekti.filter(function(x){return x.id===t.dataset.pr;})[0];
+    if(prc){
+      if(!prc.cgp||typeof prc.cgp!=="object")prc.cgp={};
+      prc.cgp[t.dataset.cgp]=t.value;
+      shrani();
+      /* vzorce barv osvežimo brez ponovnega izrisa celega pogleda */
+      if(t.dataset.cgp==="barve"){
+        var sw=q(".cgp-sw",t.parentNode);
+        if(sw)sw.innerHTML=cgpBarve(t.value).map(function(b){
+          return '<i style="background:'+esc(b)+'" title="'+esc(b)+'"></i>';
+        }).join("");
+      }
+    }
   }else if(t.dataset.przap!=null){
     var pr0=S.projekti.filter(function(x){return x.id===t.dataset.przap;})[0];
     if(pr0){pr0.zapiski=t.value;shrani();}
@@ -4029,6 +4108,10 @@ document.addEventListener("change",function(ev){
   if(t.id==="dfile-izd"){
     var pi=P();
     if(pi)dodajDatoteke(t.files,datLastnikIzdelka(pi));
+    t.value="";return;
+  }
+  if(t.dataset.filecgp!=null){
+    dodajDatoteke(t.files,"cgp:"+t.dataset.filecgp);
     t.value="";return;
   }
   if(t.id==="dfile-ref"){
@@ -4279,7 +4362,8 @@ document.addEventListener("click",function(ev){
     var izd3=S.izdelki.filter(function(x){return x.id===pick.dataset.pick;})[0];
     if(!izd3)return;
     S.aktivenProjekt=izd3.projekt;S.aktiven=izd3.id;odprtaKreativa=null;
-    shrani();polniIzbirnik();nastaviView("pregled");return;
+    /* klik na izdelek pelje naravnost na kreative — tam se dela */
+    shrani();polniIzbirnik();nastaviView("kreative");return;
   }
   var prpick=t.closest("[data-prpick]");
   if(prpick){
@@ -4350,6 +4434,8 @@ document.addEventListener("click",function(ev){
   }
   if(t.id==="logo-btn"){el("dfile-logo").click();return;}
   if(t.closest("#drop-ref")){el("dfile-ref").click();return;}
+  var dcgp=t.closest("[data-dropcgp]");
+  if(dcgp){var vhod=el("dfile-cgp-"+dcgp.dataset.dropcgp);if(vhod)vhod.click();return;}
 
   switch(t.id){
     case "back": odprtaKreativa=null;pocistiUrlje();render();window.scrollTo(0,0);break;
