@@ -1035,8 +1035,11 @@ pre{font-family:var(--mono);font-size:12px;background:var(--surf3);border-radius
   .korak{gap:10px}
   .korak-n{width:22px;height:22px;font-size:12px}
 }
-/* vodoravno drsenje cele strani ni nikoli v redu */
-html,body{max-width:100%;overflow-x:hidden}
+/* Vodoravno drsenje ustavimo v vsebini, NE na html/body: overflow na korenu
+   naredi iz telesa drsni okvir in stranska vrstica s position:sticky se odlepi.
+   overflow-x:clip reze brez drsnega okvirja, zato sticky ostane cel.        */
+main{overflow-x:clip}
+@supports not (overflow:clip){main{overflow-x:hidden}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 @media print{

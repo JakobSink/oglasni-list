@@ -1,4 +1,4 @@
-# Oglaševalka
+# Oglasni list
 
 Delovni prostor za pisanje oglasnih kreativ (Facebook, Instagram, Google, TikTok), načrtovanje budgeta in izračun tega, kaj od naročila sploh ostane.
 

@@ -6,7 +6,7 @@
 
 /* Oznaka različice. Poveča jo vsaka objava — v stranski vrstici je vidna, da se
    na prvi pogled loči, ali brskalnik strežé svežo kopijo ali staro iz cache-a. */
-var RAZLICICA="različica 9 · skupen prostor za ekipo, slike v oblaku";
+var RAZLICICA="različica 10 · popravljena stranska vrstica";
 
 /* ============ pomožne funkcije ============ */
 var LS="oglasni-list-v1", LS_TEMA="oglasni-list-tema";
