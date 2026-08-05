@@ -470,6 +470,41 @@ table.mtx th:first-child{text-align:left}
 /* stikala: vrednosti na kartici kreative in vrstica s filtrom nad seznamom */
 .tags.stik span{background:var(--surf2);border:1px solid var(--line2);color:var(--ink2)}
 .tags.stik span.vodi{border-color:var(--brand);color:var(--brand)}
+/* brief po korakih: stevilka koraka ob polju */
+.korak{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-top:1px solid var(--line)}
+.korak:first-of-type{border-top:none;padding-top:2px}
+.korak>div{flex:1;min-width:0}
+.korak-n{
+  flex:none;width:24px;height:24px;border-radius:50%;background:var(--brand);color:var(--brand-on);
+  display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;margin-top:2px;
+}
+/* referenca: seznam povezav */
+.ref-l{display:flex;flex-direction:column;gap:4px;margin:-4px 0 4px}
+.ref-l a,.ref-l span{font-size:12.5px;color:var(--brand);word-break:break-all}
+.ref-l span{color:var(--ink3)}
+
+/* banka hookov: vpis, kategorije, seznam z gumbom za brisanje */
+.bank-w{margin-top:6px}
+.bank-add{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.bank-add #bank-nov{flex:1 1 240px;min-width:0}
+.bank-add #bank-kat{flex:0 0 auto;width:auto}
+.bank-kat{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.bank-i{display:inline-flex;align-items:stretch}
+.bank-i .bank-x{
+  border:1px solid var(--line2);border-left:none;background:var(--surf);color:var(--ink3);
+  border-radius:0 10px 10px 0;padding:0 8px;font:inherit;font-size:11px;cursor:pointer;
+}
+.bank-i .bank-x:hover{color:var(--neg);border-color:var(--neg)}
+.bank-i [data-hook]{border-radius:10px 0 0 10px}
+
+/* stikala na vrhu kreative: oznaka, gumbi in vklop locenih besedil v eni vrsti */
+.stik-bar .pad{display:flex;flex-direction:column;gap:12px}
+.stik-vrsta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.stik-vrsta .lbl{margin:0;min-width:72px}
+.stik-vrsta .um-pills{align-self:auto;flex:0 1 auto}
+.stik-vrsta .hint{flex:1 1 100%;margin:0}
+.stik-loci{white-space:nowrap;font-size:12.5px}
+
 .stik-filter .pad{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:flex-start}
 .stik-filter .f{flex:0 1 auto;min-width:180px}
 .stik-filter .note{flex:1 1 100%;margin:0}
@@ -502,12 +537,29 @@ table.mtx th:first-child{text-align:left}
 .ft.na-temnem.fold .ft-m{right:0;bottom:0;color:rgba(255,255,255,.85);background:linear-gradient(90deg,transparent,rgba(0,0,0,.75) 22px)}
 
 /* ---- okvir telefona ---- */
+/* Okvir iPhone 15: titanijev rob, Dynamic Island, tipke ob strani.
+   Radij in debelina roba sta blizu pravih mer, da predogled ne izgleda kot
+   splosen "telefon" - ko oglas pokazes stranki, je razlika opazna.          */
 .fon{
-  width:100%;max-width:336px;background:#fff;color:#050505;
-  border:8px solid #16181C;border-radius:36px;overflow:hidden;
-  box-shadow:var(--sh-3);
-  font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.35;
+  position:relative;
+  width:100%;max-width:340px;background:#fff;color:#050505;
+  border:11px solid #3C3C41;border-radius:52px;overflow:hidden;
+  box-shadow:0 0 0 1.5px #86868B, 0 0 0 3px #2A2A2E, var(--sh-3);
+  font-family:-apple-system,"SF Pro Text","Segoe UI",system-ui,Helvetica,Arial,sans-serif;
+  font-size:14px;line-height:1.35;
+  padding-top:6px;
 }
+/* Dynamic Island */
+.fon::before{
+  content:"";position:absolute;top:9px;left:50%;transform:translateX(-50%);
+  width:80px;height:23px;background:#000;border-radius:14px;z-index:20;pointer-events:none;
+}
+/* tipke: glasnost in stranska tipka */
+.fon::after{
+  content:"";position:absolute;top:96px;right:-14px;width:3px;height:64px;
+  background:#86868B;border-radius:0 2px 2px 0;z-index:1;
+}
+.fon-polni::before{background:#000}
 :root[data-theme="dark"] .fon{background:#242526;color:#E4E6EB;border-color:#0A0B0D}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .fon{background:#242526;color:#E4E6EB;border-color:#0A0B0D}}
 .fon-b{max-height:560px;overflow-y:auto;scrollbar-width:none}
@@ -515,7 +567,16 @@ table.mtx th:first-child{text-align:left}
 .fon-polni{position:relative;aspect-ratio:9/16;background:#000;color:#fff;border-color:#0A0B0D}
 :root[data-theme="dark"] .fon-polni{background:#000;color:#fff}
 
-.fon-s{display:flex;align-items:center;gap:5px;padding:8px 18px 4px;font-size:11.5px;font-weight:600}
+/* statusna vrstica se umakne Dynamic Islandu: ura levo, ikone desno */
+.fon-s{display:flex;align-items:center;gap:5px;padding:6px 22px 6px;font-size:12px;font-weight:600;position:relative;z-index:21}
+.fon-s .ura{min-width:52px}
+/* logo oglasevalca v avatarju */
+.fb-av img,.gg-fav img,.tt-av .fb-av img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
+.fb-av.ima-logo,.gg-fav.ima-logo{background:#fff;padding:0;overflow:hidden}
+/* seznam z enim samim logotipom stoji ob gumbu, ne pod njim */
+.files-logo{display:flex;gap:8px;margin:0}
+.files-logo .file{width:64px}
+.files-logo .meta{display:none}
 .fon-s.nad{position:absolute;inset:0 0 auto 0;color:#fff;z-index:4;text-shadow:0 1px 2px rgba(0,0,0,.4)}
 .fon-s .sig{display:flex;align-items:flex-end;gap:1.5px;height:9px}
 .fon-s .sig i{width:2.5px;background:currentColor;border-radius:1px;display:block}

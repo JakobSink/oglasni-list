@@ -140,7 +140,7 @@ if (g) {
   const t = w.document.getElementById("predogled").innerHTML;
   ok(t.indexOf("vinil") >= 0 && t.indexOf("na-klik") >= 0, "prikazna pot v predogledu");
   ok(t.indexOf("Cenik") >= 0, "sitelinki v predogledu");
-  ok(t.indexOf("Sponzorirano") >= 0, "oznaka Sponzorirano");
+  ok(t.indexOf("Sponsored") >= 0, "oznaka Sponsored (vmesnik je angleški, kot v resnici)");
   ok(w.briefText(g).indexOf("PRIKAZNA POT") >= 0, "pot v briefu");
 }
 
@@ -241,14 +241,17 @@ w.S.aktiven = ps.id;
 w.odprtaKreativa = kv.id;
 ok(w.briefText(kv).indexOf("Trg: Hrvaška") >= 0, "brief navede vrednost stikala");
 ok(w.briefText(kv).indexOf("vodi") >= 0, "brief pove, da stikalo vodi besedila");
-ok(w.xlsStolpci().some((c) => c.g === "Trg"), "izvoz v Excel dobi stolpec Trg");
+ok(w.xlsVrstice().some((c) => c.g === "Trg"), "izvoz v Excel dobi vrstico Trg");
+ok(w.xlsVrstice()[0].g === "Izdelek" && w.xlsVrstice().map((c) => c.g).indexOf("Ime kreative") > 0,
+  "izvoz je obrnjen: polja so v vrsticah");
 
 /* urejevalnik se izrise s stikali */
 w.view = "kreative";
 try {
   w.renderEditor();
   ok(w.document.querySelectorAll('[data-stik="k"]').length === 4, "urejevalnik izriše gumbe stikala");
-  ok(!!w.document.getElementById("c-vodi"), "izbirnik vodenja je v urejevalniku");
+  ok(w.document.querySelectorAll("[data-loci]").length === 1, "vklop ločenih besedil je ob stikalu");
+  ok(w.document.querySelector("[data-loci]").checked === true, "obkljukano, ker to stikalo vodi besedila");
 } catch (e) { ok(false, "urejevalnik s stikali", e.message); }
 
 /* preimenovanje moznosti ne sme pustiti kreative brez pogleda */

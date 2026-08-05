@@ -1,4 +1,4 @@
-# Oglasni list
+# Oglasna miza
 
 Delovni prostor za pisanje oglasnih kreativ (Facebook, Instagram, Google, TikTok), načrtovanje budgeta in izračun tega, kaj od naročila sploh ostane.
 
@@ -12,6 +12,14 @@ Odpre se v brskalniku na telefonu ali računalniku, brez namestitve. Deluje tudi
 
 **Ekonomika izdelka — neobvezna.** Privzeto izklopljena; izdelek lahko uporabljaš samo za kreative. Ko jo vklopiš: cena, DDV, nabavna, dostava, embalaža, provizija plačila, vračila → marža na naročilo, **break-even CPA** (največ, kar smeš plačati za naročilo) in **break-even ROAS**. Zraven razrez enega naročila vrstico po vrstico in tabela scenarijev od 1 do 50 prodaj na dan.
 
+**Predogled v telefonu.** Vsak predogled je v okvirju iPhona, vmesnik platforme pa je v angleščini — *Sponsored*, *Like / Comment / Share*, *Shop now*, *For You* — ker je tak tudi v resnici. Tvoje besedilo ostane slovensko. Logo podjetja naložiš na izdelku in nadomesti začetnice v krogcu, tudi kot favikon v Googlu.
+
+**Referenca na kreativi.** Povezave do primerov, ki si jih videl, posnetki zaslona in tvoj komentar, kaj bi prevzel in kaj naredil drugače. Ločeno od materiala — v oglas nikoli ne gre.
+
+**Brief po korakih.** Vedno isti štirje: kaj se vidi in sliši, kaj izvajalec potrebuje, kdo dela do kdaj in kaj mora vrniti, opombe in popravki. Gumb *Kopiraj brief* da to v enem kosu.
+
+**Banka hookov.** Svoje hooke vpisuješ sam, shranijo se sproti in jih razvrstiš po kategoriji (boleča točka, dokaz, cena, hitrost …). Klik na hook ga doda kot novo različico v odprti kreativi. Banka je skupna vsem mapam.
+
 **Umestitve, ne samo platforme.** Predogled in polja določi *umestitev* — tisto, kar v oglasnem računu izbereš pod „placements“. 15 umestitev: FB Feed / Reels / Zgodba / Marketplace, IG Feed / Reels / Zgodba / Razišči, Google Iskanje / Display / Performance Max, TikTok Za vas, YouTube In-stream / Shorts. Ista kreativa v feedu izgleda drugače kot v zgodbi in ne prikaže istih polj — v Marketplace se primarno besedilo ne vidi, v IG Feed se naslov ne vidi, in aplikacija ti to napiše pod poljem.
 
 **Kreative.** Kot oglasa, publika, hook, besedilo s števci znakov (Facebook 125/40/30, Google RSA 30 × 5 in 90 × 3 z ločenimi polji, ključnimi besedami, prikazno potjo in sitelinki), design brief s checklistom, banka hookov, nalaganje slik in videov, budget.
@@ -23,7 +31,7 @@ Odpre se v brskalniku na telefonu ali računalniku, brez namestitve. Deluje tudi
 
 Stikala urejaš v zavihku **Podatki**. Če jih ne narediš, jih ni nikjer — nič v aplikaciji se ne spremeni.
 
-**Izvoz v Excel.** Pravi `.xlsx`, brez knjižnic in brez interneta. Izbereš obseg (izdelek / mapa / vse) in oglase, dobiš tri liste: *Oglasi* (kaj se vidi in sliši, besedila, gumb, URL, pot, sitelinki, budget, CPA), *Različice besedil* (vse variante s številom znakov in oznako „nad mejo“) in *Povzetek*.
+**Izvoz v Excel.** Pravi `.xlsx`, brez knjižnic in brez interneta. Izbereš obseg (izdelek / mapa / vse) in oglase, dobiš tri liste. List *Oglasi* je obrnjen: v stolpcu A so imena polj (Kreativa, Ime kreative, Hook, Primarno besedilo, Naslov pod sliko, Opis, GUMB, URL, Publika in targetiranje …), vsak naslednji stolpec je en oglas — tako se kopije berejo drug ob drugem. Zraven sta *Različice besedil* (vse variante s številom znakov in oznako „nad mejo“) in *Povzetek*.
 
 **Dva bloka številk na kreativo.** *Načrt*: vpišeš CPM, CTR, CVR → dobiš prikaze, klike, naročila, CPC, CPA, ROAS in profit. *Rezultati*: vpišeš dejansko porabo, prikaze, klike in naročila → dobiš izmerjene metrike. Aplikacija primerja dejanski CPA z break-even in ti pove, ali skalirati ali ustaviti.
 

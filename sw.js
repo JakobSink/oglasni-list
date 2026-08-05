@@ -1,5 +1,5 @@
 /* Offline delovanje: omrežje najprej, predpomnilnik kot rezerva. */
-var CACHE="oglasni-list-v5";
+var CACHE="oglasni-list-v7";
 var DATOTEKE=["./","index.html","styles.css","app.js","config.js","manifest.webmanifest","icon.svg"];
 
 self.addEventListener("install",function(ev){

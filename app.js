@@ -6,7 +6,7 @@
 
 /* Oznaka različice. Poveča jo vsaka objava — v stranski vrstici je vidna, da se
    na prvi pogled loči, ali brskalnik strežé svežo kopijo ali staro iz cache-a. */
-var RAZLICICA="različica 6 · stikala in mapa Eureka";
+var RAZLICICA="različica 7 · iPhone predogled, referenca, banka hookov";
 
 /* ============ pomožne funkcije ============ */
 var LS="oglasni-list-v1", LS_TEMA="oglasni-list-tema";
@@ -262,7 +262,7 @@ function stikOpis(zapis){
   }).join(" · ");
 }
 
-function novProjekt(ime){return {id:uid(),ime:ime||"Nov projekt",opis:""};}
+function novProjekt(ime){return {id:uid(),ime:ime||"Nov projekt",opis:"",zapiski:""};}
 function novIzdelek(ime,projekt){
   return {id:uid(),projekt:projekt||null,ime:ime||"Nov izdelek",opis:"",znamka:"",domena:"",url:"",
     zapiski:"",stDatotek:0,izracuni:false,stikala:{},
@@ -279,6 +279,7 @@ function novaKreativa(pl){
     kot:"",publika:"",tagi:"",
     hooki:[""],primarna:[""],naslovi:[""],opisi:[""],cta:privzetiCTA(pl),
     kljucneBesede:"",url:"",pot1:"",pot2:"",sitelinki:"",design:"",izvajalec:"",rok:"",opombe:"",stDatotek:0,
+    material:"",oddaja:"",refLinki:"",refOpis:"",ugotovitve:"",
     stikala:{},vodi:"",variante:{},
     budget:"",cpm:"",ctr:"",cvr:"",
     rSpend:"",rImpr:"",rClicks:"",rOrders:""};
@@ -355,6 +356,22 @@ function ocistiSeznam(a){
   return a.length?a:[""];
 }
 
+/* Vzorci, s katerimi se banka hookov napolni prvič. Potem je uporabnikova. */
+var HOOKI=[
+ "Tri leta sem plačeval X. Potem sem …",
+ "Če te [problem] budi ponoči, preberi to.",
+ "Nehaj kupovati [kategorija], dokler ne vidiš tega.",
+ "Naredil sem napako, ki jo dela 90 % ljudi z [problem].",
+ "[Število] dni. Brez [problem]. Brez [običajna rešitev].",
+ "Zakaj [ciljna skupina] to naroča po dva naenkrat",
+ "Prodali smo [število] kosov v [obdobje]. Tukaj je zakaj.",
+ "Poglej razliko po enem tednu (fotografija prej/potem)",
+ "To je stalo manj kot ena masaža / en obisk / ena dostava",
+ "Če ti v 30 dneh ne pomaga, ti vrnemo denar. Brez vprašanj.",
+ "Primerjava: [naša rešitev] proti [običajna rešitev]",
+ "Nihče ti ne pove tega o [kategorija]"
+];
+
 /* Poskrbi, da je stanje veljavno tudi po uvozu ali starejši različici. */
 function migriraj(){
   if(!S||typeof S!=="object")S=seed();
@@ -366,7 +383,10 @@ function migriraj(){
     S.izdelki.forEach(function(x){x.projekt=pr.id;});
     S.aktivenProjekt=pr.id;
   }
-  var znani={};S.projekti.forEach(function(x){znani[x.id]=1;});
+  var znani={};S.projekti.forEach(function(x){
+    znani[x.id]=1;
+    if(typeof x.zapiski!=="string")x.zapiski="";
+  });
   S.izdelki.forEach(function(x){
     if(!x.projekt||!znani[x.projekt])x.projekt=S.projekti[0].id;
     if(typeof x.znamka!=="string")x.znamka="";
@@ -404,6 +424,11 @@ function migriraj(){
       if(!k.stikala||typeof k.stikala!=="object")k.stikala={};
       if(!k.variante||typeof k.variante!=="object")k.variante={};
       if(typeof k.vodi!=="string")k.vodi="";
+      /* brief po korakih in referenca sta novi — stare opombe so bile mešanica
+         navodil in ugotovitev, zato jih pustimo v opombah in ugotovitve začnemo prazne */
+      ["material","oddaja","refLinki","refOpis","ugotovitve"].forEach(function(f){
+        if(typeof k[f]!=="string")k[f]="";
+      });
     });
   });
   if(!S.aktivenProjekt||!znani[S.aktivenProjekt])S.aktivenProjekt=S.projekti[0].id;
@@ -418,6 +443,16 @@ function migriraj(){
     g.moznosti=g.moznosti.map(function(m){return String(m==null?"":m).trim();}).filter(Boolean);
   });
   if(!S.stikaloPogled||typeof S.stikaloPogled!=="object")S.stikaloPogled={};
+
+  /* banka hookov: prvič jo napolnimo z vzorci, potem je uporabnikova */
+  if(!Array.isArray(S.banka))
+    S.banka=HOOKI.map(function(t){return {id:uid(),txt:t,kat:"vzorec"};});
+  S.banka=S.banka.filter(function(h){return h&&String(h.txt||"").trim();});
+  S.banka.forEach(function(h){
+    if(!h.id)h.id=uid();
+    if(typeof h.kat!=="string"||!h.kat)h.kat="drugo";
+  });
+
   /* vrednosti, ki jih stikalo ne pozna več (preimenovana možnost), pobrišemo,
      da kreativa ne izpade iz vseh pogledov                                  */
   var znanaSt={};
@@ -665,13 +700,19 @@ var Datoteke=(function(){
 function brisiDatotekeKreativ(kreative){
   if(!Datoteke.naVoljo)return Promise.resolve();
   var p=Promise.resolve();
-  kreative.forEach(function(k){p=p.then(function(){return Datoteke.brisiZaKreativo(k.id).catch(function(){});});});
+  /* s kreativo gredo tudi njene reference */
+  kreative.forEach(function(k){
+    p=p.then(function(){return Datoteke.brisiZaKreativo(k.id).catch(function(){});})
+      .then(function(){return Datoteke.brisiZaKreativo(datLastnikRef(k)).catch(function(){});});
+  });
   return p;
 }
-/* z izdelkom gre tudi njegov material */
+/* z izdelkom gredo tudi njegov material in logo */
 function brisiDatotekeIzdelka(izd){
   if(!Datoteke.naVoljo)return Promise.resolve();
   return brisiDatotekeKreativ(izd.kreative||[]).then(function(){
+    return Datoteke.brisiZaKreativo(datLastnikLogo(izd)).catch(function(){});
+  }).then(function(){
     return Datoteke.brisiZaKreativo(datLastnikIzdelka(izd)).catch(function(){});
   });
 }
@@ -727,6 +768,10 @@ function renderProjekti(){
         '<div class="cards">'+izdelki+
           '<button class="card card-add" data-addi="'+pr.id+'"><b>+ Izdelek</b><span>cena, stroški, kreative</span></button>'+
         '</div>'+
+        /* zapiski mape: kar velja za celo stranko ali sezono, ne za en izdelek */
+        '<div class="f" style="margin-top:18px"><label for="pr-zap-'+pr.id+'">Zapiski o mapi</label>'+
+          '<textarea id="pr-zap-'+pr.id+'" data-przap="'+pr.id+'" rows="4" placeholder="Kar velja za celo stranko ali sezono: dogovori, dostopi, kdo odloča, kaj je že bilo testirano, roki …">'+esc(pr.zapiski||"")+'</textarea>'+
+          '<span class="hint">Shranjuje se med tipkanjem. Gre v brief vsake kreative v tej mapi.</span></div>'+
         (izd.length?'<p class="note" style="margin-top:14px">Klik na izdelek ga odpre. Za premik v drugo mapo odpri izdelek in spremeni polje <i>Mapa</i> v Ekonomiki.</p>':
           '<p class="note" style="margin-top:14px">Mapa je prazna.</p>')+
       '</div>'+
@@ -766,9 +811,17 @@ function renderPregled(){
     '<button class="btn btn-p" data-goto="kreative">Kreative</button>',
     [{t:PR().ime,v:"projekti"},{t:p.ime}])+
 
-  /* 1 — ali izdelek prenese oglase */
+  /* 1 — kreative: kaj je dano delat in kaj teče */
   '<div class="block">'+
-    '<header><div class="head-t"><span class="eyebrow">1 — Temelj</span>'+
+    '<header><div class="head-t"><span class="eyebrow">1 — Oglasi</span><h2>Kreative</h2></div>'+
+      '<p data-o="krN"></p><span class="sp"></span>'+
+      '<button class="btn btn-s no-print" data-goto="kreative">Odpri vse</button></header>'+
+    '<div class="pad" id="pr-kre"></div>'+
+  '</div>'+
+
+  /* 2 — ali izdelek prenese oglase */
+  '<div class="block">'+
+    '<header><div class="head-t"><span class="eyebrow">2 — Temelj</span>'+
       '<h2>Ali izdelek prenese oglase?</h2></div>'+
       '<p>Marža je edini denar, iz katerega lahko plačaš oglase.</p></header>'+
     '<div class="ledger">'+
@@ -779,9 +832,9 @@ function renderPregled(){
     '<div class="pad pad-t" id="pr-verdict"></div>'+
   '</div>'+
 
-  /* 2 — kam gre denar */
+  /* 3 — kam gre denar */
   '<div class="block">'+
-    '<header><div class="head-t"><span class="eyebrow">2 — Razrez</span>'+
+    '<header><div class="head-t"><span class="eyebrow">3 — Razrez</span>'+
       '<h2>Kam gre denar od enega naročila</h2></div>'+
       '<p data-o="wbarSum"></p></header>'+
     '<div class="pad" id="pr-wbar"></div>'+
@@ -789,7 +842,7 @@ function renderPregled(){
 
   /* 3 — načrt z vzvodi */
   '<div class="block">'+
-    '<header><div class="head-t"><span class="eyebrow">3 — Načrt</span>'+
+    '<header><div class="head-t"><span class="eyebrow">4 — Načrt</span>'+
       '<h2>Koliko daš na dan in kaj od tega ostane</h2></div>'+
       '<p>Spremeni številki in preostanek strani se preračuna.</p></header>'+
     '<div class="pad">'+
@@ -811,14 +864,6 @@ function renderPregled(){
       '<div class="cell"><span class="k">Pri 1 prodaji / dan</span><span class="v" data-o="ena">—</span><span class="n" data-o="enaN"></span></div>'+
     '</div>'+
     '<div class="pad pad-t"><p class="note" data-o="stavek"></p></div>'+
-  '</div>'+
-
-  /* 4 — kreative */
-  '<div class="block">'+
-    '<header><div class="head-t"><span class="eyebrow">4 — Oglasi</span><h2>Kreative</h2></div>'+
-      '<p data-o="krN"></p><span class="sp"></span>'+
-      '<button class="btn btn-s no-print" data-goto="kreative">Odpri vse</button></header>'+
-    '<div class="pad" id="pr-kre"></div>'+
   '</div>'+
 
   /* 5 — kaj izboljšati */
@@ -918,18 +963,30 @@ function paintPregled(){
         STATUSI.filter(function(s){return sk[s[0]];}).map(function(s){
           return '<span class="pill st-'+s[0]+'">'+s[1]+' · '+sk[s[0]]+'</span>';}).join("")+
         (caka?'<span class="sp"></span><span class="note"><b>'+caka+'</b> čaka na delo</span>':'')+'</div>'+
-        '<div class="scroll"><table><thead><tr><th>Kreativa</th><th>Status</th><th>Budget / dan</th><th>CPA</th><th>Profit</th></tr></thead><tbody>'+
-        p.kreative.map(function(k){
+        '<div class="scroll"><table><thead><tr><th>Kreativa</th><th>Kje je</th><th>Kdo dela</th><th>Rok</th>'+
+          '<th>Budget / dan</th><th>CPA</th><th>Profit</th></tr></thead><tbody>'+
+        /* najprej tisto, kar čaka na delo — to je razlog, da to tabelo odpreš */
+        p.kreative.slice().sort(function(a,b){
+          var ra=VDELU.indexOf(a.status)>=0?0:(jeVZraku(a)?1:2);
+          var rb=VDELU.indexOf(b.status)>=0?0:(jeVZraku(b)?1:2);
+          return ra-rb;
+        }).map(function(k){
           var r=rezultat(k,ek), l=lijak(k.budget,k.cpm,k.ctr,k.cvr,ek);
           var cpaK=r.imaPodatke&&r.narocil>0?r.cpa:l.cpa;
           var prof=r.imaPodatke?r.profit:l.profit;
-          return '<tr data-open="'+k.id+'" style="cursor:pointer"><td>'+esc(k.naslov)+'</td>'+
+          var caka=VDELU.indexOf(k.status)>=0;
+          return '<tr data-open="'+k.id+'" style="cursor:pointer"'+(caka?' class="mark"':'')+'>'+
+            '<td>'+esc(k.naslov)+
+              (stikala().length?'<i style="display:block;font-size:11.5px;color:var(--ink3);font-style:normal">'+esc(stikOpis(k))+'</i>':'')+
+            '</td>'+
             '<td style="text-align:left"><span class="pill st-'+k.status+'">'+esc(statusIme(k.status))+'</span></td>'+
+            '<td style="text-align:left">'+esc(k.izvajalec||"—")+'</td>'+
+            '<td style="text-align:left">'+esc(k.rok||"—")+'</td>'+
             '<td>'+e(n(k.budget))+'</td>'+
             '<td class="'+(isFinite(cpaK)?(cpaK<=ek.beCPA?"pos":"neg"):"")+'">'+e(cpaK)+'</td>'+
             '<td class="'+znak(prof)+'">'+e(prof)+'</td></tr>';
         }).join("")+'</tbody></table></div>'+
-        '<p class="note" style="margin-top:10px">Stolpec CPA in Profit sta iz izmerjenih rezultatov, kjer so vpisani, drugače iz napovedi. Klik na vrstico odpre kreativo.</p>';
+        '<p class="note" style="margin-top:10px">Zgoraj je tisto, kar čaka na delo, potem kar teče, na koncu ostalo. CPA in Profit sta iz izmerjenih rezultatov, kjer so vpisani, drugače iz napovedi. Klik na vrstico odpre kreativo.</p>';
     }
   }
 
@@ -978,6 +1035,13 @@ function renderEkon(){
         '</select><span class="hint">Sprememba izdelek takoj prestavi v drugo mapo.</span></div>'+
         txtFld("opis","Kratek opis / ponudba","Pokaže se na Pregledu in v briefu.")+
         txtFld("znamka","Ime strani / znamke","Uporabi se kot ime oglaševalca v predogledu oglasa.","npr. Moja trgovina")+
+        (Datoteke.naVoljo
+          ? '<div class="f"><span class="lbl">Logo podjetja</span>'+
+              '<div class="row"><button class="btn btn-s btn-soft no-print" id="logo-btn">Naloži logo</button>'+
+                '<input type="file" id="dfile-logo" accept="image/*" hidden>'+
+                '<div class="files files-logo" id="datoteke-logo"></div></div>'+
+              '<span class="hint">Kvadratna slika. V predogledu oglasa nadomesti začetnice v krogcu — na Facebooku, Instagramu, TikToku in kot favikon v Googlu.</span></div>'
+          : '')+
         txtFld("domena","Domena","Prikaže se v predogledu FB in Google oglasa.","npr. mojatrgovina.si")+
         txtFld("url","Povezava na izdelek","Privzeti ciljni URL za nove kreative tega izdelka.","https://…")+
       '</div>'+
@@ -1115,21 +1179,54 @@ function paintEkon(){
     '<b>Kdaj ubiti kreativo:</b> po '+e(testBudget*3)+' porabe brez naročila, ali ko CPA preseže '+e(ek.beCPA)+'.</p>';
 }
 
-/* ============ POGLED: kreative ============ */
-var HOOKI=[
- "Tri leta sem plačeval X. Potem sem …",
- "Če te [problem] budi ponoči, preberi to.",
- "Nehaj kupovati [kategorija], dokler ne vidiš tega.",
- "Naredil sem napako, ki jo dela 90 % ljudi z [problem].",
- "[Število] dni. Brez [problem]. Brez [običajna rešitev].",
- "Zakaj [ciljna skupina] to naroča po dva naenkrat",
- "Prodali smo [število] kosov v [obdobje]. Tukaj je zakaj.",
- "Poglej razliko po enem tednu (fotografija prej/potem)",
- "To je stalo manj kot ena masaža / en obisk / ena dostava",
- "Če ti v 30 dneh ne pomaga, ti vrnemo denar. Brez vprašanj.",
- "Primerjava: [naša rešitev] proti [običajna rešitev]",
- "Nihče ti ne pove tega o [kategorija]"
-];
+/* ============ banka hookov ============
+   Vzorci spodaj so samo začetek. Svoje hooke dodajaš sam, shranijo se sproti in
+   jih razvrstiš po kategoriji — banka je uporabna šele, ko je tvoja.        */
+var HOOK_KAT=["boleča točka","dokaz","cena","hitrost","primerjava","zgodba","brez tveganja","sezona","drugo"];
+function bankaSeznam(){
+  if(!Array.isArray(S.banka))S.banka=[];
+  return S.banka;
+}
+function bankaDodaj(txt,kat){
+  txt=String(txt||"").trim();
+  if(!txt)return null;
+  var h={id:uid(),txt:txt,kat:kat||"drugo"};
+  bankaSeznam().push(h);
+  shrani();
+  return h;
+}
+/* katera kategorija je zdaj v pogledu banke */
+var bankaKat="vse";
+function bankaHtml(){
+  var vsi=bankaSeznam();
+  var kat=vsi.reduce(function(a,h){a[h.kat]=(a[h.kat]||0)+1;return a;},{});
+  var vidni=bankaKat==="vse"?vsi:vsi.filter(function(h){return h.kat===bankaKat;});
+  return '<div class="f no-print bank-w"><span class="lbl">Banka hookov'+
+      '<em class="cnt-b">'+vsi.length+'</em></span>'+
+    '<div class="bank-add">'+
+      '<input class="txt" type="text" id="bank-nov" placeholder="Napiši svoj hook in pritisni Enter">'+
+      '<select class="txt" id="bank-kat">'+
+        HOOK_KAT.map(function(x){return '<option'+(x==="drugo"?" selected":"")+'>'+esc(x)+'</option>';}).join("")+
+      '</select>'+
+      '<button class="btn btn-s btn-p" id="bank-go">Shrani v banko</button>'+
+    '</div>'+
+    (vsi.length
+      ? '<div class="bank-kat">'+
+          '<button type="button" class="um-p'+(bankaKat==="vse"?" on":"")+'" data-bkat="vse">vse · '+vsi.length+'</button>'+
+          /* kategorije beremo iz banke, ne iz fiksnega seznama — tako se pokažejo
+             tudi tiste, ki si jih uvozil ali preimenoval                       */
+          Object.keys(kat).sort().map(function(x){
+            return '<button type="button" class="um-p'+(bankaKat===x?" on":"")+'" data-bkat="'+esc(x)+'">'+esc(x)+' · '+kat[x]+'</button>';
+          }).join("")+
+        '</div>'+
+        '<div class="bank">'+vidni.map(function(h){
+          return '<span class="bank-i"><button type="button" data-hook="'+h.id+'" title="Klikni, da ga vstaviš kot novo različico">'+esc(h.txt)+'</button>'+
+            '<button type="button" class="bank-x" data-bdel="'+h.id+'" title="Odstrani iz banke" aria-label="Odstrani">✕</button></span>';
+        }).join("")+'</div>'
+      : '<p class="hint">Banka je prazna. Vpiši hook zgoraj — shrani se sproti in ostane na voljo pri vsaki kreativi.</p>')+
+    '<span class="hint">Klik na hook ga doda kot novo različico v tej kreativi. Banka je skupna vsem izdelkom in mapam.</span>'+
+  '</div>';
+}
 
 function renderKreative(){
   var p=P();
@@ -1300,28 +1397,24 @@ function stikNapisane(k,g){
    pripada) ali pa vodi besedila — takrat ima vsaka možnost svoj tekst.       */
 function stikalaKreativeHtml(k){
   var vodeno=stikVodi(k);
-  var h='<fieldset class="sect"><div class="lg"><h3>Stikala</h3>'+
-    '<p>Vrednost pove, kateremu naboru ta oglas pripada. Če eno stikalo <b>vodi besedila</b>, ima vsaka njegova možnost svoj hook, besedilo, naslove in URL — preklop jih zamenja.</p></div>';
+  var h='<div class="block stik-bar"><div class="pad">';
   stikala().forEach(function(g){
     var v=stikVrednost(k,g), jeVodeno=vodeno&&vodeno.id===g.id;
-    h+='<div class="f"><span class="lbl">'+esc(g.ime)+
-      (jeVodeno?' <em class="cnt-b">vodi besedila</em>':'')+'</span>'+
+    h+='<div class="stik-vrsta">'+
+      '<span class="lbl">'+esc(g.ime)+'</span>'+
       stikPills("k",g,v,true)+
-      (jeVodeno
-        ? '<span class="hint">Preklop shrani, kar je zdaj vpisano, in naloži besedila izbrane možnosti. '+
-          'Napisano pri: '+esc(stikNapisane(k,g).join(", ")||"—")+'.</span>'
-        : (v===STIK_VSE?'<span class="hint">„vse“ pomeni, da je ta oglas viden pri vsaki možnosti.</span>':''))+
+      '<label class="chk stik-loci" title="Vsaka možnost tega stikala dobi svoj hook, besedilo, naslove, opise, gumb in URL">'+
+        '<input type="checkbox" data-loci="'+g.id+'"'+(jeVodeno?" checked":"")+'> ločena besedila'+
+      '</label>'+
+      '<span class="hint">'+(jeVodeno
+        ? 'Preklop shrani, kar je vpisano, in naloži besedila izbrane možnosti. Napisano pri: <b>'+
+          esc(stikNapisane(k,g).join(", ")||"—")+'</b>.'
+        : (v===STIK_VSE
+            ? '„vse“ pomeni, da je oglas viden pri vsaki možnosti. Besedilo je skupno.'
+            : 'Besedilo je zdaj skupno vsem možnostim. Obkljukaj <i>ločena besedila</i>, če hočeš za vsako možnost svoj tekst.'))+'</span>'+
     '</div>';
   });
-  h+='<div class="f"><label for="c-vodi">Katero stikalo vodi besedila</label>'+
-    '<select class="txt" id="c-vodi" data-vodi="1">'+
-      '<option value=""'+(k.vodi?"":" selected")+'>nobeno — besedilo je eno samo</option>'+
-      stikala().map(function(g){
-        return '<option value="'+g.id+'"'+(k.vodi===g.id?" selected":"")+'>'+esc(g.ime)+'</option>';
-      }).join("")+
-    '</select>'+
-    '<span class="hint">Ob vklopu vsaka možnost dobi kopijo trenutnih besedil, da ne pišeš iz nič. Ob izklopu ostanejo shranjena, samo preklapljanja ni več.</span></div>';
-  return h+'</fieldset>';
+  return h+'</div></div>';
 }
 
 function varList(k,polje,label,limit,hint,vrstic){
@@ -1385,6 +1478,9 @@ function renderEditor(){
     '<button class="btn btn-d" id="delk">Izbriši</button>',
     [{t:PR().ime,v:"projekti"},{t:p.ime,v:"pregled"},{t:"Kreative",v:"kreative"},{t:platNaziv+" · "+u[1]}])+
 
+  /* stikala takoj pod naslovom — s tem preklapljaš trg oziroma različico */
+  (stikala().length?stikalaKreativeHtml(k):'')+
+
   /* 1 — osnova */
   '<div class="block" id="cre-form">'+
     '<fieldset class="sect"><div class="lg"><h3>Osnova</h3><p>Platforma in umestitev določita polja, omejitve znakov in predogled</p></div>'+
@@ -1412,9 +1508,6 @@ function renderEditor(){
         '</div>'+
       '</div>'+
     '</fieldset>'+
-
-    /* stikala kreative + izbira, katero vodi besedila */
-    (stikala().length?stikalaKreativeHtml(k):'')+
 
     /* 2 — kot in publika */
     '<fieldset class="sect"><div class="lg"><h3>Kot in publika</h3><p>Kaj obljubljaš in komu</p></div>'+
@@ -1478,9 +1571,7 @@ function renderEditor(){
                 '<span class="hint">Seznam je tak, kot ga ponudi '+(k.platforma==="tiktok"?"TikTok Ads":"Meta")+'.</span></div>'+
               '<div class="f"><label for="c-url">Ciljni URL</label><input class="txt" id="c-url" type="text" data-c="url" value="'+esc(k.url)+'" placeholder="https://'+esc(p.domena||"tvoja-domena.si")+'"></div>'+
             '</div>')+
-          '<div class="f no-print"><span class="lbl">Banka hookov — klikni, da dodaš novo različico</span><div class="bank">'+
-            HOOKI.map(function(h,idx){return '<button type="button" data-hook="'+idx+'">'+esc(h)+'</button>';}).join("")+
-          '</div></div>'+
+          bankaHtml()+
         '</div>'+
         '<div><div class="prev-wrap">'+
           '<div class="prev-lab"><span class="eyebrow">Predogled</span><span class="sp"></span><span class="pill plat np">'+esc(platNaziv)+'</span></div>'+
@@ -1498,18 +1589,64 @@ function renderEditor(){
       '</div>'+
     '</fieldset>'+
 
-    /* 5 — design brief in predaja v delo */
+    /* 5 — referenca: kako si to predstavljaš */
+    '<fieldset class="sect"><div class="lg"><h3>Referenca</h3>'+
+      '<p>Primeri, ki si jih videl in ti niso ušli iz glave — in kaj bi pri njih spremenil</p></div>'+
+      '<div class="f"><label for="c-refLinki">Povezave do primerov</label>'+
+        '<textarea id="c-refLinki" data-c="refLinki" rows="3" placeholder="Ena povezava na vrstico — oglas iz Meta Ad Library, TikTok, posnetek zaslona s spleta …">'+esc(k.refLinki||"")+'</textarea>'+
+        '<span class="hint">Vsaka vrstica postane klikljiva povezava spodaj.</span></div>'+
+      (String(k.refLinki||"").trim()
+        ? '<div class="ref-l">'+String(k.refLinki).split("\n").map(function(v){
+            v=v.trim();if(!v)return "";
+            var url=/^https?:\/\//i.test(v)?v:null;
+            return url?'<a href="'+esc(url)+'" target="_blank" rel="noopener">'+esc(url.replace(/^https?:\/\//,"").slice(0,60))+'</a>':'<span>'+esc(v)+'</span>';
+          }).join("")+'</div>'
+        : '')+
+      '<div class="f" style="margin-top:14px"><label for="c-refOpis">Kaj mi je pri tem všeč in kaj bi spremenil</label>'+
+        '<textarea id="c-refOpis" data-c="refOpis" rows="4" placeholder="Kaj konkretno prevzamem (prvi kader, tempo, tip podnapisov) in kaj naredim drugače …">'+esc(k.refOpis||"")+'</textarea></div>'+
+      (Datoteke.naVoljo
+        ? '<div class="drop no-print" id="drop-ref" style="margin-top:14px">'+
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>'+
+            '<b>Naloži posnetke zaslona in primere</b>'+
+            '<span>Klikni ali povleci sem. To ni material za oglas — samo referenca.</span>'+
+          '</div>'+
+          '<input type="file" id="dfile-ref" multiple accept="image/*,video/*,.pdf" hidden>'+
+          '<div class="files" id="datoteke-ref"></div>'
+        : '')+
+    '</fieldset>'+
+
+    /* 6 — brief po korakih, vedno isti proces */
     '<fieldset class="sect"><div class="lg"><h3>Brief za izdelavo</h3>'+
-      '<p>Navodilo zase ali za tistega, ki bo snemal in sestavljal</p><span class="sp"></span>'+
+      '<p>Isti koraki vsakič, ko daš delat — da ni treba nič pojasnjevati po telefonu</p><span class="sp"></span>'+
       '<button class="btn btn-s no-print" id="copybrief">Kopiraj brief</button></div>'+
-      '<div class="f"><label for="c-design">Kaj naj se vidi in sliši</label>'+
-        '<textarea id="c-design" data-c="design" rows="6" placeholder="Format, prvi kader, kaj je v roki, kaj piše na zaslonu, kaj se sliši, kako se konča …">'+esc(k.design)+'</textarea></div>'+
-      '<div class="grid" style="margin-top:16px">'+
-        '<div class="f"><label for="c-izvajalec">Kdo dela</label>'+
-          '<input class="txt" id="c-izvajalec" type="text" data-c="izvajalec" value="'+esc(k.izvajalec)+'" placeholder="jaz / Ana / agencija"></div>'+
-        '<div class="f"><label for="c-rok">Rok</label>'+
-          '<input class="txt" id="c-rok" type="text" data-c="rok" value="'+esc(k.rok)+'" placeholder="do petka / 12. 8."></div>'+
-      '</div>'+
+
+      '<div class="korak"><span class="korak-n">1</span><div>'+
+        '<div class="f"><label for="c-design">Kaj naj se vidi in sliši</label>'+
+          '<textarea id="c-design" data-c="design" rows="6" placeholder="Format in razmerje, prvi kader, kaj je v roki, kaj piše na zaslonu, kaj se sliši, kako se konča …">'+esc(k.design)+'</textarea>'+
+          '<span class="hint">Najpomembnejši del briefa. Napiši prvi kader in zadnje tri sekunde — vmes se da improvizirati.</span></div>'+
+      '</div></div>'+
+
+      '<div class="korak"><span class="korak-n">2</span><div>'+
+        '<div class="f"><label for="c-material">Kaj potrebuje za izvedbo</label>'+
+          '<textarea id="c-material" data-c="material" rows="3" placeholder="Izdelek, lokacija, rekviziti, dostop do trgovine, logo, glasba, podnapisi …">'+esc(k.material||"")+'</textarea></div>'+
+      '</div></div>'+
+
+      '<div class="korak"><span class="korak-n">3</span><div>'+
+        '<div class="grid">'+
+          '<div class="f"><label for="c-izvajalec">Kdo dela</label>'+
+            '<input class="txt" id="c-izvajalec" type="text" data-c="izvajalec" value="'+esc(k.izvajalec)+'" placeholder="jaz / agencija / snemalec"></div>'+
+          '<div class="f"><label for="c-rok">Rok</label>'+
+            '<input class="txt" id="c-rok" type="text" data-c="rok" value="'+esc(k.rok)+'" placeholder="do petka / 12. 8."></div>'+
+          '<div class="f"><label for="c-oddaja">Kaj mora vrniti</label>'+
+            '<input class="txt" id="c-oddaja" type="text" data-c="oddaja" value="'+esc(k.oddaja||"")+'" placeholder="npr. 9:16 MP4 + 3 fotke 4:5, brez podnapisov"></div>'+
+        '</div>'+
+      '</div></div>'+
+
+      '<div class="korak"><span class="korak-n">4</span><div>'+
+        '<div class="f"><label for="c-opombe">Opombe in kaj popraviti</label>'+
+          '<textarea id="c-opombe" data-c="opombe" rows="4" placeholder="Pripombe po prvem osnutku, česa ne ponavljati, kaj je platforma zavrnila …">'+esc(k.opombe||"")+'</textarea></div>'+
+      '</div></div>'+
+
       (c.seznam.length?'<div style="margin-top:18px"><span class="lbl" style="font-size:12.5px;color:var(--ink2);font-weight:500">Kontrolni seznam za '+esc(platNaziv)+'</span>'+
         '<ul class="check" style="margin-top:9px">'+c.seznam.map(function(x){return '<li>'+x+'</li>';}).join("")+'</ul></div>':'')+
     '</fieldset>'+
@@ -1555,9 +1692,9 @@ function renderEditor(){
       '<div id="cre-verdict2" style="margin-top:16px"></div>'+
     '</fieldset>'+
 
-    /* 8 — opombe */
-    '<fieldset class="sect"><div class="lg"><h3>Opombe</h3><p>Kar si ugotovil med testiranjem</p></div>'+
-      '<div class="f"><textarea data-c="opombe" rows="3" aria-label="Opombe" placeholder="'+(jeGoogle?"Negativne ključne besede, kaj je delalo, kaj ne …":"Katera različica je zmagala, kaj bi naslednjič spremenil …")+'">'+esc(k.opombe)+'</textarea></div>'+
+    /* 8 — kaj si se naučil (opombe za brief so v koraku 4) */
+    '<fieldset class="sect"><div class="lg"><h3>Kaj si ugotovil</h3><p>Po testu — da naslednja kreativa ne ponovi iste napake</p></div>'+
+      '<div class="f"><textarea data-c="ugotovitve" rows="3" aria-label="Ugotovitve" placeholder="'+(jeGoogle?"Negativne ključne besede, katera poizvedba je prinesla naročila, kaj ne dela …":"Katera različica je zmagala, kaj bi naslednjič spremenil, kdaj je začelo pešati …")+'">'+esc(k.ugotovitve||"")+'</textarea></div>'+
     '</fieldset>'+
   '</div>'+
   '<div class="row no-print"><button class="btn" id="back">← Vse kreative</button></div>';
@@ -1687,6 +1824,25 @@ var I_VEC='<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="
 var I_PUSCICA='<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';
 var I_GOR='<svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg>';
 
+/* Vmesnik v predogledu je v anglescini, ker je tak tudi v resnici: Meta, Google
+   in TikTok kazejo svoje gumbe in oznake v jeziku aplikacije, ne oglasa.
+   Tvoje besedilo ostane slovensko - prevedeni so samo napisi platforme.     */
+var CTA_EN={
+  "Kupi zdaj":"Shop now","Nakupuj zdaj":"Shop now","Izvedi več":"Learn more",
+  "Naroči zdaj":"Order now","Prijavi se":"Sign up","Pošlji sporočilo":"Send message",
+  "Rezerviraj":"Book now","Prenesi":"Download","Poišči ponudbo":"Get offer","Pokliči":"Call now"
+};
+function ctaEN(k){
+  var v=k.cta||privzetiCTA(k.platforma);
+  return CTA_EN[v]||v;
+}
+/* avatar oglasevalca: logo izdelka, ce je nalozen, drugace zacetnice */
+var predLogo=null;
+function avatar(ime,razred){
+  var c="fb-av"+(razred?" "+razred:"")+(predLogo?" ima-logo":"");
+  return '<span class="'+c+'">'+
+    (predLogo?'<img src="'+predLogo+'" alt="">':esc(zacetnice(ime)))+'</span>';
+}
 function vrhFB(){
   return '<div class="app app-fb"><span class="wm">facebook</span><span class="sp"></span>'+
     '<span class="ib">'+I_LUPA+'</span><span class="ib">'+I_MSG+'</span></div>';
@@ -1699,18 +1855,18 @@ function vrhIG(){
 function feedGlava(ime,jeIG){
   var globus='<svg viewBox="0 0 24 24" style="width:11px;height:11px"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>';
   return '<div class="fb-h">'+
-    '<span class="fb-av'+(jeIG?" ig-av":"")+'">'+esc(zacetnice(ime))+'</span>'+
-    '<span class="fb-hn"><b>'+esc(ime)+'</b><span>'+(jeIG?"Sponzorirano":"Sponzorirano · "+globus)+'</span></span>'+
+    avatar(ime,jeIG?"ig-av":"")+
+    '<span class="fb-hn"><b>'+esc(ime)+'</b><span>'+(jeIG?"Sponsored":"Sponsored · "+globus)+'</span></span>'+
     '<span class="fb-x">'+I_VEC+'</span>'+
   '</div>';
 }
 function feedNoge(){
   return '<div class="fb-r"><span class="rx"><i class="r1">👍</i><i class="r2">❤</i></span>'+
-    '<span>142</span><span class="sp"></span><span>18 komentarjev · 6 delitev</span></div>'+
+    '<span>142</span><span class="sp"></span><span>18 comments · 6 shares</span></div>'+
     '<div class="fb-a">'+
-      '<span><svg viewBox="0 0 24 24"><path d="M7 10v10H4V10zM7 10l4-7a2 2 0 0 1 3 2l-1 5h5a2 2 0 0 1 2 2.3l-1 6A2 2 0 0 1 17 20H7"/></svg>Všeč mi je</span>'+
-      '<span>'+I_KOMENT+'Komentiraj</span>'+
-      '<span><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 3v12M8 7l4-4 4 4"/></svg>Deli</span>'+
+      '<span><svg viewBox="0 0 24 24"><path d="M7 10v10H4V10zM7 10l4-7a2 2 0 0 1 3 2l-1 5h5a2 2 0 0 1 2 2.3l-1 6A2 2 0 0 1 17 20H7"/></svg>Like</span>'+
+      '<span>'+I_KOMENT+'Comment</span>'+
+      '<span><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 3v12M8 7l4-4 4 4"/></svg>Share</span>'+
     '</div>';
 }
 /* kartica povezave pod sliko: domena, naslov v eni vrstici, opis, gumb */
@@ -1725,7 +1881,7 @@ function kartaFB(p,k,spec){
       '<b class="c1">'+esc(naslov||"Naslov oglasa")+'</b>'+
       (opis?'<span class="d c1">'+esc(opis)+'</span>':'')+
     '</span>'+
-    '<span class="fb-cta">'+esc(k.cta||privzetiCTA(k.platforma))+'</span>'+
+    '<span class="fb-cta">'+esc(ctaEN(k))+'</span>'+
   '</div>';
 }
 /* Facebook feed */
@@ -1756,16 +1912,16 @@ function predIgFeed(p,k,spec){
   return fon(vrhIG(),
     '<div class="ig">'+
       '<div class="fb-h">'+
-        '<span class="fb-av ig-av">'+esc(zacetnice(znamkaIme(p)))+'</span>'+
-        '<span class="fb-hn"><b>'+esc(ime)+'</b><span>Sponzorirano</span></span>'+
+        avatar(znamkaIme(p),"ig-av")+
+        '<span class="fb-hn"><b>'+esc(ime)+'</b><span>Sponsored</span></span>'+
         '<span class="fb-x">'+I_VEC+'</span>'+
       '</div>'+
       '<div class="fb-m">'+vizual(spec,k)+'</div>'+
-      '<div class="ig-cta"><b>'+esc(k.cta||privzetiCTA(k.platforma))+'</b>'+I_PUSCICA+'</div>'+
+      '<div class="ig-cta"><b>'+esc(ctaEN(k))+'</b>'+I_PUSCICA+'</div>'+
       '<div class="ig-a"><span>'+I_SRCE+'</span><span>'+I_KOMENT+'</span><span>'+I_LETALO+'</span>'+
         '<span class="sp"></span><span>'+I_ZAZNAMEK+'</span></div>'+
-      '<div class="ig-l">142 všečkov</div>'+
-      (telo?'<div class="ig-c">'+zloz(telo,spec.zlozi||1,"več","ig",'<b>'+esc(ime)+'</b> ')+'</div>':'')+
+      '<div class="ig-l">142 likes</div>'+
+      (telo?'<div class="ig-c">'+zloz(telo,spec.zlozi||1,"more","ig",'<b>'+esc(ime)+'</b> ')+'</div>':'')+
     '</div>');
 }
 /* karusel: vsaka kartica dobi svoj naslov iz seznama različic */
@@ -1779,13 +1935,13 @@ function predKarusel(p,k,spec){
       '<div class="kar-m">'+(m||'<span class="ph">'+IKONA_SLIKA+'</span>')+'<span class="kar-n">'+(i+1)+'</span></div>'+
       '<div class="kar-b"><b class="c2">'+esc(t)+'</b>'+
         (domenaIz(p,k)?'<span>'+esc(domenaIz(p,k))+'</span>':'')+
-        '<span class="kar-cta">'+esc(k.cta||privzetiCTA(k.platforma))+'</span></div>'+
+        '<span class="kar-cta">'+esc(ctaEN(k))+'</span></div>'+
     '</div>';
   }).join("");
   return fon(jeIG?vrhIG():vrhFB(),
     '<div class="fb'+(jeIG?" ig":"")+'">'+
       feedGlava(znamkaIme(p),jeIG)+
-      zloz(telesno(k),spec.zlozi||3,jeIG?"več":"Več")+
+      zloz(telesno(k),spec.zlozi||3,jeIG?"more":"See more")+
       '<div class="kar"><div class="kar-t">'+kartice+'</div></div>'+
       '<div class="kar-d">'+nas.slice(0,5).map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>';}).join("")+'</div>'+
       (jeIG?'':feedNoge())+
@@ -1798,7 +1954,7 @@ function predKolekcija(p,k,spec){
   return fon(jeIG?vrhIG():vrhFB(),
     '<div class="fb'+(jeIG?" ig":"")+'">'+
       feedGlava(znamkaIme(p),jeIG)+
-      zloz(telesno(k),spec.zlozi||3,jeIG?"več":"Več")+
+      zloz(telesno(k),spec.zlozi||3,jeIG?"more":"See more")+
       '<div class="fb-m">'+vizual(spec,k,"1.91 / 1")+'</div>'+
       '<div class="kol">'+[0,1,2].map(function(i){
         return '<div class="kol-c">'+(m||'<span class="ph">'+IKONA_SLIKA+'</span>')+
@@ -1812,15 +1968,15 @@ function predMarket(p,k,spec){
   var naslov=prvi(k.naslovi,predIzbor.naslovi)||"Naslov ponudbe";
   var cena=n(p.cena)>0?e(n(p.cena)):"—";
   var m=medij("1 / 1");
-  var tuji=["Podoben izdelek","Iz oglasov v bližini","Rabljeno · Ljubljana"];
+  var tuji=["Similar item","Listed 2 days ago","Used · Ljubljana"];
   return fon('<div class="app app-mk"><b>Marketplace</b><span class="sp"></span><span class="ib">'+I_LUPA+'</span></div>',
     '<div class="mk">'+
       '<div class="mk-g">'+
         '<div class="mk-c mk-ad">'+
-          '<div class="mk-m">'+(m||'<span class="ph">'+IKONA_SLIKA+'</span>')+'<span class="mk-o">Sponzorirano</span></div>'+
+          '<div class="mk-m">'+(m||'<span class="ph">'+IKONA_SLIKA+'</span>')+'<span class="mk-o">Sponsored</span></div>'+
           '<b>'+esc(cena)+'</b><span class="c2">'+esc(naslov)+'</span>'+
-          '<span class="mk-l">Mengeš</span>'+
-          '<span class="mk-cta">'+esc(k.cta||privzetiCTA(k.platforma))+'</span>'+
+          '<span class="mk-l">Ljubljana</span>'+
+          '<span class="mk-cta">'+esc(ctaEN(k))+'</span>'+
         '</div>'+
         tuji.map(function(t){
           return '<div class="mk-c"><div class="mk-m mk-siv"></div><b>—</b><span class="c2">'+esc(t)+'</span></div>';
@@ -1836,13 +1992,13 @@ function predZgodba(p,k,spec){
     '<div class="zg-m">'+(medij("9 / 16",true)||prazno(null,"Ni naloženega 9:16 videa ali slike",true))+'</div>'+
     '<div class="zg-vrh">'+
       '<div class="zg-bar"><i></i><i class="d"></i><i class="d"></i></div>'+
-      '<div class="zg-id"><span class="fb-av'+(jeIG?" ig-av":"")+'">'+esc(zacetnice(znamkaIme(p)))+'</span>'+
+      '<div class="zg-id">'+avatar(znamkaIme(p),jeIG?"ig-av":"")+
         '<b>'+esc(jeIG?String(znamkaIme(p)).toLowerCase().replace(/\s+/g,"_"):znamkaIme(p))+'</b>'+
-        '<span class="zg-ozn">Sponzorirano</span><span class="sp"></span><span class="zg-x">✕</span></div>'+
+        '<span class="zg-ozn">Sponsored</span><span class="sp"></span><span class="zg-x">✕</span></div>'+
     '</div>'+
     '<div class="zg-spo">'+
-      (telo?zloz(telo,spec.zlozi||2,"Več","na-temnem"):"")+
-      '<div class="zg-cta">'+I_GOR+'<b>'+esc(k.cta||privzetiCTA(k.platforma))+'</b></div>'+
+      (telo?zloz(telo,spec.zlozi||2,"more","na-temnem"):"")+
+      '<div class="zg-cta">'+I_GOR+'<b>'+esc(ctaEN(k))+'</b></div>'+
     '</div>');
 }
 /* Reels in Shorts: cel zaslon, stranska vrsta ikon, gumb pod napisom */
@@ -1855,19 +2011,19 @@ function predReels(p,k,spec){
     '<div class="zg-m">'+(medij("9 / 16",true)||prazno(null,"Ni naloženega 9:16 videa",true))+'</div>'+
     '<div class="rl-grad"></div>'+
     '<div class="rl-side">'+
-      '<span>'+I_SRCE+'<i>1,2 t.</i></span>'+
+      '<span>'+I_SRCE+'<i>1.2K</i></span>'+
       '<span>'+I_KOMENT+'<i>318</i></span>'+
-      '<span>'+I_LETALO+'<i>Pošlji</i></span>'+
+      '<span>'+I_LETALO+'<i>Share</i></span>'+
       '<span>'+I_VEC+'</span>'+
       '<span class="rl-disk"></span>'+
     '</div>'+
     '<div class="rl-b">'+
-      '<div class="rl-id"><span class="fb-av'+(jeIG?" ig-av":"")+'">'+esc(zacetnice(znamkaIme(p)))+'</span>'+
-        '<b>'+esc(jeIG?ime:znamkaIme(p))+'</b><span class="rl-sledi">Sledi</span></div>'+
-      '<span class="rl-ozn">Sponzorirano</span>'+
-      (telo?zloz(telo,spec.zlozi||2,"več","na-temnem"):"")+
-      '<span class="rl-zvok">♪ '+esc(jeYT?"originalni zvok":znamkaIme(p)+" · originalni zvok")+'</span>'+
-      '<div class="rl-cta'+(jeYT?" yt":"")+'"><b>'+esc(k.cta||privzetiCTA(k.platforma))+'</b>'+I_PUSCICA+'</div>'+
+      '<div class="rl-id">'+avatar(znamkaIme(p),jeIG?"ig-av":"")+
+        '<b>'+esc(jeIG?ime:znamkaIme(p))+'</b><span class="rl-sledi">Follow</span></div>'+
+      '<span class="rl-ozn">Sponsored</span>'+
+      (telo?zloz(telo,spec.zlozi||2,"more","na-temnem"):"")+
+      '<span class="rl-zvok">♪ '+esc(jeYT?"original audio":znamkaIme(p)+" · original audio")+'</span>'+
+      '<div class="rl-cta'+(jeYT?" yt":"")+'"><b>'+esc(ctaEN(k))+'</b>'+I_PUSCICA+'</div>'+
     '</div>');
 }
 /* TikTok Za vas */
@@ -1876,10 +2032,11 @@ function predTikTok(p,k,spec){
   var telo=telesno(k);
   return fonPolni(
     '<div class="zg-m">'+(medij("9 / 16",true)||prazno(null,"Ni naloženega 9:16 videa",true))+'</div>'+
-    '<div class="tt-vrh"><span>Sledim</span><b>Za vas</b></div>'+
+    '<div class="tt-vrh"><span>Following</span><b>For You</b></div>'+
     '<div class="rl-grad"></div>'+
     '<div class="rl-side tt-s">'+
-      '<span class="tt-av"><i class="fb-av">'+esc(zacetnice(znamkaIme(p)))+'</i><em>+</em></span>'+
+      '<span class="tt-av"><i class="fb-av'+(predLogo?" ima-logo":"")+'">'+
+        (predLogo?'<img src="'+predLogo+'" alt="">':esc(zacetnice(znamkaIme(p))))+'</i><em>+</em></span>'+
       '<span>'+I_SRCE+'<i>2143</i></span>'+
       '<span>'+I_KOMENT+'<i>86</i></span>'+
       '<span>'+I_ZAZNAMEK+'<i>41</i></span>'+
@@ -1887,10 +2044,10 @@ function predTikTok(p,k,spec){
     '</div>'+
     '<div class="rl-b">'+
       '<b class="tt-ime">'+esc(ime)+'</b>'+
-      '<span class="tt-ozn">Sponzorirano</span>'+
-      (telo?zloz(telo,spec.zlozi||2,"več","na-temnem"):"")+
-      '<span class="rl-zvok">♪ promovirana glasba</span>'+
-      '<div class="rl-cta tt-cta2"><b>'+esc(k.cta||privzetiCTA("tiktok"))+'</b>'+I_PUSCICA+'</div>'+
+      '<span class="tt-ozn">Sponsored</span>'+
+      (telo?zloz(telo,spec.zlozi||2,"more","na-temnem"):"")+
+      '<span class="rl-zvok">♪ promoted music</span>'+
+      '<div class="rl-cta tt-cta2"><b>'+esc(ctaEN(k))+'</b>'+I_PUSCICA+'</div>'+
     '</div>','tt');
 }
 /* YouTube in-stream: predvajalnik z gumbom za preskok */
@@ -1898,15 +2055,15 @@ function predYt(p,k,spec){
   var naslov=prvi(k.naslovi,predIzbor.naslovi)||"Naslov oglasa";
   return '<div class="yt">'+
     '<div class="yt-p">'+(medij("16 / 9")||prazno("16 / 9","Ni naloženega 16:9 videa",true))+
-      '<span class="yt-ozn">Oglas</span>'+
-      '<span class="yt-skip">Preskoči oglas '+I_PUSCICA+'</span>'+
+      '<span class="yt-ozn">Ad</span>'+
+      '<span class="yt-skip">Skip ad '+I_PUSCICA+'</span>'+
       '<div class="yt-prog"><i></i></div>'+
     '</div>'+
     '<div class="yt-f">'+
-      '<span class="fb-av">'+esc(zacetnice(znamkaIme(p)))+'</span>'+
+      avatar(znamkaIme(p))+
       '<span class="yt-fn"><b class="c1">'+esc(naslov)+'</b>'+
         '<span>'+esc(domenaIz(p,k)||"tvoja-domena.si")+'</span></span>'+
-      '<span class="yt-cta">'+esc(k.cta||privzetiCTA("youtube"))+'</span>'+
+      '<span class="yt-cta">'+esc(ctaEN(k))+'</span>'+
     '</div>'+
   '</div>';
 }
@@ -1921,7 +2078,7 @@ function predSearch(p,k,spec){
   var sl=String(k.sitelinki||"").split(",").map(function(x){return x.trim();}).filter(Boolean);
   var poizvedba=String(k.kljucneBesede||"").split(",")[0].trim()||prvi(k.naslovi).toLowerCase()||"tvoja ključna beseda";
   var vrh='<div class="gg-q">'+I_LUPA+'<span>'+esc(poizvedba)+'</span></div>'+
-    '<div class="gg-tabs"><b>Vse</b><span>Slike</span><span>Nakupovanje</span><span>Videoposnetki</span><span>Novice</span></div>';
+    '<div class="gg-tabs"><b>All</b><span>Images</span><span>Shopping</span><span>Videos</span><span>News</span></div>';
   if(!nas.length&&!opi.length){
     return '<div class="gg">'+vrh+
       '<p class="gg-empty">Vpiši vsaj en naslov, da se predogled izriše.<br><br>'+
@@ -1930,11 +2087,12 @@ function predSearch(p,k,spec){
   function vrstica(nabor,opisi){
     return '<div class="gg-r">'+
       '<div class="gg-id">'+
-        '<span class="gg-fav">'+esc(zacetnice(znamka))+'</span>'+
+        '<span class="gg-fav'+(predLogo?" ima-logo":"")+'">'+
+          (predLogo?'<img src="'+predLogo+'" alt="">':esc(zacetnice(znamka)))+'</span>'+
         '<span class="gg-idn"><b>'+esc(znamka)+'</b>'+
           '<span>'+esc(dom)+(pot.length?' › '+pot.map(esc).join(" › "):'')+'</span></span>'+
       '</div>'+
-      '<div class="gg-ad">Sponzorirano</div>'+
+      '<div class="gg-ad">Sponsored</div>'+
       '<span class="gg-t">'+esc(nabor.join(" | "))+'</span>'+
       '<p class="gg-d">'+esc(opisi.join(" "))+'</p>'+
       (sl.length?'<div class="gg-sl">'+sl.slice(0,4).map(function(s){return '<span>'+esc(s)+'</span>';}).join("")+'</div>':'')+
@@ -1960,15 +2118,15 @@ function predDisplay(p,k,spec){
   return '<div class="gd-w">'+
     '<div class="gd">'+
       '<div class="gd-m">'+(m1||prazno("1.91 / 1","1200 × 628"))+'</div>'+
-      '<div class="gd-b"><span class="gd-o">Oglas · '+esc(dom)+'</span>'+
+      '<div class="gd-b"><span class="gd-o">Ad · '+esc(dom)+'</span>'+
         '<b class="c2">'+esc(naslov)+'</b>'+
         (opis?'<span class="c2">'+esc(opis)+'</span>':'')+
-        '<span class="gd-cta">'+esc(k.cta||"Izvedi več")+'</span></div>'+
+        '<span class="gd-cta">'+esc(ctaEN(k))+'</span></div>'+
     '</div>'+
     '<div class="gd gd-kv">'+
       '<div class="gd-m">'+(m2||prazno("1 / 1","300 × 250"))+'</div>'+
-      '<div class="gd-b"><span class="gd-o">Oglas</span><b class="c2">'+esc(naslov)+'</b>'+
-        '<span class="gd-cta">'+esc(k.cta||"Izvedi več")+'</span></div>'+
+      '<div class="gd-b"><span class="gd-o">Ad</span><b class="c2">'+esc(naslov)+'</b>'+
+        '<span class="gd-cta">'+esc(ctaEN(k))+'</span></div>'+
     '</div>'+
   '</div>';
 }
@@ -1993,10 +2151,15 @@ function predSplosno(p,k,spec){
 /* Datoteke visijo na lastniku: kreativa (njen id) ali izdelek ("izd:"+id).
    Material izdelka je skupen vsem njegovim kreativam.                      */
 function datLastnikIzdelka(p){return "izd:"+(p&&p.id);}
+function datLastnikLogo(p){return "logo:"+(p&&p.id);}
+/* reference kreative so ločene od materiala — v predogled ne gredo nikoli */
+function datLastnikRef(k){return "ref:"+(k&&k.id);}
 function datCilji(){
   var out=[], k=K(), p=P();
   if(el("datoteke")&&k)out.push({cilj:"datoteke",lastnik:k.id,zapis:k});
   if(el("datoteke-izd")&&p)out.push({cilj:"datoteke-izd",lastnik:datLastnikIzdelka(p),zapis:p});
+  if(el("datoteke-logo")&&p)out.push({cilj:"datoteke-logo",lastnik:datLastnikLogo(p)});
+  if(el("datoteke-ref")&&k)out.push({cilj:"datoteke-ref",lastnik:datLastnikRef(k)});
   return out;
 }
 function narisiDatoteke(){
@@ -2049,10 +2212,22 @@ function dodajDatoteke(files,lastnik){
     toast("Shranjevanje ni uspelo"+(uspelo?" po "+uspelo+" datotekah":"")+": "+(err&&err.message||"shramba je zavrnila zapis"));
   });
 }
+/* logo izdelka za avatar oglasevalca v predogledu */
+function osveziLogo(){
+  var p=P();
+  if(!p||!Datoteke.naVoljo){predLogo=null;return;}
+  Datoteke.prviVizual(datLastnikLogo(p)).then(function(d){
+    if(!d){predLogo=null;risiPredogled();return;}
+    try{var u=URL.createObjectURL(d.blob);odprtiUrlji.push(u);predLogo=u;}
+    catch(err){predLogo=null;}
+    risiPredogled();
+  },function(){predLogo=null;});
+}
 /* Po dodajanju ali brisanju osveži sliko v predogledu oglasa. Če kreativa
    nima svojega materiala, vzame prvo sliko izdelka.                        */
 function osveziPredVizual(){
   var k=K(),p=P();
+  osveziLogo();
   if(!k||!Datoteke.naVoljo)return;
   function uporabi(d,izIzdelka){
     if(!d){predVizual=null;risiPredogled();return;}
@@ -2900,6 +3075,7 @@ function briefText(k){
   if(k.izvajalec||k.rok)L.push("Dela: "+(k.izvajalec||"—")+(k.rok?" · rok: "+k.rok:""));
   if(k.kot){L.push("");L.push("KOT: "+k.kot);}
   if(k.publika)L.push("PUBLIKA: "+k.publika);
+  if(String(PR().zapiski||"").trim()){L.push("");L.push("── O MAPI ──");L.push(PR().zapiski);}
   if(String(p.zapiski||"").trim()){L.push("");L.push("── O IZDELKU ──");L.push(p.zapiski);}
 
   var lim=LIM[k.platforma]||LIM.drugo;
@@ -2917,7 +3093,19 @@ function briefText(k){
     L.push("");L.push("CTA: "+k.cta);
   }
   if(k.url)L.push("URL: "+k.url);
-  if(k.design){L.push("");L.push("── DESIGN BRIEF ──");L.push(k.design);}
+
+  /* brief po korakih — isti vrstni red kot v aplikaciji */
+  if(k.refLinki||k.refOpis){
+    L.push("");L.push("── REFERENCA ──");
+    if(k.refLinki)L.push(k.refLinki);
+    if(k.refOpis){L.push("");L.push("Kaj prevzeti in kaj drugače: "+k.refOpis);}
+  }
+  if(k.design){L.push("");L.push("── 1. KAJ SE VIDI IN SLIŠI ──");L.push(k.design);}
+  if(k.material){L.push("");L.push("── 2. KAJ POTREBUJE ──");L.push(k.material);}
+  L.push("");L.push("── 3. KDO, DO KDAJ, KAJ VRNE ──");
+  L.push("Dela: "+(k.izvajalec||"—")+" · rok: "+(k.rok||"—"));
+  L.push("Odda: "+(k.oddaja||"—"));
+  if(k.opombe){L.push("");L.push("── 4. OPOMBE IN POPRAVKI ──");L.push(k.opombe);}
   if(k.stDatotek)L.push("MATERIAL: "+k.stDatotek+" naloženih datotek v aplikaciji");
 
   var ek=ekon(p),l=lijak(k.budget,k.cpm,k.ctr,k.cvr,ek);
@@ -2925,7 +3113,7 @@ function briefText(k){
   L.push("Budget: "+e(n(k.budget))+" / dan");
   L.push("Načrt: CPM "+e(n(k.cpm))+" · CTR "+p1(n(k.ctr))+" · CVR "+p1(n(k.cvr))+" → CPA "+e(l.cpa)+" · profit/dan "+e(l.profit));
   L.push("Break-even: CPA "+e(ek.beCPA)+" · ROAS "+x2(ek.beROAS));
-  if(k.opombe){L.push("");L.push("OPOMBE: "+k.opombe);}
+  if(k.ugotovitve){L.push("");L.push("── KAJ SMO UGOTOVILI ──");L.push(k.ugotovitve);}
   return L.join("\n");
 }
 function kopiraj(txt){
@@ -3136,39 +3324,49 @@ function stikStolpci(){
     }};
   });
 }
-var XLS_STOLPCI=[
-  {g:"#",w:5,tip:"sredina",v:function(o,i){return i+1;}},
-  {g:"Izdelek",w:24,v:function(o){return o.izd.ime;}},
-  {g:"Ime kreative",w:30,v:function(o){return o.k.naslov;}},
-  {g:"Platforma",w:13,v:function(o){return platIme(o.k.platforma);}},
-  {g:"Umestitev",w:16,v:function(o){return umIme(o.k);}},
-  {g:"Format",w:15,v:function(o){return o.k.format;}},
-  {g:"Material (datoteke)",w:14,tip:"sredina",v:function(o){return o.k.stDatotek||0;}},
-  {g:"Kaj se vidi in sliši na kreativi",w:52,v:function(o){return o.k.design;}},
-  {g:"Hook — prva vrstica",w:40,v:function(o){return prvi(o.k.hooki);}},
-  {g:"Primarno besedilo (ob kreativi)",w:60,v:function(o){return prvi(o.k.primarna);}},
-  {g:"Naslov",w:32,v:function(o){return prvi(o.k.naslovi);}},
-  {g:"Opis",w:28,v:function(o){return prvi(o.k.opisi);}},
-  {g:"Gumb (CTA)",w:16,v:function(o){return o.k.platforma==="google"&&o.k.format==="RSA"?"—":o.k.cta;}},
-  {g:"Ciljni URL",w:38,v:function(o){return o.k.url;}},
-  {g:"Prikazna pot",w:18,v:function(o){return [o.k.pot1,o.k.pot2].filter(Boolean).join(" / ");}},
-  {g:"Sitelinki",w:30,v:function(o){return o.k.sitelinki;}},
-  {g:"Ključne besede",w:38,v:function(o){return o.k.kljucneBesede;}},
-  {g:"Kot / obljuba",w:34,v:function(o){return o.k.kot;}},
-  {g:"Publika",w:30,v:function(o){return o.k.publika;}},
-  {g:"Status",w:16,v:function(o){return statusIme(o.k.status);}},
-  {g:"Budget / dan",w:13,tip:"evri",v:function(o){return n(o.k.budget)||"";}},
-  {g:"Napoved CPA",w:13,tip:"evri",v:function(o){
+/* List „Oglasi“ je obrnjen: v stolpcu A so imena polj, vsak naslednji stolpec je
+   en oglas. Tako se oglasi berejo drug ob drugem in dolga besedila ne silijo
+   vrstice v nemogoče višine — pri pisanju in primerjanju kopij je to edina
+   postavitev, ki dela.                                                       */
+var XLS_VRSTICE=[
+  {g:"Izdelek",v:function(o){return o.izd.ime;}},
+  {g:"Kreativa",v:function(o){return platIme(o.k.platforma)+" · "+umIme(o.k)+" · "+o.k.format;}},
+  {g:"Ime kreative",v:function(o){return o.k.naslov;}},
+  {g:"Hook",v:function(o){return prvi(o.k.hooki);}},
+  {g:"Primarno besedilo",v:function(o){return prvi(o.k.primarna);}},
+  {g:"Naslov pod sliko",v:function(o){return prvi(o.k.naslovi);}},
+  {g:"Opis",v:function(o){return prvi(o.k.opisi);}},
+  {g:"GUMB",v:function(o){return o.k.platforma==="google"&&o.k.format==="RSA"?"—":o.k.cta;}},
+  {g:"URL",v:function(o){return o.k.url;}},
+  {g:"Publika in targetiranje",v:function(o){return o.k.publika;}},
+  {g:"Kot / obljuba",v:function(o){return o.k.kot;}},
+  {g:"Kaj se vidi in sliši",v:function(o){return o.k.design;}},
+  {g:"Prikazna pot",v:function(o){return [o.k.pot1,o.k.pot2].filter(Boolean).join(" / ");}},
+  {g:"Sitelinki",v:function(o){return o.k.sitelinki;}},
+  {g:"Ključne besede",v:function(o){return o.k.kljucneBesede;}},
+  {g:"Status",v:function(o){return statusIme(o.k.status);}},
+  {g:"Kdo dela · rok",v:function(o){return [o.k.izvajalec,o.k.rok].filter(Boolean).join(" · ");}},
+  {g:"Budget / dan",v:function(o){return n(o.k.budget)?e(n(o.k.budget)):"";}},
+  {g:"Napoved CPA",v:function(o){
     var l=lijak(o.k.budget,o.k.cpm,o.k.ctr,o.k.cvr,ekon(o.izd));
-    return isFinite(l.cpa)?Math.round(l.cpa*100)/100:"";}},
-  {g:"Opombe",w:34,v:function(o){return o.k.opombe;}}
+    return isFinite(l.cpa)?e(l.cpa):"";}},
+  {g:"Material (datoteke)",v:function(o){return o.k.stDatotek||0;}},
+  {g:"Opombe",v:function(o){return o.k.opombe;}}
 ];
 var XLS_POLJA=[["hooki","Hook",80],["primarna","Primarno besedilo",0],["naslovi","Naslov",0],["opisi","Opis",0]];
-/* stolpci lista Oglasi: stikala se vrinejo takoj za format */
-function xlsStolpci(){
-  var out=XLS_STOLPCI.slice();
-  var kam=out.map(function(c){return c.g;}).indexOf("Format")+1;
-  return out.slice(0,kam).concat(stikStolpci(),out.slice(kam));
+/* vrstice stikal se vrinejo takoj za „Kreativa“ */
+function stikVrstice(){
+  return stikala().map(function(g){
+    return {g:g.ime,v:function(o){
+      var v=o.k.stikala?o.k.stikala[g.id]:null;
+      return (v===STIK_VSE?"vse":(v||stikVrednost(o.k,g)))+(o.k.vodi===g.id?" ◂ ločena besedila":"");
+    }};
+  });
+}
+function xlsVrstice(){
+  var out=XLS_VRSTICE.slice();
+  var kam=out.map(function(c){return c.g;}).indexOf("Kreativa")+1;
+  return out.slice(0,kam).concat(stikVrstice(),out.slice(kam));
 }
 
 function izvozniSeznam(obseg){
@@ -3185,12 +3383,16 @@ function izvozniSeznam(obseg){
 }
 function xlsxIzvozi(izbrani){
   if(!izbrani.length){toast("Nič ni izbrano.");return;}
-  var stolpci=xlsStolpci();
-  var vrstice=izbrani.map(function(o,i){
-    return stolpci.map(function(c){
-      var v=c.v(o,i);
+  /* obrnjeno: polja po vrsticah, en oglas na stolpec */
+  var polja=xlsVrstice();
+  var stolpci=[{g:"Polje",w:26}].concat(izbrani.map(function(o){
+    return {g:o.izd.ime,w:46};
+  }));
+  var vrstice=polja.map(function(f){
+    return [f.g].concat(izbrani.map(function(o,i){
+      var v=f.v(o,i);
       return v==null?"":v;
-    });
+    }));
   });
   var razl=[];
   izbrani.forEach(function(o){
@@ -3218,7 +3420,7 @@ function xlsxIzvozi(izbrani){
   povz.push(["Skupaj",izbrani.length,skupaj||"",skupaj?skupaj*30:""]);
 
   var listi=[
-    {ime:"Oglasi",stolpci:stolpci.map(function(c){return {g:c.g,w:c.w,tip:c.tip};}),vrstice:vrstice},
+    {ime:"Oglasi",stolpci:stolpci,vrstice:vrstice},
     {ime:"Različice besedil",stolpci:[
       {g:"Izdelek",w:24},{g:"Kreativa",w:30},{g:"Polje",w:20},{g:"Št.",w:6,tip:"sredina"},
       {g:"Besedilo",w:70},{g:"Znakov",w:9,tip:"sredina"},{g:"Meja",w:9,tip:"sredina"},{g:"Nad mejo",w:10,tip:"sredina"}
@@ -3417,6 +3619,9 @@ document.addEventListener("input",function(ev){
     shrani();paintKreativa();risiPredogled();
   }else if(t.dataset.k!=null){
     S.kalk[t.dataset.k]=t.value;shrani();paintKalk();
+  }else if(t.dataset.przap!=null){
+    var pr0=S.projekti.filter(function(x){return x.id===t.dataset.przap;})[0];
+    if(pr0){pr0.zapiski=t.value;shrani();}
   }else if(t.dataset.sgime!=null){
     var g1=stikNajdi(t.dataset.sgime);
     if(g1){g1.ime=t.value;shrani();}
@@ -3464,6 +3669,21 @@ document.addEventListener("change",function(ev){
     if(pi)dodajDatoteke(t.files,datLastnikIzdelka(pi));
     t.value="";return;
   }
+  if(t.id==="dfile-ref"){
+    var kr0=K();
+    if(kr0)dodajDatoteke(t.files,datLastnikRef(kr0));
+    t.value="";return;
+  }
+  if(t.id==="dfile-logo"){
+    var pl=P();
+    if(pl){
+      /* logo je en sam — star pobrišemo, da se ne nabirajo */
+      Datoteke.brisiZaKreativo(datLastnikLogo(pl)).then(function(){
+        dodajDatoteke(t.files,datLastnikLogo(pl));
+      },function(){dodajDatoteke(t.files,datLastnikLogo(pl));});
+    }
+    t.value="";return;
+  }
   if(t.dataset.move!=null){
     var cilj=t.value;if(!cilj)return;
     var izd=S.izdelki.filter(function(x){return x.id===t.dataset.move;})[0];
@@ -3473,14 +3693,19 @@ document.addEventListener("change",function(ev){
     shrani();polniIzbirnik();render();toast("Premaknjeno v „"+(S.projekti.filter(function(x){return x.id===cilj;})[0]||{}).ime+"“.");
     return;
   }
-  if(t.dataset.vodi!=null){
+  /* „ločena besedila“ pri stikalu: eno stikalo hkrati lahko vodi besedila */
+  if(t.dataset.loci!=null){
     var kv=K();if(!kv)return;
-    if(t.value)stikVklopiVodenje(kv,t.value);
-    else kv.vodi="";
-    shrani();renderEditor();
-    toast(t.value
-      ? "Besedila vodi stikalo „"+(stikNajdi(t.value)||{}).ime+"“. Vsaka možnost ima svoj tekst."
-      : "Besedilo je zdaj eno samo. Že napisane različice ostanejo shranjene.");
+    var g0=stikNajdi(t.dataset.loci);
+    if(t.checked&&g0){
+      stikVklopiVodenje(kv,g0.id);
+      shrani();renderEditor();
+      toast("Besedila so zdaj ločena po „"+g0.ime+"“. Vsaka možnost je začela s kopijo trenutnega besedila.");
+    }else{
+      kv.vodi="";
+      shrani();renderEditor();
+      toast("Besedilo je zdaj skupno. Že napisane različice ostanejo shranjene.");
+    }
     return;
   }
   if(t.dataset.p!=null&&(t.tagName==="SELECT"||t.type==="checkbox")){
@@ -3599,13 +3824,29 @@ document.addEventListener("click",function(ev){
   var hook=t.closest("[data-hook]");
   if(hook){
     var kh=K();if(!kh)return;
-    var txt=HOOKI[parseInt(hook.dataset.hook,10)];
+    var izBanke=bankaSeznam().filter(function(h){return h.id===hook.dataset.hook;})[0];
+    if(!izBanke)return;
+    var txt=izBanke.txt;
     if(!Array.isArray(kh.hooki))kh.hooki=[""];
     if(kh.hooki.length===1&&!String(kh.hooki[0]).trim())kh.hooki[0]=txt;
     else kh.hooki.push(txt);
     predIzbor.hooki=kh.hooki.length-1;
     shrani();renderEditor();toast("Hook dodan kot nova različica.");return;
   }
+  /* dodajanje in brisanje v banki, izbira kategorije */
+  if(t.id==="bank-go"){
+    var polje=el("bank-nov");
+    if(!polje||!String(polje.value).trim()){toast("Najprej vpiši hook.");return;}
+    bankaDodaj(polje.value,el("bank-kat")&&el("bank-kat").value);
+    polje.value="";renderEditor();toast("Shranjeno v banko.");return;
+  }
+  var bdel=t.closest("[data-bdel]");
+  if(bdel){
+    S.banka=bankaSeznam().filter(function(h){return h.id!==bdel.dataset.bdel;});
+    shrani();renderEditor();return;
+  }
+  var bkat=t.closest("[data-bkat]");
+  if(bkat){bankaKat=bkat.dataset.bkat;renderEditor();return;}
   /* + dodaj različico */
   var vadd=t.closest("[data-vadd]");
   if(vadd){
@@ -3699,6 +3940,8 @@ document.addEventListener("click",function(ev){
   if(goto_){nastaviView(goto_.dataset.goto);return;}
   if(t.closest("#drop")){el("dfile").click();return;}
   if(t.closest("#drop-izd")){el("dfile-izd").click();return;}
+  if(t.id==="logo-btn"){el("dfile-logo").click();return;}
+  if(t.closest("#drop-ref")){el("dfile-ref").click();return;}
 
   switch(t.id){
     case "back": odprtaKreativa=null;pocistiUrlje();render();window.scrollTo(0,0);break;
@@ -3758,6 +4001,17 @@ document.addEventListener("click",function(ev){
   }
 });
 document.addEventListener("keydown",function(ev){
+  /* Enter v polju banke shrani hook, brez skoka na gumb */
+  if(ev.key==="Enter"&&ev.target&&ev.target.id==="bank-nov"){
+    ev.preventDefault();
+    if(String(ev.target.value).trim()){
+      bankaDodaj(ev.target.value,el("bank-kat")&&el("bank-kat").value);
+      ev.target.value="";renderEditor();
+      var pn=el("bank-nov");if(pn)pn.focus();
+      toast("Shranjeno v banko.");
+    }
+    return;
+  }
   if(ev.key==="Escape"){zapriIzvoz();zapriPovecano();return;}
   if(ev.key!=="Enter")return;
   var id=ev.target&&ev.target.id;
@@ -3771,10 +4025,12 @@ function vlecemoDatoteke(ev){
 }
 /* katero polje za spuščanje je pod kazalcem in čigav je material */
 function dropPolje(cilj){
-  var d=cilj&&cilj.closest?cilj.closest("#drop,#drop-izd"):null;
+  var d=cilj&&cilj.closest?cilj.closest("#drop,#drop-izd,#drop-ref"):null;
   if(!d)return null;
   var p=P();
-  return {polje:d,lastnik:d.id==="drop-izd"?(p?datLastnikIzdelka(p):null):(K()?K().id:null)};
+  if(d.id==="drop-izd")return {polje:d,lastnik:p?datLastnikIzdelka(p):null};
+  if(d.id==="drop-ref")return {polje:d,lastnik:K()?datLastnikRef(K()):null};
+  return {polje:d,lastnik:K()?K().id:null};
 }
 document.addEventListener("dragover",function(ev){
   if(!vlecemoDatoteke(ev))return;
@@ -3784,7 +4040,7 @@ document.addEventListener("dragover",function(ev){
 });
 document.addEventListener("dragleave",function(ev){
   if(ev.relatedTarget)return;
-  ["drop","drop-izd"].forEach(function(id){var d=el(id);if(d)d.classList.remove("nad");});
+  ["drop","drop-izd","drop-ref"].forEach(function(id){var d=el(id);if(d)d.classList.remove("nad");});
 });
 document.addEventListener("drop",function(ev){
   if(!vlecemoDatoteke(ev))return;
