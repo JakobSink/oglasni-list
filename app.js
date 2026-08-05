@@ -2421,14 +2421,21 @@ function renderPodatki(){
     '<div id="prostor" class="note" style="margin-top:10px">Preverjam zasedenost shrambe …</div>'+
     '<div class="row" style="margin-top:14px">'+
       '<button class="btn btn-p" id="exp">Izvozi besedila (JSON)</button>'+
-      '<button class="btn" id="impBtn">Uvozi iz datoteke</button>'+
+      '<button class="btn" id="impAdd">Uvozi in dodaj</button>'+
+      '<button class="btn" id="impBtn">Uvozi in zamenjaj</button>'+
       '<input type="file" id="impFile" accept=".json,application/json" hidden>'+
+      '<input type="file" id="impFileAdd" accept=".json,application/json" hidden>'+
       '<button class="btn" id="prn">Natisni / PDF</button>'+
     '</div>'+
-    '<p class="note" style="margin-top:10px">Izvoz vsebuje projekte, izdelke, kreative in vse številke — <b>ne pa naloženih slik in videov</b>, ker so za JSON preveliki. Te po potrebi prenesi posamično iz kreative.</p>'+
+    '<p class="note" style="margin-top:10px"><b>Uvozi in dodaj</b> mape in izdelke iz datoteke prilepi zraven obstoječim — nič se ne povozi. '+
+    '<b>Uvozi in zamenjaj</b> odvrže vse, kar je zdaj v aplikaciji, in postavi na njegovo mesto vsebino datoteke; pred tem vpraša za potrditev.<br>'+
+    'Izvoz vsebuje projekte, izdelke, kreative in vse številke — <b>ne pa naloženih slik in videov</b>, ker so za JSON preveliki. Te po potrebi prenesi posamično iz kreative.</p>'+
     '<div class="f" style="margin-top:18px"><label for="paste">Ali prilepi vsebino izvožene datoteke sem in klikni Uvozi</label>'+
-      '<textarea id="paste" rows="4" placeholder=\'{"v":2,"projekti":[…]}\'></textarea>'+
-      '<div class="row" style="margin-top:8px"><button class="btn" id="impPaste">Uvozi prilepljeno</button></div></div>'+
+      '<textarea id="paste" rows="4" placeholder=\'{"v":4,"projekti":[…]}\'></textarea>'+
+      '<div class="row" style="margin-top:8px">'+
+        '<button class="btn" id="impPasteAdd">Uvozi prilepljeno in dodaj</button>'+
+        '<button class="btn" id="impPaste">Uvozi prilepljeno in zamenjaj</button>'+
+      '</div></div>'+
   '</div></div>'+
   '<div class="block"><header><div class="head-t"><span class="eyebrow">Telefon</span><h2>Namesti kot aplikacijo</h2></div></header><div class="pad">'+
     '<p class="note"><b>Android / Chrome:</b> meni ⋮ → „Dodaj na začetni zaslon“. <b>iPhone / Safari:</b> gumb za deljenje → „Dodaj na domači zaslon“. '+
@@ -2475,13 +2482,47 @@ function izvozi(){
     toast("Prenos ni uspel — besedilo je v polju spodaj, shrani ga ročno.");
   }
 }
-function uvozi(txt){
+/* nacin "zamenjaj" pobrise obstojece stanje, "dodaj" ga pusti pri miru in
+   uvozene mape ter izdelke samo prilepi zraven                              */
+function uvozi(txt,nacin){
   var d;
   try{d=JSON.parse(txt);}catch(err){toast("To ni veljaven JSON.");return;}
   if(!d||!d.izdelki||!d.izdelki.length){toast("V datoteki ni izdelkov.");return;}
+  if(nacin==="dodaj")return uvoziDodaj(d);
+  if(!confirm("Uvoz zamenja vse, kar je zdaj v aplikaciji — "+S.izdelki.length+
+    " izdelkov gre stran. Nadaljujem?"))return;
   S=d;migriraj();
   odprtaKreativa=null;shrani();polniIzbirnik();render();
   toast("Uvoženo: "+S.projekti.length+" map, "+S.izdelki.length+" izdelkov.");
+}
+/* Uvoz brez povozitve. Mapa z istim imenom se ponovno uporabi, izdelki pa se
+   vedno dodajo na novo z novimi id-ji — uvoz torej nikoli nicesar ne izgubi.
+   Ce izdelek s tem imenom v mapi ze obstaja, dobi pripis, da se vidi razlika. */
+function uvoziDodaj(d){
+  var mape={}, novihMap=0, novihIzd=0, novihKr=0;
+  (Array.isArray(d.projekti)?d.projekti:[]).forEach(function(pr){
+    var ime=String(pr&&pr.ime||"").trim()||"Uvožena mapa";
+    var obst=S.projekti.filter(function(x){return x.ime===ime;})[0];
+    if(obst){mape[pr.id]=obst.id;return;}
+    var nov={id:uid(),ime:ime};
+    S.projekti.push(nov);mape[pr.id]=nov.id;novihMap++;
+  });
+  d.izdelki.forEach(function(izd){
+    var kopija=JSON.parse(JSON.stringify(izd));
+    kopija.id=uid();
+    kopija.projekt=mape[izd.projekt]||(S.projekti[0]&&S.projekti[0].id)||null;
+    kopija.stDatotek=0;
+    var vMapi=S.izdelki.filter(function(x){return x.projekt===kopija.projekt;});
+    if(vMapi.some(function(x){return x.ime===kopija.ime;}))kopija.ime=kopija.ime+" (uvoženo)";
+    (Array.isArray(kopija.kreative)?kopija.kreative:[]).forEach(function(k){
+      k.id=uid();k.stDatotek=0;novihKr++;
+    });
+    S.izdelki.push(kopija);novihIzd++;
+  });
+  migriraj();
+  odprtaKreativa=null;shrani();polniIzbirnik();render();
+  toast("Dodano: "+novihIzd+" izdelkov, "+novihKr+" kreativ"+
+    (novihMap?", "+novihMap+" novih map":"")+". Nič obstoječega ni povoženo.");
 }
 
 /* ============ brief ============ */
@@ -3023,10 +3064,11 @@ document.addEventListener("change",function(ev){
     predIzbor[t.dataset.pv]=parseInt(t.dataset.i,10)||0;
     risiPredogled();return;
   }
-  if(t.id==="impFile"){
+  if(t.id==="impFile"||t.id==="impFileAdd"){
     var f=t.files&&t.files[0];if(!f)return;
+    var nacinUvoza=t.id==="impFileAdd"?"dodaj":"zamenjaj";
     var r=new FileReader();
-    r.onload=function(){uvozi(String(r.result));};
+    r.onload=function(){uvozi(String(r.result),nacinUvoza);};
     r.onerror=function(){toast("Datoteke ni bilo mogoče prebrati.");};
     r.readAsText(f);t.value="";return;
   }
@@ -3271,7 +3313,9 @@ document.addEventListener("click",function(ev){
     }
     case "exp": izvozi();break;
     case "impBtn": el("impFile").click();break;
-    case "impPaste": uvozi(el("paste").value);break;
+    case "impAdd": el("impFileAdd").click();break;
+    case "impPaste": uvozi(el("paste").value,"zamenjaj");break;
+    case "impPasteAdd": uvozi(el("paste").value,"dodaj");break;
     case "prn": window.print();break;
     case "prnew": dodajProjekt();break;
     case "pnew3": dodajIzdelek();break;

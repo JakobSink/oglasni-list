@@ -228,6 +228,42 @@ Promise.resolve()
   })
   .catch((err) => ok(false, "material izdelka", err && err.message))
   .then(() => {
+    console.log("\n== uvoz: dodaj proti zamenjaj ==");
+    const prejIzd = w.S.izdelki.length, prejMap = w.S.projekti.length;
+    const paket = {
+      v: 4,
+      projekti: [{ id: "pr-uvoz", ime: "TESTNA MAPA" }],
+      izdelki: [{
+        id: "izd-uvoz", projekt: "pr-uvoz", ime: "Uvožen izdelek", zapiski: "iz datoteke",
+        kreative: [{ id: "kr-uvoz", naslov: "Uvožena kreativa", platforma: "facebook" }],
+      }],
+    };
+    w.uvozi(JSON.stringify(paket), "dodaj");
+    ok(w.S.izdelki.length === prejIzd + 1, "dodaj doda izdelek", w.S.izdelki.length + " (prej " + prejIzd + ")");
+    ok(w.S.projekti.length === prejMap + 1, "dodaj doda novo mapo");
+    const uvozen = w.S.izdelki.filter((x) => x.ime === "Uvožen izdelek")[0];
+    ok(!!uvozen, "uvožen izdelek je tu");
+    ok(uvozen.id !== "izd-uvoz", "uvožen izdelek dobi svoj id");
+    ok(uvozen.kreative[0].id !== "kr-uvoz", "uvožena kreativa dobi svoj id");
+    ok(uvozen.zapiski === "iz datoteke", "zapiski se prenesejo");
+    ok(w.S.izdelki.filter((x) => x.ime.indexOf("Vinil") === 0 || x.kreative.length >= 2).length > 0,
+      "obstoječi izdelki ostanejo");
+
+    /* isti paket še enkrat: mapa se ponovno uporabi, izdelek dobi pripis */
+    w.uvozi(JSON.stringify(paket), "dodaj");
+    ok(w.S.projekti.length === prejMap + 1, "druga ponovitev ne naredi nove mape");
+    ok(w.S.izdelki.filter((x) => x.ime === "Uvožen izdelek (uvoženo)").length === 1,
+      "podvojeno ime dobi pripis");
+    ok(w.S.izdelki.length === prejIzd + 2, "druga ponovitev nič ne povozi");
+
+    /* zamenjaj pobrise vse (w.confirm vraca true) */
+    w.uvozi(JSON.stringify(paket), "zamenjaj");
+    ok(w.S.izdelki.length === 1 && w.S.projekti.length === 1, "zamenjaj postavi samo vsebino datoteke",
+      w.S.izdelki.length + " izdelkov, " + w.S.projekti.length + " map");
+    ok(w.S.v === 4, "po zamenjavi je stanje migrirano");
+  })
+  .catch((err) => ok(false, "uvoz", err && err.message))
+  .then(() => {
     console.log("\n" + (napake.length ? "NAPAKE (" + napake.length + "):\n - " + napake.join("\n - ") : "VSE V REDU"));
     process.exit(napake.length ? 1 : 0);
   });
