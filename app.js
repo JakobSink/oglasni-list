@@ -6,7 +6,7 @@
 
 /* Oznaka različice. Poveča jo vsaka objava — v stranski vrstici je vidna, da se
    na prvi pogled loči, ali brskalnik strežé svežo kopijo ali staro iz cache-a. */
-var RAZLICICA="različica 16 · sinhronizacija zlije, ne prepiše";
+var RAZLICICA="različica 17 · različice premikaš, izbira ostane";
 
 /* ============ pomožne funkcije ============ */
 var LS="oglasni-list-v1", LS_TEMA="oglasni-list-tema";
@@ -376,6 +376,10 @@ var HOOKI=[
  "Nihče ti ne pove tega o [kategorija]"
 ];
 
+/* Katera različica je v predogledu. Hrani se NA KREATIVI, zato izbira ostane
+   tudi po osvežitvi strani in je pri vsaki kreativi svoja.                  */
+var PRED_POLJA=["hooki","primarna","naslovi","opisi"];
+
 /* Poskrbi, da je stanje veljavno tudi po uvozu ali starejši različici. */
 function migriraj(){
   if(!S||typeof S!=="object")S=seed();
@@ -432,6 +436,13 @@ function migriraj(){
         k.pot2=typeof k.pot2==="string"?k.pot2:(pot[1]||"");
       }
       if(typeof k.sitelinki!=="string")k.sitelinki="";
+      /* izbrana različica v predogledu se hrani na kreativi, da ostane po osvežitvi */
+      if(!k.izbrana||typeof k.izbrana!=="object")k.izbrana={};
+      PRED_POLJA.forEach(function(f){
+        var i=parseInt(k.izbrana[f],10);
+        var dolzina=Array.isArray(k[f])?k[f].length:0;
+        k.izbrana[f]=(isFinite(i)&&i>=0&&i<dolzina)?i:0;
+      });
       if(!k.cta||ctaSeznam(k.platforma).indexOf(k.cta)<0)k.cta=privzetiCTA(k.platforma);
       if(!k.stikala||typeof k.stikala!=="object")k.stikala={};
       if(!k.variante||typeof k.variante!=="object")k.variante={};
@@ -1602,9 +1613,24 @@ var CFG={
 function cfg(k){return CFG[k.platforma]||CFG.drugo;}
 
 /* katera različica gre v predogled */
-var predIzbor={hooki:0,primarna:0,naslovi:0,opisi:0};
+function izbrane(k){
+  if(!k)return {};
+  if(!k.izbrana||typeof k.izbrana!=="object")k.izbrana={};
+  return k.izbrana;
+}
+var predIzbor={
+  get hooki(){return izbrane(K()).hooki||0;},
+  get primarna(){return izbrane(K()).primarna||0;},
+  get naslovi(){return izbrane(K()).naslovi||0;},
+  get opisi(){return izbrane(K()).opisi||0;}
+};
+function nastaviIzbor(polje,i){
+  var k=K();if(!k)return;
+  izbrane(k)[polje]=i;
+  shrani();
+}
 function izbor(polje,dolzina){
-  var i=predIzbor[polje]||0;
+  var i=izbrane(K())[polje]||0;
   return i<dolzina?i:0;
 }
 /* seznam različic z gumbi za dodajanje, brisanje in izbiro v predogled */
@@ -1635,6 +1661,70 @@ function mereHtml(k,u){
     v.map(function(x){return '<span class="mere-v"><i>'+esc(x.k)+'</i>'+esc(x.v)+'</span>';}).join("")+
     '<span class="hint" style="margin:2px 0 0">Pride iz izbrane umestitve zgoraj — zamenjaj umestitev in mere se spremenijo same. Gre tudi v kopiran brief.</span></div>';
 }
+
+/* ============ premikanje različic ============
+   Vrstni red različic je pomemben: prva je tista, ki jo najprej prebereš, in v
+   Google RSA jo Google tudi najpogosteje uporabi. Premikaš z vlečenjem za
+   držalo ali z puščicama — puščici sta tu zato, da dela tudi na telefonu.  */
+function premakniVarianto(polje,od,do_){
+  var k=K();if(!k||!Array.isArray(k[polje]))return false;
+  var a=k[polje];
+  if(od<0||od>=a.length||do_<0||do_>=a.length||od===do_)return false;
+  a.splice(do_,0,a.splice(od,1)[0]);
+  /* izbira v predogledu naj ostane na istem besedilu, ne na istem mestu */
+  var iz=izbrane(k);
+  if(iz[polje]===od)iz[polje]=do_;
+  else if(iz[polje]>od&&iz[polje]<=do_)iz[polje]--;
+  else if(iz[polje]<od&&iz[polje]>=do_)iz[polje]++;
+  shrani();
+  return true;
+}
+/* vlečenje za držalo, z miško in s prstom */
+var vlecem=null;
+function zacniVlecenje(ev,polje,i){
+  var vrsta=ev.target.closest(".vrow");
+  var seznam=vrsta&&vrsta.parentNode;
+  if(!seznam)return;
+  vlecem={polje:polje,od:i,vrsta:vrsta,seznam:seznam,zdaj:i};
+  vrsta.classList.add("vlecem");
+  try{ev.target.setPointerCapture(ev.pointerId);}catch(err){}
+  ev.preventDefault();
+}
+function medVlecenjem(ev){
+  if(!vlecem)return;
+  var vrstice=qa(".vrow",vlecem.seznam);
+  var y=ev.clientY;
+  for(var j=0;j<vrstice.length;j++){
+    if(vrstice[j]===vlecem.vrsta)continue;
+    var r=vrstice[j].getBoundingClientRect();
+    var sredina=r.top+r.height/2;
+    if(y<sredina&&j<vlecem.zdaj){
+      vlecem.seznam.insertBefore(vlecem.vrsta,vrstice[j]);
+      vlecem.zdaj=j;break;
+    }
+    if(y>sredina&&j>vlecem.zdaj){
+      vlecem.seznam.insertBefore(vlecem.vrsta,vrstice[j].nextSibling);
+      vlecem.zdaj=j;break;
+    }
+  }
+}
+function konecVlecenja(){
+  if(!vlecem)return;
+  var v=vlecem;vlecem=null;
+  v.vrsta.classList.remove("vlecem");
+  /* pravo mesto preberemo iz DOM, ker se je med vlečenjem premikal */
+  var koncni=qa(".vrow",v.seznam).indexOf(v.vrsta);
+  if(koncni>=0&&koncni!==v.od&&premakniVarianto(v.polje,v.od,koncni))renderEditor();
+  else renderEditor();
+}
+document.addEventListener("pointerdown",function(ev){
+  var g=ev.target.closest?ev.target.closest("[data-vgrip]"):null;
+  if(!g)return;
+  zacniVlecenje(ev,g.dataset.vgrip,parseInt(g.dataset.i,10));
+});
+document.addEventListener("pointermove",medVlecenjem);
+document.addEventListener("pointerup",konecVlecenja);
+document.addEventListener("pointercancel",konecVlecenja);
 
 /* pri katerih možnostih vodenega stikala je besedilo že napisano */
 function stikNapisane(k,g){
@@ -1676,7 +1766,10 @@ function varList(k,polje,label,limit,hint,vrstic){
   arr.forEach(function(v,i){
     var val=v==null?"":String(v);
     var over=val.length>limit;
-    h+='<div class="vrow">'+
+    h+='<div class="vrow" data-vpolje="'+polje+'" data-vi="'+i+'">'+
+      '<span class="vgrip no-print" data-vgrip="'+polje+'" data-i="'+i+'" title="Povleci, da premakneš" aria-hidden="true">'+
+        '<i></i><i></i><i></i>'+
+      '</span>'+
       '<label class="vpick" title="Pokaži to različico v predogledu">'+
         '<input type="radio" name="pv-'+polje+'" data-pv="'+polje+'" data-i="'+i+'"'+(i===izb?" checked":"")+'>'+
         '<span>'+(i+1)+'</span></label>'+
@@ -1685,6 +1778,10 @@ function varList(k,polje,label,limit,hint,vrstic){
         : '<input class="txt" type="text" data-c="'+polje+'.'+i+'" data-limit="'+limit+'" value="'+esc(val)+'">')+
       '<span class="vend">'+
         '<span class="counter'+(over?" over":"")+'" data-cnt="'+polje+'.'+i+'">'+val.length+' / '+limit+'</span>'+
+        (arr.length>1?'<span class="vmove no-print">'+
+          '<button data-vgor="'+polje+'.'+i+'"'+(i===0?" disabled":"")+' title="Premakni višje" aria-label="Premakni višje">▲</button>'+
+          '<button data-vdol="'+polje+'.'+i+'"'+(i===arr.length-1?" disabled":"")+' title="Premakni nižje" aria-label="Premakni nižje">▼</button>'+
+        '</span>':'')+
         (arr.length>1?'<button class="vx no-print" data-vdel="'+polje+'.'+i+'" title="Odstrani to različico" aria-label="Odstrani">'+
           '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></button>':'')+
       '</span>'+
@@ -4297,7 +4394,7 @@ document.addEventListener("change",function(ev){
   }
   /* radio pri različici → katera gre v predogled */
   if(t.dataset.pv!=null){
-    predIzbor[t.dataset.pv]=parseInt(t.dataset.i,10)||0;
+    nastaviIzbor(t.dataset.pv,parseInt(t.dataset.i,10)||0);
     risiPredogled();return;
   }
   if(t.id==="impFile"||t.id==="impFileAdd"){
@@ -4503,7 +4600,7 @@ document.addEventListener("click",function(ev){
     if(!Array.isArray(kh.hooki))kh.hooki=[""];
     if(kh.hooki.length===1&&!String(kh.hooki[0]).trim())kh.hooki[0]=txt;
     else kh.hooki.push(txt);
-    predIzbor.hooki=kh.hooki.length-1;
+    nastaviIzbor("hooki",kh.hooki.length-1);
     shrani();renderEditor();toast("Hook dodan kot nova različica.");return;
   }
   /* dodajanje in brisanje v banki, izbira kategorije */
@@ -4532,6 +4629,13 @@ document.addEventListener("click",function(ev){
     return;
   }
   /* + dodaj različico */
+  var vgor=t.closest("[data-vgor]"), vdol=t.closest("[data-vdol]");
+  if(vgor||vdol){
+    var d2=(vgor||vdol).dataset[vgor?"vgor":"vdol"].split(".");
+    var i4=parseInt(d2[1],10);
+    if(premakniVarianto(d2[0],i4,i4+(vgor?-1:1)))renderEditor();
+    return;
+  }
   var vadd=t.closest("[data-vadd]");
   if(vadd){
     var kv=K();if(!kv)return;
@@ -4539,7 +4643,7 @@ document.addEventListener("click",function(ev){
     if(!Array.isArray(kv[polje]))kv[polje]=[""];
     if(kv[polje].length>=25){toast("Dovolj različic — 25 je zgornja meja.");return;}
     kv[polje].push("");
-    predIzbor[polje]=kv[polje].length-1;
+    nastaviIzbor(polje,kv[polje].length-1);
     shrani();renderEditor();
     var vsi=qa('[data-c="'+polje+'.'+(kv[polje].length-1)+'"]');
     if(vsi[0])vsi[0].focus();
@@ -4554,7 +4658,7 @@ document.addEventListener("click",function(ev){
     var vsebina=String(kd2[pol][idx]||"").trim();
     if(vsebina&&!confirm("Odstranim to različico?"))return;
     kd2[pol].splice(idx,1);
-    if(predIzbor[pol]>=kd2[pol].length)predIzbor[pol]=0;
+    if(izbrane(kd2)[pol]>=kd2[pol].length)izbrane(kd2)[pol]=0;
     shrani();renderEditor();return;
   }
   var pick=t.closest("[data-pick]");

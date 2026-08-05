@@ -169,6 +169,39 @@ try {
   ok(izv.izdelki[0].kreative[0].umestitev != null, "umestitev se serializira");
 } catch (err) { ok(false, "serializacija", err.message); }
 
+console.log("\n== vrstni red različic in izbira v predogledu ==");
+{
+  const kv2 = w.P().kreative[0];
+  w.odprtaKreativa = kv2.id;
+  w.view = "kreative";
+  kv2.hooki = ["prvi", "drugi", "tretji"];
+  kv2.izbrana = {};
+  w.renderEditor();
+  ok(w.document.querySelectorAll("[data-vgrip]").length > 0, "vrstice imajo držalo za vlečenje");
+  ok(!!w.document.querySelector("[data-vgor]") && !!w.document.querySelector("[data-vdol]"),
+    "in puščici, da dela tudi na telefonu");
+
+  /* izbira mora ostati na istem BESEDILU, ne na istem mestu */
+  w.nastaviIzbor("hooki", 2);
+  ok(w.premakniVarianto("hooki", 2, 0), "tretji se premakne na prvo mesto");
+  ok(kv2.hooki.join("|") === "tretji|prvi|drugi", "vrstni red je nov", kv2.hooki.join("|"));
+  ok(kv2.izbrana.hooki === 0, "izbira sledi premaknjenemu besedilu", String(kv2.izbrana.hooki));
+
+  w.premakniVarianto("hooki", 0, 2);
+  ok(kv2.hooki.join("|") === "prvi|drugi|tretji", "in nazaj", kv2.hooki.join("|"));
+  ok(kv2.izbrana.hooki === 2, "izbira spet sledi", String(kv2.izbrana.hooki));
+  ok(!w.premakniVarianto("hooki", 0, -1), "premik izven seznama se zavrne");
+
+  /* izbira se hrani na kreativi, torej prezivi osvezitev */
+  w.nastaviIzbor("naslovi", 0);
+  kv2.naslovi = ["A", "B"];
+  w.nastaviIzbor("naslovi", 1);
+  const kopija = JSON.parse(JSON.stringify(w.S));
+  ok(kopija.izdelki.some((x) => x.kreative.some((k) => k.izbrana && k.izbrana.naslovi === 1)),
+    "izbrana različica se shrani v stanje in preživi osvežitev");
+  ok(w.predIzbor.naslovi === 1, "predogled bere izbiro s kreative", String(w.predIzbor.naslovi));
+}
+
 console.log("\n== zlivanje z oblakom ==");
 {
   const lok = {

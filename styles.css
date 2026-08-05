@@ -548,6 +548,22 @@ table.mtx th:first-child{text-align:left}
   flex:none;width:24px;height:24px;border-radius:50%;background:var(--brand);color:var(--brand-on);
   display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;margin-top:2px;
 }
+/* premikanje razlicic: drzalo za vlecenje in puscici za telefon */
+.vgrip{
+  flex:none;display:flex;flex-direction:column;justify-content:center;gap:2.5px;
+  width:16px;padding:6px 3px;cursor:grab;touch-action:none;align-self:flex-start;margin-top:7px;
+}
+.vgrip i{display:block;height:1.5px;background:var(--line2);border-radius:1px}
+.vgrip:hover i{background:var(--brand)}
+.vrow.vlecem{opacity:.65;background:var(--surf2);border-radius:10px;box-shadow:var(--sh-2)}
+.vmove{display:flex;flex-direction:column;gap:2px}
+.vmove button{
+  border:1px solid var(--line2);background:var(--surf);color:var(--ink3);
+  border-radius:6px;width:22px;height:15px;font-size:8px;line-height:1;cursor:pointer;padding:0;
+}
+.vmove button:hover:not(:disabled){color:var(--brand);border-color:var(--brand)}
+.vmove button:disabled{opacity:.3;cursor:default}
+
 /* mere, ki jih doloci umestitev */
 .mere{display:flex;flex-direction:column;gap:5px;background:var(--surf2);border:1px solid var(--line2);
   border-radius:12px;padding:11px 13px;margin-bottom:14px}
