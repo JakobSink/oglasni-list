@@ -6,7 +6,7 @@
 
 /* Oznaka različice. Poveča jo vsaka objava — v stranski vrstici je vidna, da se
    na prvi pogled loči, ali brskalnik strežé svežo kopijo ali staro iz cache-a. */
-var RAZLICICA="5. 8. 2026 · umestitve, material, Excel, uvoz";
+var RAZLICICA="5. 8. 2026 · stikala, umestitve, Excel, uvoz";
 
 /* ============ pomožne funkcije ============ */
 var LS="oglasni-list-v1", LS_TEMA="oglasni-list-tema";
@@ -138,10 +138,134 @@ function platIme(pl){return (PLATFORME.filter(function(x){return x[0]===pl;})[0]
 /* ali se dano polje v tej umestitvi sploh prikaže */
 function seVidi(spec,polje){return !spec.rabi||spec.rabi.indexOf(polje)>=0;}
 
+/* ============ stikala ============
+   Stikalo je skupina, ki si jo določiš sam: ime in nekaj možnosti, na primer
+   „Trg: Slovenija / Hrvaška / Slovaška“. Uporabi se na dva načina hkrati:
+
+   1. Kot izbirnik nabora. Kreativa nosi svojo vrednost, seznam kreativ pa
+      pokaže samo tiste, ki ustrezajo izbrani. Ko preklopiš na Hrvaško, so
+      spredaj hrvaški oglasi — lahko so čisto druge kreative.
+   2. Kot izbirnik besedila znotraj ene kreative. Če kreativi rečeš, da jo to
+      stikalo „vodi“, ima vsaka možnost svoje hooke, besedila, naslove in URL.
+      Preklop shrani trenutna besedila in naloži besedila druge možnosti — zato
+      predogled, brief in izvoz delajo naprej brez posebnih primerov.
+
+   Polja, ki se pri vodenem stikalu hranijo ločeno po možnosti:              */
+var STIK_POLJA=["hooki","primarna","naslovi","opisi","cta","url","kljucneBesede","pot1","pot2","sitelinki"];
+var STIK_VSE="*";   /* kreativa velja za vse možnosti */
+
+function novoStikalo(ime,moznosti){
+  return {id:uid(),ime:ime||"Novo stikalo",moznosti:(moznosti&&moznosti.length?moznosti:["Prva","Druga"])};
+}
+function stikala(){return Array.isArray(S.stikala)?S.stikala:[];}
+function stikNajdi(gid){return stikala().filter(function(g){return g.id===gid;})[0]||null;}
+/* vrednost stikala na izdelku ali kreativi; če je ni, prva možnost */
+function stikVrednost(zapis,g){
+  var v=zapis&&zapis.stikala?zapis.stikala[g.id]:null;
+  if(v===STIK_VSE)return STIK_VSE;
+  if(typeof v==="string"&&g.moznosti.indexOf(v)>=0)return v;
+  return g.moznosti[0];
+}
+/* katera možnost je zdaj v pogledu — filter nad seznamom kreativ */
+function stikPogled(g){
+  var v=S.stikaloPogled&&S.stikaloPogled[g.id];
+  if(v===STIK_VSE||g.moznosti.indexOf(v)>=0)return v;
+  return STIK_VSE;
+}
+function stikNastaviPogled(gid,v){
+  if(!S.stikaloPogled||typeof S.stikaloPogled!=="object")S.stikaloPogled={};
+  S.stikaloPogled[gid]=v;
+}
+/* ali se kreativa vidi pri trenutnem pogledu vseh stikal */
+function stikVidna(k){
+  return stikala().every(function(g){
+    var pogled=stikPogled(g);
+    if(pogled===STIK_VSE)return true;
+    var svoja=k.stikala?k.stikala[g.id]:null;
+    if(svoja===STIK_VSE||svoja==null)return true;   /* velja za vse */
+    return svoja===pogled;
+  });
+}
+function stikFilter(kreative){return (kreative||[]).filter(stikVidna);}
+/* nova kreativa prevzame vrednosti izdelka, oziroma tisto, kar je v pogledu */
+function stikPodeduj(k,p){
+  if(!k.stikala||typeof k.stikala!=="object")k.stikala={};
+  stikala().forEach(function(g){
+    var pogled=stikPogled(g);
+    k.stikala[g.id]=pogled!==STIK_VSE?pogled:stikVrednost(p,g);
+  });
+}
+/* ali to stikalo vodi besedila te kreative */
+function stikVodi(k){
+  if(!k||!k.vodi)return null;
+  var g=stikNajdi(k.vodi);
+  return g&&stikVrednost(k,g)!==STIK_VSE?g:null;
+}
+function praznaVarianta(){
+  return {hooki:[""],primarna:[""],naslovi:[""],opisi:[""],cta:"",url:"",kljucneBesede:"",pot1:"",pot2:"",sitelinki:""};
+}
+function poberiVarianto(k){
+  var v={};
+  STIK_POLJA.forEach(function(f){
+    v[f]=Array.isArray(k[f])?k[f].slice():k[f];
+  });
+  return v;
+}
+function nalozVarianto(k,v){
+  STIK_POLJA.forEach(function(f){
+    if(v[f]==null)return;
+    k[f]=Array.isArray(v[f])?v[f].slice():v[f];
+  });
+}
+/* Preklop vodenega stikala: trenutna besedila shrani pod staro možnost in
+   naloži besedila nove. Če nove še ni, jo začni kot kopijo trenutne — hrvaški
+   oglas se skoraj vedno začne kot prevod slovenskega, ne iz nič.            */
+function stikPreklopi(k,g,nova){
+  if(!k.variante||typeof k.variante!=="object")k.variante={};
+  var stara=stikVrednost(k,g);
+  if(!k.stikala||typeof k.stikala!=="object")k.stikala={};
+  if(stara===nova){k.stikala[g.id]=nova;return;}
+  if(stikVodi(k)&&g.id===k.vodi){
+    k.variante[stara]=poberiVarianto(k);
+    nalozVarianto(k,k.variante[nova]||poberiVarianto(k));
+  }
+  k.stikala[g.id]=nova;
+}
+/* ob vklopu vodenja: vsaka druga možnost dobi kopijo trenutnih besedil */
+function stikVklopiVodenje(k,gid){
+  var g=stikNajdi(gid);
+  k.vodi=g?gid:"";
+  if(!g)return;
+  if(!k.variante||typeof k.variante!=="object")k.variante={};
+  if(stikVrednost(k,g)===STIK_VSE)k.stikala[g.id]=g.moznosti[0];
+  var zdaj=stikVrednost(k,g);
+  g.moznosti.forEach(function(m){
+    if(m!==zdaj&&!k.variante[m])k.variante[m]=poberiVarianto(k);
+  });
+}
+/* segmentirani gumbi; kje = "p" izdelek, "k" kreativa, "v" pogled */
+function stikPills(kje,g,izbrana,dovoliVse){
+  var moz=g.moznosti.slice();
+  var h='<div class="um-pills no-print" role="group" aria-label="'+esc(g.ime)+'">';
+  if(dovoliVse)
+    h+='<button class="um-p'+(izbrana===STIK_VSE?" on":"")+'" data-stik="'+kje+'" data-sg="'+g.id+'" data-sv="'+STIK_VSE+'">vse</button>';
+  moz.forEach(function(m){
+    h+='<button class="um-p'+(izbrana===m?" on":"")+'" data-stik="'+kje+'" data-sg="'+g.id+'" data-sv="'+esc(m)+'">'+esc(m)+'</button>';
+  });
+  return h+'</div>';
+}
+/* opis vrednosti za brief in izvoz */
+function stikOpis(zapis){
+  return stikala().map(function(g){
+    var v=zapis&&zapis.stikala?zapis.stikala[g.id]:null;
+    return g.ime+": "+(v===STIK_VSE?"vse":(v||g.moznosti[0]));
+  }).join(" · ");
+}
+
 function novProjekt(ime){return {id:uid(),ime:ime||"Nov projekt",opis:""};}
 function novIzdelek(ime,projekt){
   return {id:uid(),projekt:projekt||null,ime:ime||"Nov izdelek",opis:"",znamka:"",domena:"",url:"",
-    zapiski:"",stDatotek:0,izracuni:false,
+    zapiski:"",stDatotek:0,izracuni:false,stikala:{},
     cena:"",ddv:"22",ddvVkljucen:true,posiljanjePlaca:"",
     nabavna:"",posiljanje:"",embalaza:"",provizijaPct:"2,9",provizijaFix:"0,25",ostalo:"",vracilaPct:"5",
     fiksniMesecni:"",dnevniBudget:"",predvidenCPA:"",
@@ -155,6 +279,7 @@ function novaKreativa(pl){
     kot:"",publika:"",tagi:"",
     hooki:[""],primarna:[""],naslovi:[""],opisi:[""],cta:privzetiCTA(pl),
     kljucneBesede:"",url:"",pot1:"",pot2:"",sitelinki:"",design:"",izvajalec:"",rok:"",opombe:"",stDatotek:0,
+    stikala:{},vodi:"",variante:{},
     budget:"",cpm:"",ctr:"",cvr:"",
     rSpend:"",rImpr:"",rClicks:"",rOrders:""};
 }
@@ -276,10 +401,40 @@ function migriraj(){
       }
       if(typeof k.sitelinki!=="string")k.sitelinki="";
       if(!k.cta||ctaSeznam(k.platforma).indexOf(k.cta)<0)k.cta=privzetiCTA(k.platforma);
+      if(!k.stikala||typeof k.stikala!=="object")k.stikala={};
+      if(!k.variante||typeof k.variante!=="object")k.variante={};
+      if(typeof k.vodi!=="string")k.vodi="";
     });
   });
   if(!S.aktivenProjekt||!znani[S.aktivenProjekt])S.aktivenProjekt=S.projekti[0].id;
-  S.v=4;
+
+  /* stikala si določi uporabnik — privzeto jih ni in nič se ne spremeni */
+  if(!Array.isArray(S.stikala))S.stikala=[];
+  S.stikala=S.stikala.filter(function(g){
+    return g&&typeof g.ime==="string"&&Array.isArray(g.moznosti)&&g.moznosti.length>=2;
+  });
+  S.stikala.forEach(function(g){
+    if(!g.id)g.id=uid();
+    g.moznosti=g.moznosti.map(function(m){return String(m==null?"":m).trim();}).filter(Boolean);
+  });
+  if(!S.stikaloPogled||typeof S.stikaloPogled!=="object")S.stikaloPogled={};
+  /* vrednosti, ki jih stikalo ne pozna več (preimenovana možnost), pobrišemo,
+     da kreativa ne izpade iz vseh pogledov                                  */
+  var znanaSt={};
+  S.stikala.forEach(function(g){znanaSt[g.id]=g.moznosti;});
+  S.izdelki.forEach(function(x){
+    if(!x.stikala||typeof x.stikala!=="object")x.stikala={};
+    [x].concat(x.kreative).forEach(function(z){
+      Object.keys(z.stikala||{}).forEach(function(gid){
+        var moz=znanaSt[gid];
+        if(!moz||(z.stikala[gid]!==STIK_VSE&&moz.indexOf(z.stikala[gid])<0))delete z.stikala[gid];
+      });
+    });
+    x.kreative.forEach(function(k){
+      if(k.vodi&&!znanaSt[k.vodi])k.vodi="";
+    });
+  });
+  S.v=5;
 }
 
 var S;
@@ -845,6 +1000,18 @@ function renderEkon(){
         : '<p class="note">Ta brskalnik ne dovoli shranjevanja datotek (IndexedDB ni na voljo).</p>')+
     '</fieldset>'+
 
+    /* stikala izdelka — privzetki za nove kreative tega izdelka */
+    (stikala().length
+      ? '<fieldset class="sect"><div class="lg"><h3>Stikala</h3>'+
+          '<p>Privzete vrednosti za nove kreative tega izdelka. Na kreativi jih lahko povoziš, v seznamu kreativ pa s stikalom izbereš, katere oglase vidiš.</p></div>'+
+          stikala().map(function(g){
+            return '<div class="f"><span class="lbl">'+esc(g.ime)+'</span>'+
+              stikPills("p",g,stikVrednost(p,g),false)+'</div>';
+          }).join("")+
+          '<p class="note" style="margin-top:12px">Stikala urejaš v zavihku <b>Podatki</b>.</p>'+
+        '</fieldset>'
+      : '')+
+
     /* stikalo za izračune */
     '<fieldset class="sect"><div class="lg"><h3>Izračuni</h3>'+
       '<p>Marža, break-even CPA, ROAS in napoved profita. Dodatek — če ga ne rabiš, ga pusti izklopljenega in izdelek uporabljaj samo za kreative.</p></div>'+
@@ -972,7 +1139,10 @@ function renderKreative(){
   var ek=ekon(p);
   var bAkt=budgetAktivnih(p);
 
-  var kartice=p.kreative.map(function(k){
+  var vidne=stikFilter(p.kreative);
+  var skrite=p.kreative.length-vidne.length;
+
+  var kartice=vidne.map(function(k){
     var l=lijak(k.budget,k.cpm,k.ctr,k.cvr,ek), r=rezultat(k,ek);
     var jeDej=r.imaPodatke&&r.narocil>0;
     var prof=r.imaPodatke?r.profit:l.profit;
@@ -990,6 +1160,13 @@ function renderKreative(){
           (k.izvajalec&&VDELU.indexOf(k.status)>=0?'<span class="pill np">'+esc(k.izvajalec)+(k.rok?" · "+esc(k.rok):"")+'</span>':'')+
         '</div>'+
         '<span class="card-t">'+esc(k.naslov)+'</span>'+
+        (stikala().length
+          ? '<span class="tags stik">'+stikala().map(function(g){
+              var v=k.stikala?k.stikala[g.id]:null;
+              return '<span'+(k.vodi===g.id?' class="vodi" title="To stikalo vodi besedila te kreative"':'')+'>'+
+                esc(v===STIK_VSE?g.ime+": vse":(v||stikVrednost(k,g)))+'</span>';
+            }).join("")+'</span>'
+          : '')+
         '<span class="card-s">'+esc(k.kot||prvi(k.hooki)||prvi(k.naslovi)||"Brez kota — odpri in napiši, kaj ta oglas obljublja.")+'</span>'+
         (String(k.tagi||"").trim()?'<span class="tags">'+String(k.tagi).split(",").slice(0,4).map(function(x){x=x.trim();return x?'<span>'+esc(x)+'</span>':'';}).join("")+'</span>':'')+
       '</div>'+
@@ -1014,9 +1191,25 @@ function renderKreative(){
     '<button class="btn btn-soft" data-add="tiktok">+ TikTok</button>'+
     (p.kreative.length?'<button class="btn" id="xlsx">Izvozi v Excel</button>':''),
     [{t:PR().ime,v:"projekti"},{t:p.ime,v:"pregled"},{t:"Kreative"}])+
+  (stikala().length
+    ? '<div class="block stik-filter"><div class="pad">'+
+        stikala().map(function(g){
+          return '<div class="f"><span class="lbl">'+esc(g.ime)+'</span>'+
+            stikPills("v",g,stikPogled(g),true)+'</div>';
+        }).join("")+
+        '<p class="note" style="margin-top:4px">'+
+          (skrite
+            ? 'Prikazanih '+vidne.length+' od '+p.kreative.length+' kreativ; '+skrite+' jih ta izbira skrije. Nova kreativa prevzame izbrane vrednosti.'
+            : 'Izbira določa, katere kreative vidiš in kaj prevzame nova kreativa.')+
+        '</p>'+
+      '</div></div>'
+    : '')+
   '<div class="cards">'+kartice+
     '<button class="card card-add" data-add="facebook"><b>+ Nova kreativa</b><span>privzeto Facebook, platformo lahko zamenjaš</span></button>'+
-  '</div>';
+  '</div>'+
+  (skrite&&!vidne.length
+    ? '<p class="note" style="margin-top:14px">Vse kreative tega izdelka so skrite s trenutno izbiro stikal. Postavi stikalo na <b>vse</b>, da jih spet vidiš.</p>'
+    : '');
 
   narisiNaslovnice();
 }
@@ -1094,6 +1287,43 @@ function izbor(polje,dolzina){
   return i<dolzina?i:0;
 }
 /* seznam različic z gumbi za dodajanje, brisanje in izbiro v predogled */
+/* pri katerih možnostih vodenega stikala je besedilo že napisano */
+function stikNapisane(k,g){
+  var zdaj=stikVrednost(k,g);
+  function ima(vir){return !!String(prvi(vir&&vir.hooki)||prvi(vir&&vir.naslovi)||prvi(vir&&vir.primarna)||"").trim();}
+  return g.moznosti.filter(function(m){
+    return m===zdaj ? ima(k) : ima(k.variante&&k.variante[m]);
+  });
+}
+
+/* Stikala na kreativi. Vsako stikalo je lahko samo oznaka (kateremu trgu oglas
+   pripada) ali pa vodi besedila — takrat ima vsaka možnost svoj tekst.       */
+function stikalaKreativeHtml(k){
+  var vodeno=stikVodi(k);
+  var h='<fieldset class="sect"><div class="lg"><h3>Stikala</h3>'+
+    '<p>Vrednost pove, kateremu naboru ta oglas pripada. Če eno stikalo <b>vodi besedila</b>, ima vsaka njegova možnost svoj hook, besedilo, naslove in URL — preklop jih zamenja.</p></div>';
+  stikala().forEach(function(g){
+    var v=stikVrednost(k,g), jeVodeno=vodeno&&vodeno.id===g.id;
+    h+='<div class="f"><span class="lbl">'+esc(g.ime)+
+      (jeVodeno?' <em class="cnt-b">vodi besedila</em>':'')+'</span>'+
+      stikPills("k",g,v,true)+
+      (jeVodeno
+        ? '<span class="hint">Preklop shrani, kar je zdaj vpisano, in naloži besedila izbrane možnosti. '+
+          'Napisano pri: '+esc(stikNapisane(k,g).join(", ")||"—")+'.</span>'
+        : (v===STIK_VSE?'<span class="hint">„vse“ pomeni, da je ta oglas viden pri vsaki možnosti.</span>':''))+
+    '</div>';
+  });
+  h+='<div class="f"><label for="c-vodi">Katero stikalo vodi besedila</label>'+
+    '<select class="txt" id="c-vodi" data-vodi="1">'+
+      '<option value=""'+(k.vodi?"":" selected")+'>nobeno — besedilo je eno samo</option>'+
+      stikala().map(function(g){
+        return '<option value="'+g.id+'"'+(k.vodi===g.id?" selected":"")+'>'+esc(g.ime)+'</option>';
+      }).join("")+
+    '</select>'+
+    '<span class="hint">Ob vklopu vsaka možnost dobi kopijo trenutnih besedil, da ne pišeš iz nič. Ob izklopu ostanejo shranjena, samo preklapljanja ni več.</span></div>';
+  return h+'</fieldset>';
+}
+
 function varList(k,polje,label,limit,hint,vrstic){
   var arr=k[polje]||[""];
   var izb=izbor(polje,arr.length);
@@ -1182,6 +1412,9 @@ function renderEditor(){
         '</div>'+
       '</div>'+
     '</fieldset>'+
+
+    /* stikala kreative + izbira, katero vodi besedila */
+    (stikala().length?stikalaKreativeHtml(k):'')+
 
     /* 2 — kot in publika */
     '<fieldset class="sect"><div class="lg"><h3>Kot in publika</h3><p>Kaj obljubljaš in komu</p></div>'+
@@ -2443,6 +2676,7 @@ function renderPodatki(){
         '<button class="btn" id="impPaste">Uvozi prilepljeno in zamenjaj</button>'+
       '</div></div>'+
   '</div></div>'+
+  stikalaUrediHtml()+
   '<div class="block"><header><div class="head-t"><span class="eyebrow">Telefon</span><h2>Namesti kot aplikacijo</h2></div></header><div class="pad">'+
     '<p class="note"><b>Android / Chrome:</b> meni ⋮ → „Dodaj na začetni zaslon“. <b>iPhone / Safari:</b> gumb za deljenje → „Dodaj na domači zaslon“. '+
     'Odpre se kot aplikacija, brez naslovne vrstice, in dela tudi brez signala.</p>'+
@@ -2488,6 +2722,55 @@ function izvozi(){
     toast("Prenos ni uspel — besedilo je v polju spodaj, shrani ga ročno.");
   }
 }
+/* ============ urejanje stikal ============ */
+function stikalaUrediHtml(){
+  return '<div class="block"><header><div class="head-t"><span class="eyebrow">Stikala</span>'+
+    '<h2>Svoja stikala</h2></div>'+
+    '<p>Stikalo je skupina možnosti, ki si jo določiš sam — na primer <b>Trg: Slovenija / Hrvaška / Slovaška</b>. '+
+    'Pojavi se na izdelku in na vsaki kreativi. V seznamu kreativ z njim izbereš, katere oglase vidiš, '+
+    'na kreativi pa lahko eno stikalo vodi besedila, tako da ima vsaka možnost svoj tekst.</p></header><div class="pad">'+
+    (stikala().length
+      ? stikala().map(function(g,i){
+          return '<fieldset class="sect"><div class="lg"><h3>'+esc(g.ime||"Stikalo")+'</h3>'+
+            '<p>'+g.moznosti.length+' možnosti</p></div>'+
+            '<div class="grid">'+
+              '<div class="f"><label for="sg-ime-'+g.id+'">Ime stikala</label>'+
+                '<input class="txt" id="sg-ime-'+g.id+'" type="text" data-sgime="'+g.id+'" value="'+esc(g.ime)+'" placeholder="npr. Trg"></div>'+
+              '<div class="f"><label for="sg-moz-'+g.id+'">Možnosti</label>'+
+                '<input class="txt" id="sg-moz-'+g.id+'" type="text" data-sgmoz="'+g.id+'" value="'+esc(g.moznosti.join(", "))+'" placeholder="Slovenija, Hrvaška, Slovaška">'+
+                '<span class="hint">Ločeno z vejico, vsaj dve. Preimenovanje možnosti pobriše to vrednost pri izdelkih in kreativah, zato jo raje preimenuj v isti sapi kot vsebino.</span></div>'+
+            '</div>'+
+            '<div class="row no-print" style="margin-top:10px">'+
+              '<button class="btn btn-s btn-d" data-sgdel="'+g.id+'">Odstrani stikalo</button>'+
+            '</div>'+
+          '</fieldset>';
+        }).join("")
+      : '<p class="note">Stikal še ni. Dodaj svoje ali vzemi pripravljeno.</p>')+
+    '<div class="row no-print" style="margin-top:14px">'+
+      '<button class="btn btn-p" id="sgnew">+ Novo stikalo</button>'+
+      (stikala().some(function(g){return g.ime==="Trg";})?'':'<button class="btn" id="sgtrg">+ Trg (Slovenija, Hrvaška, Slovaška)</button>')+
+    '</div>'+
+  '</div></div>';
+}
+function dodajStikalo(ime,moznosti){
+  if(!Array.isArray(S.stikala))S.stikala=[];
+  var g=novoStikalo(ime,moznosti);
+  S.stikala.push(g);
+  shrani();render();
+  toast("Stikalo „"+g.ime+"“ dodano. Najdeš ga na izdelku in na kreativah.");
+}
+function brisiStikalo(gid){
+  var g=stikNajdi(gid);
+  if(!g)return;
+  var vodijo=0;
+  S.izdelki.forEach(function(x){(x.kreative||[]).forEach(function(k){if(k.vodi===gid)vodijo++;});});
+  if(!confirm("Odstranim stikalo „"+g.ime+"“?"+
+    (vodijo?"\n\n"+vodijo+" kreativ ima po njem ločena besedila. Besedila, ki so zdaj vpisana, ostanejo; ostale različice postanejo nedosegljive.":"")))return;
+  S.stikala=stikala().filter(function(x){return x.id!==gid;});
+  migriraj();shrani();render();
+  toast("Stikalo odstranjeno.");
+}
+
 /* Mapa, pripravljena vnaprej in objavljena skupaj z aplikacijo. Obide datoteke
    in kopiranje besedila — na telefonu je oboje mučno.                        */
 var MAPE_URL="mape/eureka.json";
@@ -2523,7 +2806,33 @@ function uvozi(txt,nacin){
    vedno dodajo na novo z novimi id-ji — uvoz torej nikoli nicesar ne izgubi.
    Ce izdelek s tem imenom v mapi ze obstaja, dobi pripis, da se vidi razlika. */
 function uvoziDodaj(d){
-  var mape={}, novihMap=0, novihIzd=0, novihKr=0;
+  var mape={}, novihMap=0, novihIzd=0, novihKr=0, novihStik=0;
+  /* Stikala iz paketa: tisto z istim imenom je isto stikalo, zato prevzamemo
+     obstoječe in samo dopolnimo možnosti, ki jih še ni.                     */
+  var stikPreslikava={};
+  if(!Array.isArray(S.stikala))S.stikala=[];
+  (Array.isArray(d.stikala)?d.stikala:[]).forEach(function(g){
+    if(!g||typeof g.ime!=="string"||!Array.isArray(g.moznosti)||g.moznosti.length<2)return;
+    var obst=stikala().filter(function(x){return x.ime===g.ime;})[0];
+    if(obst){
+      g.moznosti.forEach(function(m){if(obst.moznosti.indexOf(m)<0)obst.moznosti.push(m);});
+      stikPreslikava[g.id]=obst.id;
+      return;
+    }
+    var nov=novoStikalo(g.ime,g.moznosti.slice());
+    S.stikala.push(nov);stikPreslikava[g.id]=nov.id;novihStik++;
+  });
+  /* vrednosti stikal na uvozenem zapisu prevezi na id-je pri nas */
+  function prevezi(z){
+    if(!z.stikala||typeof z.stikala!=="object"){z.stikala={};return;}
+    var novo={};
+    Object.keys(z.stikala).forEach(function(gid){
+      var cilj=stikPreslikava[gid]||(stikNajdi(gid)?gid:null);
+      if(cilj)novo[cilj]=z.stikala[gid];
+    });
+    z.stikala=novo;
+    if(z.vodi)z.vodi=stikPreslikava[z.vodi]||(stikNajdi(z.vodi)?z.vodi:"");
+  }
   (Array.isArray(d.projekti)?d.projekti:[]).forEach(function(pr){
     var ime=String(pr&&pr.ime||"").trim()||"Uvožena mapa";
     var obst=S.projekti.filter(function(x){return x.ime===ime;})[0];
@@ -2538,15 +2847,17 @@ function uvoziDodaj(d){
     kopija.stDatotek=0;
     var vMapi=S.izdelki.filter(function(x){return x.projekt===kopija.projekt;});
     if(vMapi.some(function(x){return x.ime===kopija.ime;}))kopija.ime=kopija.ime+" (uvoženo)";
+    prevezi(kopija);
     (Array.isArray(kopija.kreative)?kopija.kreative:[]).forEach(function(k){
-      k.id=uid();k.stDatotek=0;novihKr++;
+      k.id=uid();k.stDatotek=0;prevezi(k);novihKr++;
     });
     S.izdelki.push(kopija);novihIzd++;
   });
   migriraj();
   odprtaKreativa=null;shrani();polniIzbirnik();render();
   toast("Dodano: "+novihIzd+" izdelkov, "+novihKr+" kreativ"+
-    (novihMap?", "+novihMap+" novih map":"")+". Nič obstoječega ni povoženo.");
+    (novihMap?", "+novihMap+" novih map":"")+
+    (novihStik?", "+novihStik+" stikal":"")+". Nič obstoječega ni povoženo.");
 }
 
 /* ============ brief ============ */
@@ -2562,6 +2873,10 @@ function briefText(k){
   L.push("═══ "+k.naslov+" ═══");
   L.push(PR().ime+" · "+p.ime);
   L.push(plat+" · "+umIme(k)+" · "+k.format+" · "+statusIme(k.status));
+  if(stikala().length){
+    var vodenoG=stikVodi(k);
+    L.push(stikOpis(k)+(vodenoG?"  (besedila vodi „"+vodenoG.ime+"“)":""));
+  }
   if(k.tagi)L.push("Oznake: "+k.tagi);
   if(k.izvajalec||k.rok)L.push("Dela: "+(k.izvajalec||"—")+(k.rok?" · rok: "+k.rok:""));
   if(k.kot){L.push("");L.push("KOT: "+k.kot);}
@@ -2793,6 +3108,15 @@ function prenesiBlob(blob,ime){
 }
 
 /* ---- kaj gre v preglednico ---- */
+/* stolpci stikal se pojavijo samo, če si kakšno stikalo naredil */
+function stikStolpci(){
+  return stikala().map(function(g){
+    return {g:g.ime,w:Math.max(12,Math.min(24,g.ime.length+8)),v:function(o){
+      var v=o.k.stikala?o.k.stikala[g.id]:null;
+      return (v===STIK_VSE?"vse":(v||stikVrednost(o.k,g)))+(o.k.vodi===g.id?" ◂ vodi besedila":"");
+    }};
+  });
+}
 var XLS_STOLPCI=[
   {g:"#",w:5,tip:"sredina",v:function(o,i){return i+1;}},
   {g:"Izdelek",w:24,v:function(o){return o.izd.ime;}},
@@ -2821,6 +3145,12 @@ var XLS_STOLPCI=[
   {g:"Opombe",w:34,v:function(o){return o.k.opombe;}}
 ];
 var XLS_POLJA=[["hooki","Hook",80],["primarna","Primarno besedilo",0],["naslovi","Naslov",0],["opisi","Opis",0]];
+/* stolpci lista Oglasi: stikala se vrinejo takoj za format */
+function xlsStolpci(){
+  var out=XLS_STOLPCI.slice();
+  var kam=out.map(function(c){return c.g;}).indexOf("Format")+1;
+  return out.slice(0,kam).concat(stikStolpci(),out.slice(kam));
+}
 
 function izvozniSeznam(obseg){
   var izd=S.izdelki.filter(function(x){
@@ -2836,8 +3166,9 @@ function izvozniSeznam(obseg){
 }
 function xlsxIzvozi(izbrani){
   if(!izbrani.length){toast("Nič ni izbrano.");return;}
+  var stolpci=xlsStolpci();
   var vrstice=izbrani.map(function(o,i){
-    return XLS_STOLPCI.map(function(c){
+    return stolpci.map(function(c){
       var v=c.v(o,i);
       return v==null?"":v;
     });
@@ -2868,7 +3199,7 @@ function xlsxIzvozi(izbrani){
   povz.push(["Skupaj",izbrani.length,skupaj||"",skupaj?skupaj*30:""]);
 
   var listi=[
-    {ime:"Oglasi",stolpci:XLS_STOLPCI.map(function(c){return {g:c.g,w:c.w,tip:c.tip};}),vrstice:vrstice},
+    {ime:"Oglasi",stolpci:stolpci.map(function(c){return {g:c.g,w:c.w,tip:c.tip};}),vrstice:vrstice},
     {ime:"Različice besedil",stolpci:[
       {g:"Izdelek",w:24},{g:"Kreativa",w:30},{g:"Polje",w:20},{g:"Št.",w:6,tip:"sredina"},
       {g:"Besedilo",w:70},{g:"Znakov",w:9,tip:"sredina"},{g:"Meja",w:9,tip:"sredina"},{g:"Nad mejo",w:10,tip:"sredina"}
@@ -3067,6 +3398,18 @@ document.addEventListener("input",function(ev){
     shrani();paintKreativa();risiPredogled();
   }else if(t.dataset.k!=null){
     S.kalk[t.dataset.k]=t.value;shrani();paintKalk();
+  }else if(t.dataset.sgime!=null){
+    var g1=stikNajdi(t.dataset.sgime);
+    if(g1){g1.ime=t.value;shrani();}
+  }else if(t.dataset.sgmoz!=null){
+    /* Možnosti sprejmemo šele, ko sta vsaj dve neprazni — vmes bi vsak pritisk
+       tipke pobrisal vrednosti pri izdelkih in kreativah.                    */
+    var g2=stikNajdi(t.dataset.sgmoz);
+    if(!g2)return;
+    var moz=t.value.split(",").map(function(x){return x.trim();}).filter(Boolean);
+    if(moz.length<2)return;
+    g2.moznosti=moz;
+    migriraj();shrani();
   }
 });
 document.addEventListener("change",function(ev){
@@ -3109,6 +3452,16 @@ document.addEventListener("change",function(ev){
     izd.projekt=cilj;
     if(S.aktiven===izd.id)S.aktiven=null;
     shrani();polniIzbirnik();render();toast("Premaknjeno v „"+(S.projekti.filter(function(x){return x.id===cilj;})[0]||{}).ime+"“.");
+    return;
+  }
+  if(t.dataset.vodi!=null){
+    var kv=K();if(!kv)return;
+    if(t.value)stikVklopiVodenje(kv,t.value);
+    else kv.vodi="";
+    shrani();renderEditor();
+    toast(t.value
+      ? "Besedila vodi stikalo „"+(stikNajdi(t.value)||{}).ime+"“. Vsaka možnost ima svoj tekst."
+      : "Besedilo je zdaj eno samo. Že napisane različice ostanejo shranjene.");
     return;
   }
   if(t.dataset.p!=null&&(t.tagName==="SELECT"||t.type==="checkbox")){
@@ -3157,11 +3510,37 @@ document.addEventListener("click",function(ev){
       polniIzbirnik();nastaviView("kreative");}
     return;
   }
+  /* gumbi stikal: p = izdelek, k = kreativa, v = pogled nad seznamom */
+  var stikG=t.closest("[data-stik]");
+  if(stikG){
+    var g=stikNajdi(stikG.dataset.sg), nv=stikG.dataset.sv;
+    if(!g)return;
+    if(stikG.dataset.stik==="v"){
+      stikNastaviPogled(g.id,nv);shrani();render();return;
+    }
+    if(stikG.dataset.stik==="p"){
+      var pp=P();if(!pp)return;
+      if(!pp.stikala||typeof pp.stikala!=="object")pp.stikala={};
+      pp.stikala[g.id]=nv;shrani();renderEkon();return;
+    }
+    var kk=K();if(!kk)return;
+    var jeVodeno=stikVodi(kk)&&kk.vodi===g.id;
+    stikPreklopi(kk,g,nv);
+    shrani();renderEditor();
+    if(jeVodeno)toast(nv===STIK_VSE?"Besedilo velja za vse možnosti.":"Besedila za „"+nv+"“.");
+    return;
+  }
+  if(t.id==="sgnew"){dodajStikalo("Novo stikalo",["Prva","Druga"]);return;}
+  if(t.id==="sgtrg"){dodajStikalo("Trg",["Slovenija","Hrvaška","Slovaška"]);return;}
+  var sgdel=t.closest("[data-sgdel]");
+  if(sgdel){brisiStikalo(sgdel.dataset.sgdel);return;}
+
   var add=t.closest("[data-add]");
   if(add){
     var p3=P();if(!p3)return;
     var nk=novaKreativa(add.dataset.add);
     if(p3.url)nk.url=p3.url;
+    stikPodeduj(nk,p3);
     p3.kreative.push(nk);odprtaKreativa=nk.id;
     shrani();view="kreative";render();window.scrollTo(0,0);return;
   }
@@ -3169,7 +3548,7 @@ document.addEventListener("click",function(ev){
   if(addk){
     var izd2=S.izdelki.filter(function(x){return x.id===addk.dataset.addk;})[0];
     if(!izd2)return;
-    var nk2=novaKreativa("facebook");izd2.kreative.push(nk2);
+    var nk2=novaKreativa("facebook");stikPodeduj(nk2,izd2);izd2.kreative.push(nk2);
     S.aktivenProjekt=izd2.projekt;S.aktiven=izd2.id;odprtaKreativa=nk2.id;
     shrani();polniIzbirnik();nastaviView("kreative");return;
   }

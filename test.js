@@ -65,7 +65,7 @@ const ok = (pogoj, ime, dodatno) => {
 
 console.log("== osnovno ==");
 ok(w.S && w.S.izdelki.length > 0, "stanje naloženo");
-ok(w.S.v === 4, "migracija na v4", "v=" + (w.S && w.S.v));
+ok(w.S.v === 5, "migracija na v5", "v=" + (w.S && w.S.v));
 const p = w.P();
 ok(p.kreative.length >= 2, "primer ima kreative");
 p.kreative.forEach((k) => {
@@ -169,6 +169,101 @@ try {
   ok(izv.izdelki[0].kreative[0].umestitev != null, "umestitev se serializira");
 } catch (err) { ok(false, "serializacija", err.message); }
 
+console.log("\n== stikala ==");
+ok(w.stikala().length === 0, "privzeto ni nobenega stikala — nič se ne spremeni");
+w.dodajStikalo("Trg", ["Slovenija", "Hrvaška", "Slovaška"]);
+const trg = w.stikala()[0];
+ok(!!trg && trg.moznosti.length === 3, "stikalo Trg dodano");
+ok(w.S.v === 5, "migracija na v5", "v=" + w.S.v);
+
+const ps = w.P();
+/* privzetek na izdelku */
+ps.stikala[trg.id] = "Hrvaška";
+w.view = "kreative";
+w.odprtaKreativa = null;
+w.render();
+ok(w.document.querySelectorAll('[data-stik="v"]').length === 4,
+  "filter nad seznamom ima vse + tri možnosti",
+  w.document.querySelectorAll('[data-stik="v"]').length + "");
+
+/* nova kreativa prevzame vrednost izdelka, ko je pogled na vse */
+const kNova = w.novaKreativa("facebook");
+w.stikPodeduj(kNova, ps);
+ok(kNova.stikala[trg.id] === "Hrvaška", "nova kreativa prevzame vrednost izdelka", kNova.stikala[trg.id]);
+/* ko je pogled na Slovaško, jo prevzame od pogleda */
+w.stikNastaviPogled(trg.id, "Slovaška");
+const kNova2 = w.novaKreativa("facebook");
+w.stikPodeduj(kNova2, ps);
+ok(kNova2.stikala[trg.id] === "Slovaška", "nova kreativa prevzame vrednost iz pogleda", kNova2.stikala[trg.id]);
+
+/* filtriranje seznama */
+ps.kreative.push(kNova, kNova2);
+w.stikNastaviPogled(trg.id, "Hrvaška");
+let vidne = w.stikFilter(ps.kreative);
+ok(vidne.indexOf(kNova) >= 0 && vidne.indexOf(kNova2) < 0,
+  "pogled Hrvaška skrije slovaško kreativo");
+ok(vidne.indexOf(ps.kreative[0]) >= 0, "kreativa brez vrednosti velja za vse in ostane vidna");
+w.stikNastaviPogled(trg.id, "*");
+ok(w.stikFilter(ps.kreative).length === ps.kreative.length, "pogled „vse“ pokaže vse");
+
+console.log("\n== stikalo, ki vodi besedila ==");
+const kv = kNova;
+kv.hooki = ["Slovenski hook"];
+kv.primarna = ["Slovensko besedilo"];
+kv.url = "https://trgovina.si/slo";
+kv.stikala[trg.id] = "Slovenija";
+w.stikVklopiVodenje(kv, trg.id);
+ok(kv.vodi === trg.id, "vodenje vklopljeno");
+ok(kv.variante["Hrvaška"] && kv.variante["Hrvaška"].hooki[0] === "Slovenski hook",
+  "ostale možnosti dobijo kopijo za začetek");
+/* preklop shrani staro in naloži novo */
+w.stikPreklopi(kv, trg, "Hrvaška");
+ok(w.stikVrednost(kv, trg) === "Hrvaška", "preklopljeno na Hrvaško");
+kv.hooki = ["Hrvatski hook"];
+kv.url = "https://trgovina.si/hr";
+w.stikPreklopi(kv, trg, "Slovenija");
+ok(kv.hooki[0] === "Slovenski hook", "vrnitev naloži slovensko besedilo", kv.hooki[0]);
+ok(kv.url === "https://trgovina.si/slo", "vrnitev naloži tudi slovenski URL", kv.url);
+w.stikPreklopi(kv, trg, "Hrvaška");
+ok(kv.hooki[0] === "Hrvatski hook", "hrvaško besedilo je shranjeno", kv.hooki[0]);
+ok(kv.url === "https://trgovina.si/hr", "hrvaški URL je shranjen", kv.url);
+ok(w.stikNapisane(kv, trg).length === 3, "napisane možnosti so preštete",
+  w.stikNapisane(kv, trg).join(", "));
+
+/* izklop vodenja ne pobrise nicesar */
+kv.vodi = "";
+ok(kv.variante["Slovenija"] && kv.variante["Slovenija"].hooki[0] === "Slovenski hook",
+  "izklop vodenja pusti shranjene različice");
+kv.vodi = trg.id;
+
+/* brief in izvoz vsebujeta stikalo */
+w.S.aktiven = ps.id;
+w.odprtaKreativa = kv.id;
+ok(w.briefText(kv).indexOf("Trg: Hrvaška") >= 0, "brief navede vrednost stikala");
+ok(w.briefText(kv).indexOf("vodi") >= 0, "brief pove, da stikalo vodi besedila");
+ok(w.xlsStolpci().some((c) => c.g === "Trg"), "izvoz v Excel dobi stolpec Trg");
+
+/* urejevalnik se izrise s stikali */
+w.view = "kreative";
+try {
+  w.renderEditor();
+  ok(w.document.querySelectorAll('[data-stik="k"]').length === 4, "urejevalnik izriše gumbe stikala");
+  ok(!!w.document.getElementById("c-vodi"), "izbirnik vodenja je v urejevalniku");
+} catch (e) { ok(false, "urejevalnik s stikali", e.message); }
+
+/* preimenovanje moznosti ne sme pustiti kreative brez pogleda */
+trg.moznosti = ["Slovenija", "Hrvaška", "Avstrija"];
+w.migriraj();
+ok(kv.stikala[trg.id] == null || trg.moznosti.indexOf(kv.stikala[trg.id]) >= 0,
+  "neveljavna vrednost se po preimenovanju pobriše", String(kv.stikala[trg.id]));
+ok(w.stikFilter(ps.kreative).length > 0, "po preimenovanju kreative ne izginejo vse");
+
+/* brisanje stikala pocisti tudi vodenje */
+w.brisiStikalo(trg.id);
+ok(w.stikala().length === 0, "stikalo odstranjeno");
+ok(kv.vodi === "", "brisanje stikala pobriše vodenje", kv.vodi);
+ps.kreative = ps.kreative.filter((x) => x !== kNova && x !== kNova2);
+
 console.log("\n== izdelek: material, zapiski, vklopljivi izračuni ==");
 const pi = w.P();
 ok(w.datLastnikIzdelka(pi) === "izd:" + pi.id, "lastnik materiala izdelka");
@@ -256,6 +351,37 @@ Promise.resolve()
       "podvojeno ime dobi pripis");
     ok(w.S.izdelki.length === prejIzd + 2, "druga ponovitev nič ne povozi");
 
+    /* paket s svojim stikalom: definicija pride z njim, vrednosti se prevežejo */
+    const sPaket = {
+      v: 5,
+      stikala: [{ id: "tuj-gid", ime: "Trg", moznosti: ["Slovenija", "Hrvaška"] }],
+      projekti: [{ id: "pr-s", ime: "MAPA S STIKALOM" }],
+      izdelki: [{
+        id: "izd-s", projekt: "pr-s", ime: "Izdelek s stikalom", stikala: { "tuj-gid": "Hrvaška" },
+        kreative: [{ id: "kr-s", naslov: "HR kreativa", platforma: "facebook",
+          stikala: { "tuj-gid": "Hrvaška" }, vodi: "tuj-gid" }],
+      }],
+    };
+    w.uvozi(JSON.stringify(sPaket), "dodaj");
+    const gTrg = w.stikala().filter((g) => g.ime === "Trg")[0];
+    ok(!!gTrg, "stikalo iz paketa je dodano");
+    ok(gTrg && gTrg.id !== "tuj-gid", "stikalo dobi svoj id");
+    const izdS = w.S.izdelki.filter((x) => x.ime === "Izdelek s stikalom")[0];
+    ok(izdS && izdS.stikala[gTrg.id] === "Hrvaška", "vrednost na izdelku je prevezana na nov id");
+    ok(izdS && izdS.kreative[0].stikala[gTrg.id] === "Hrvaška", "vrednost na kreativi je prevezana");
+    ok(izdS && izdS.kreative[0].vodi === gTrg.id, "vodenje je prevezano na nov id");
+    /* isti paket dvakrat: stikalo se ne podvoji */
+    w.uvozi(JSON.stringify(sPaket), "dodaj");
+    ok(w.stikala().filter((g) => g.ime === "Trg").length === 1, "stikalo z istim imenom se ne podvoji");
+    /* paket, ki prinese novo možnost istega stikala */
+    const sPaket2 = JSON.parse(JSON.stringify(sPaket));
+    sPaket2.stikala[0].moznosti = ["Slovenija", "Slovaška"];
+    w.uvozi(JSON.stringify(sPaket2), "dodaj");
+    ok(w.stikala().filter((g) => g.ime === "Trg")[0].moznosti.indexOf("Slovaška") >= 0,
+      "manjkajoča možnost se doda k obstoječemu stikalu");
+    w.S.stikala = [];
+    w.migriraj();
+
     /* pripravljena mapa s streznika */
     let klicanUrl = null;
     w.fetch = (url) => {
@@ -298,7 +424,7 @@ Promise.resolve()
     w.uvozi(JSON.stringify(paket), "zamenjaj");
     ok(w.S.izdelki.length === 1 && w.S.projekti.length === 1, "zamenjaj postavi samo vsebino datoteke",
       w.S.izdelki.length + " izdelkov, " + w.S.projekti.length + " map");
-    ok(w.S.v === 4, "po zamenjavi je stanje migrirano");
+    ok(w.S.v === 5, "po zamenjavi je stanje migrirano");
   })
   .catch((err) => ok(false, "uvoz", err && err.message))
   .then(() => {

@@ -58,7 +58,12 @@
           "budget": "15",
           "cpm": "8",
           "ctr": "1,4",
-          "cvr": "1,8"
+          "cvr": "1,8",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "",
+          "variante": {}
         },
         {
           "id": "kr-vk-ig",
@@ -93,7 +98,12 @@
           "budget": "15",
           "cpm": "6",
           "ctr": "1,2",
-          "cvr": "1,5"
+          "cvr": "1,5",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "",
+          "variante": {}
         },
         {
           "id": "kr-vk-g",
@@ -134,9 +144,17 @@
           "opombe": "Negativne ključne besede: rabljeno, drugorabno, popravilo, obnova laminata, vinil folija, avto folija, vinilne plošče glasba, vinyl, LP, gramofon, tapeta.\nCene v naslovih ni, dokler ne potrdimo enote — konkurenca jo ima in nas bo prehitela, zato je to prva stvar, ki jo rabim.",
           "budget": "10",
           "ctr": "6",
-          "cvr": "2,5"
+          "cvr": "2,5",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "",
+          "variante": {}
         }
-      ]
+      ],
+      "stikala": {
+        "stik-trg": "Slovenija"
+      }
     },
     {
       "id": "izd-vinil-lep",
@@ -183,7 +201,12 @@
           "budget": "10",
           "cpm": "8",
           "ctr": "1,2",
-          "cvr": "1,6"
+          "cvr": "1,6",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "",
+          "variante": {}
         },
         {
           "id": "kr-vl-g",
@@ -222,9 +245,17 @@
           "opombe": "Negativne: vinil folija, avto folija, vinyl, LP, gramofon, lepilo za ploščice, rabljeno.",
           "budget": "8",
           "ctr": "6",
-          "cvr": "2,5"
+          "cvr": "2,5",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "",
+          "variante": {}
         }
-      ]
+      ],
+      "stikala": {
+        "stik-trg": "Slovenija"
+      }
     },
     {
       "id": "izd-paneli",
@@ -275,7 +306,12 @@
           "budget": "20",
           "cpm": "8",
           "ctr": "1,5",
-          "cvr": "1,6"
+          "cvr": "1,6",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "",
+          "variante": {}
         },
         {
           "id": "kr-pan-reels",
@@ -303,7 +339,12 @@
           "budget": "20",
           "cpm": "6",
           "ctr": "1,3",
-          "cvr": "1,4"
+          "cvr": "1,4",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "",
+          "variante": {}
         },
         {
           "id": "kr-pan-g",
@@ -342,9 +383,17 @@
           "opombe": "Negativne: sendvič paneli, strešni paneli, solarni paneli, fasadni paneli, izolacijski paneli, ograja.\nCiljna stran: potrebujemo kategorijo samo za stenske panele. Zdaj kaže na domačo stran, kar bo požrlo konverzijo — to je hitrejši popravek kot katerikoli oglas tukaj.",
           "budget": "12",
           "ctr": "5,5",
-          "cvr": "2"
+          "cvr": "2",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "",
+          "variante": {}
         }
-      ]
+      ],
+      "stikala": {
+        "stik-trg": "Slovenija"
+      }
     },
     {
       "id": "izd-ariel",
@@ -355,7 +404,7 @@
       "domena": "trgovinaeureka.si",
       "url": "https://trgovinaeureka.si/izdelek/ariel-pralni-prasek-universal-130-pranj-10kg/",
       "izracuni": false,
-      "zapiski": "PODATKI (s strani, 5. 8. 2026)\n· ARIEL pralni prašek universal, 130 pranj, 10 kg\n· 26,70 €, prečrtana redna 38,00 €, oznaka −30 %\n· universal — za belo in barvno perilo\n\nZAKAJ TA IZDELEK DELUJE V OGLASU\nZnana znamka + jasen popust + izračun na pranje. 26,70 € / 130 pranj = 0,21 € na\npranje; to je edina številka, ki jo kupec rabi, in je preverljiva iz podatkov na\nstrani. Ta izračun uporabi kot hook.\n\nODPRTO — HRVAŠKA\nZa hrvaški promet se še nisva odločila: `.hr` trgovine ni. Slovensko besedilo in\n.si domena pri hrvaškem prometu pomenita nizko konverzijo — najprej rabimo\nodločitev, ali gremo v hrvaško ciljno stran ali samo v test s hrvaškim besedilom\nna obstoječo stran. Do takrat so ti oglasi pisani za SLO.",
+      "zapiski": "PODATKI (s strani, 5. 8. 2026)\n· ARIEL pralni prašek universal, 130 pranj, 10 kg\n· 26,70 €, prečrtana redna 38,00 €, oznaka −30 %\n· universal — za belo in barvno perilo\n\nZAKAJ TA IZDELEK DELUJE V OGLASU\nZnana znamka + jasen popust + izračun na pranje. 26,70 € / 130 pranj = 0,21 € na\npranje; to je edina številka, ki jo kupec rabi, in je preverljiva iz podatkov na\nstrani. Ta izračun uporabi kot hook.\n\nODPRTO — HRVAŠKA\nZa hrvaški promet se še nisva odločila: `.hr` trgovine ni. Slovensko besedilo in\n.si domena pri hrvaškem prometu pomenita nizko konverzijo — najprej rabimo\nodločitev, ali gremo v hrvaško ciljno stran ali samo v test s hrvaškim besedilom\nna obstoječo stran. Do takrat so ti oglasi pisani za SLO.\n\nSTIKALO TRG\nKreative tega izdelka imajo stikalo Trg nastavljeno na vodenje besedil: preklop na Hrvaško odpre prazno (oziroma kopirano) besedilo za hrvaški trg, slovensko ostane nedotaknjeno. Hrvaškega besedila nalašč nisem napisal, ker se še nisva odločila za hrvaško ciljno stran.",
       "kreative": [
         {
           "id": "kr-ar-fb",
@@ -395,7 +444,12 @@
           "budget": "15",
           "cpm": "7",
           "ctr": "2",
-          "cvr": "2,5"
+          "cvr": "2,5",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "stik-trg",
+          "variante": {}
         },
         {
           "id": "kr-ar-zgodba",
@@ -421,9 +475,17 @@
           "budget": "5",
           "cpm": "5",
           "ctr": "0,8",
-          "cvr": "3"
+          "cvr": "3",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "stik-trg",
+          "variante": {}
         }
-      ]
+      ],
+      "stikala": {
+        "stik-trg": "Slovenija"
+      }
     },
     {
       "id": "izd-vitrine",
@@ -434,7 +496,7 @@
       "domena": "trgovinaeureka.si",
       "url": "https://trgovinaeureka.si/",
       "izracuni": false,
-      "zapiski": "PODATKI (s strani, 5. 8. 2026) — 6 modelov v zadetkih\n· STARCREST SPS-300DC, gostinska vitrina, 300 l — 535,00 €\n· STARCREST SBC-138BK, 138 l — 330,00 €\n· STARCREST SBC-9202BK, 93 l — 260,00 €\n· STARCREST SBC-51WHE, 46 l — 160,00 €\n· STARCREST SBC-5010BK, 46 l — 160,00 €\n· PRIVILEG PRC12VF2E, vgradni — 239,00 €\nVsi navedeni imajo steklena vrata.\n\nPOPRAVEK PREJŠNJEGA POVZETKA\nPrej je bilo zapisano „160–550 €, 300–360 l, No Frost“. Preverjeno danes:\nrazpon je 160–535 €, prostornine 46–300 l, No Frost pri teh modelih NI naveden.\nV oglasih zato ni trditve o No Frost.\n\nKOMU PRODAJAMO\nTo ni gospodinjski nakup. Kupec je lokal, frizerski salon, pisarna, gostinec ali\nnajemodajalec apartmaja. B2B kupec ne kupi zaradi popusta, ampak zaradi zaloge in\nhitre dostave — v oglasu naj bo to na prvem mestu.",
+      "zapiski": "PODATKI (s strani, 5. 8. 2026) — 6 modelov v zadetkih\n· STARCREST SPS-300DC, gostinska vitrina, 300 l — 535,00 €\n· STARCREST SBC-138BK, 138 l — 330,00 €\n· STARCREST SBC-9202BK, 93 l — 260,00 €\n· STARCREST SBC-51WHE, 46 l — 160,00 €\n· STARCREST SBC-5010BK, 46 l — 160,00 €\n· PRIVILEG PRC12VF2E, vgradni — 239,00 €\nVsi navedeni imajo steklena vrata.\n\nPOPRAVEK PREJŠNJEGA POVZETKA\nPrej je bilo zapisano „160–550 €, 300–360 l, No Frost“. Preverjeno danes:\nrazpon je 160–535 €, prostornine 46–300 l, No Frost pri teh modelih NI naveden.\nV oglasih zato ni trditve o No Frost.\n\nKOMU PRODAJAMO\nTo ni gospodinjski nakup. Kupec je lokal, frizerski salon, pisarna, gostinec ali\nnajemodajalec apartmaja. B2B kupec ne kupi zaradi popusta, ampak zaradi zaloge in\nhitre dostave — v oglasu naj bo to na prvem mestu.\n\nSTIKALO TRG\nKreative tega izdelka imajo stikalo Trg nastavljeno na vodenje besedil: preklop na Hrvaško odpre prazno (oziroma kopirano) besedilo za hrvaški trg, slovensko ostane nedotaknjeno. Hrvaškega besedila nalašč nisem napisal, ker se še nisva odločila za hrvaško ciljno stran.",
       "kreative": [
         {
           "id": "kr-vit-fb",
@@ -474,7 +536,12 @@
           "budget": "12",
           "cpm": "9",
           "ctr": "1,1",
-          "cvr": "1,2"
+          "cvr": "1,2",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "stik-trg",
+          "variante": {}
         },
         {
           "id": "kr-vit-g",
@@ -513,9 +580,17 @@
           "opombe": "Negativne: rabljeno, bolha, popravilo, servis, najem, avtomat za pijačo, hladilna torba.",
           "budget": "12",
           "ctr": "5",
-          "cvr": "1,8"
+          "cvr": "1,8",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "stik-trg",
+          "variante": {}
         }
-      ]
+      ],
+      "stikala": {
+        "stik-trg": "Slovenija"
+      }
     },
     {
       "id": "izd-susilni",
@@ -565,7 +640,12 @@
           "opombe": "Negativne: rabljeno, bolha, popravilo, servis, rezervni deli, najem, filter, sušilni za lase.\nPralno-sušilne daj v LOČENO oglasno skupino z lastnim besedilom — drug izdelek, druga namera, in cena 345 € ne sme nastopati v oglasu za sušilne s toplotno črpalko.",
           "budget": "15",
           "ctr": "5",
-          "cvr": "1,5"
+          "cvr": "1,5",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "",
+          "variante": {}
         },
         {
           "id": "kr-sus-fb",
@@ -605,9 +685,17 @@
           "budget": "15",
           "cpm": "8",
           "ctr": "1,3",
-          "cvr": "1,4"
+          "cvr": "1,4",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "",
+          "variante": {}
         }
-      ]
+      ],
+      "stikala": {
+        "stik-trg": "Slovenija"
+      }
     },
     {
       "id": "izd-outlet",
@@ -654,11 +742,30 @@
           "budget": "",
           "cpm": "",
           "ctr": "",
-          "cvr": ""
+          "cvr": "",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "",
+          "variante": {}
         }
-      ]
+      ],
+      "stikala": {
+        "stik-trg": "Slovenija"
+      }
     }
   ],
   "aktivenProjekt": "pr-eureka",
-  "aktiven": "izd-vinil-klik"
+  "aktiven": "izd-vinil-klik",
+  "stikala": [
+    {
+      "id": "stik-trg",
+      "ime": "Trg",
+      "moznosti": [
+        "Slovenija",
+        "Hrvaška",
+        "Slovaška"
+      ]
+    }
+  ]
 }

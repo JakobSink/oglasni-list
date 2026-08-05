@@ -16,6 +16,13 @@ Odpre se v brskalniku na telefonu ali računalniku, brez namestitve. Deluje tudi
 
 **Kreative.** Kot oglasa, publika, hook, besedilo s števci znakov (Facebook 125/40/30, Google RSA 30 × 5 in 90 × 3 z ločenimi polji, ključnimi besedami, prikazno potjo in sitelinki), design brief s checklistom, banka hookov, nalaganje slik in videov, budget.
 
+**Stikala, ki si jih določiš sam.** Stikalo je skupina možnosti — na primer *Trg: Slovenija / Hrvaška / Slovaška*, lahko pa tudi sezona, jezik ali stranka. Pojavi se na izdelku in na vsaki kreativi in dela dvoje:
+
+- **Izbere nabor.** V seznamu kreativ s stikalom izbereš, katere oglase vidiš. Ko preklopiš na Hrvaško, so spredaj hrvaški oglasi — lahko so čisto druge kreative. Nova kreativa prevzame vrednost, ki je takrat izbrana.
+- **Izbere besedilo.** Če kreativi rečeš, da jo neko stikalo *vodi*, ima vsaka možnost svoj hook, primarno besedilo, naslove, opise, gumb in URL. Preklop shrani, kar je vpisano, in naloži besedila druge možnosti — predogled, brief in izvoz delajo naprej, kot da gre za en oglas. Ob vklopu vsaka možnost dobi kopijo trenutnih besedil, da hrvaškega oglasa ne pišeš iz nič.
+
+Stikala urejaš v zavihku **Podatki**. Če jih ne narediš, jih ni nikjer — nič v aplikaciji se ne spremeni.
+
 **Izvoz v Excel.** Pravi `.xlsx`, brez knjižnic in brez interneta. Izbereš obseg (izdelek / mapa / vse) in oglase, dobiš tri liste: *Oglasi* (kaj se vidi in sliši, besedila, gumb, URL, pot, sitelinki, budget, CPA), *Različice besedil* (vse variante s številom znakov in oznako „nad mejo“) in *Povzetek*.
 
 **Dva bloka številk na kreativo.** *Načrt*: vpišeš CPM, CTR, CVR → dobiš prikaze, klike, naročila, CPC, CPA, ROAS in profit. *Rezultati*: vpišeš dejansko porabo, prikaze, klike in naročila → dobiš izmerjene metrike. Aplikacija primerja dejanski CPA z break-even in ti pove, ali skalirati ali ustaviti.
@@ -27,6 +34,8 @@ Odpre se v brskalniku na telefonu ali računalniku, brez namestitve. Deluje tudi
 Besedila, številke in struktura map so v `localStorage` brskalnika. Naložene slike in videi so v `IndexedDB` iste naprave. Nič ne gre nikamor drugam, dokler ne vklopiš oblaka.
 
 V zavihku **Podatki** je izvoz in uvoz JSON — tako preneseš stanje na drugo napravo. Izvoz ne vsebuje naloženih slik in videov, ker so za JSON preveliki; te prenašaj posamično.
+
+Uvoz je dvojen: **Uvozi in dodaj** mape, izdelke in stikala iz datoteke prilepi zraven obstoječim in ničesar ne povozi, **Uvozi in zamenjaj** pa vse nadomesti (prej vpraša). **Naloži pripravljeno mapo** vzame `mape/eureka.json`, ki je objavljena skupaj z aplikacijo, in jo doda — brez datoteke, kar je na telefonu edina znosna pot.
 
 ## Oblačno shranjevanje (neobvezno)
 
