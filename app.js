@@ -6,7 +6,7 @@
 
 /* Oznaka različice. Poveča jo vsaka objava — v stranski vrstici je vidna, da se
    na prvi pogled loči, ali brskalnik strežé svežo kopijo ali staro iz cache-a. */
-var RAZLICICA="različica 8 · Oglaševalka, mere iz umestitve, material po stikalu";
+var RAZLICICA="različica 9 · skupen prostor za ekipo, slike v oblaku";
 
 /* ============ pomožne funkcije ============ */
 var LS="oglasni-list-v1", LS_TEMA="oglasni-list-tema";
@@ -448,6 +448,17 @@ function migriraj(){
   });
   if(!S.stikaloPogled||typeof S.stikaloPogled!=="object")S.stikaloPogled={};
 
+  /* kazalo datotek: pride iz oblaka skupaj s stanjem, zato ga preverimo */
+  if(!Array.isArray(S.datoteke))S.datoteke=[];
+  S.datoteke=S.datoteke.filter(function(x){
+    return x&&typeof x.id==="string"&&typeof x.kreativa==="string";
+  });
+  S.datoteke.forEach(function(x){
+    if(typeof x.ime!=="string")x.ime="brez-imena";
+    if(typeof x.tip!=="string")x.tip="";
+    if(typeof x.velikost!=="number")x.velikost=0;
+  });
+
   /* banka hookov: prvič jo napolnimo z vzorci, potem je uporabnikova */
   if(!Array.isArray(S.banka))
     S.banka=HOOKI.map(function(t){return {id:uid(),txt:t,kat:"vzorec"};});
@@ -663,41 +674,133 @@ var Datoteke=(function(){
     if(za!==zb)return za-zb;
     return String(a.dodano).localeCompare(String(b.dodano))||String(a.ime).localeCompare(String(b.ime));
   }
+  /* ---- kazalo datotek ----
+     Bajti so preveliki za JSON, zato v sinhroniziranem stanju hranimo samo
+     kazalo (kdo, kako se imenuje, koliko meri), same datoteke pa gredo v
+     Supabase Storage. Vsaka naprava tako ve, katere datoteke obstajajo, in jih
+     prenese takrat, ko jih res potrebuje.                                    */
+  function kazalo(){
+    if(!Array.isArray(S.datoteke))S.datoteke=[];
+    return S.datoteke;
+  }
+  function vKazalo(z){
+    var k=kazalo();
+    if(!k.some(function(x){return x.id===z.id;})){
+      k.push({id:z.id,kreativa:z.kreativa,ime:z.ime,tip:z.tip,velikost:z.velikost,dodano:z.dodano,zap:z.zap});
+      shrani();
+    }
+  }
+  function izKazala(id){
+    var k=kazalo(), i=k.map(function(x){return x.id;}).indexOf(id);
+    if(i>=0){k.splice(i,1);shrani();}
+  }
+  /* lokalni zapisi in kazalo v en seznam; kar je samo v kazalu, čaka na prenos */
+  function zlij(lastnik,lokalni){
+    var poId={};
+    (lokalni||[]).forEach(function(z){poId[z.id]=z;});
+    kazalo().filter(function(x){return x.kreativa===lastnik;}).forEach(function(x){
+      if(!poId[x.id])poId[x.id]=({id:x.id,kreativa:x.kreativa,ime:x.ime,tip:x.tip,
+        velikost:x.velikost,dodano:x.dodano,zap:x.zap,blob:null,vOblaku:true});
+    });
+    return Object.keys(poId).map(function(id){return poId[id];}).sort(poVrsti);
+  }
   return {
     naVoljo:naVoljo,
     poVrsti:poVrsti,
+    kazalo:kazalo,
     dodaj:function(kreativaId,file){
-      return op("readwrite",function(s){
-        return s.put({id:uid(),kreativa:kreativaId,ime:file.name||"brez-imena",
-          tip:file.type||"",velikost:file.size||0,
-          dodano:new Date().toISOString(),zap:Date.now()*1000+(zap++),blob:file});
+      var z={id:uid(),kreativa:kreativaId,ime:file.name||"brez-imena",
+        tip:file.type||"",velikost:file.size||0,
+        dodano:new Date().toISOString(),zap:Date.now()*1000+(zap++),blob:file};
+      return op("readwrite",function(s){return s.put(z);}).then(function(r){
+        vKazalo(z);
+        /* v oblak gre v ozadju — nalaganje ne sme blokirati vmesnika */
+        Oblak.naloziDat(z,file);
+        return r;
       });
     },
     zaKreativo:function(kid){
       return op("readonly",function(s){return s.index("kreativa").getAll(kid);})
-        .then(function(sez){return (sez||[]).slice().sort(poVrsti);});
+        .then(function(sez){return zlij(kid,sez);},function(){return zlij(kid,[]);});
+    },
+    /* Poskrbi, da ima zapis bajte: če jih lokalno ni, jih prenese iz oblaka in
+       shrani, da drugič ni več potrebe po mreži.                            */
+    zagotovi:function(id){
+      return op("readonly",function(s){return s.get(id);}).then(function(z){
+        if(z&&z.blob)return z;
+        var v=kazalo().filter(function(x){return x.id===id;})[0];
+        if(!v)return null;
+        return Oblak.prenesiDat(v).then(function(blob){
+          if(!blob)return null;
+          var nov={id:v.id,kreativa:v.kreativa,ime:v.ime,tip:v.tip||blob.type||"",
+            velikost:v.velikost||blob.size||0,dodano:v.dodano,zap:v.zap,blob:blob};
+          return op("readwrite",function(s){return s.put(nov);}).then(function(){return nov;});
+        },function(){return null;});
+      });
     },
     /* prva slika ali video kreative — za naslovnico kartice in predogled oglasa */
     prviVizual:function(kid){
       return op("readonly",function(s){return s.index("kreativa").getAll(kid);}).then(function(sez){
-        sez=(sez||[]).slice().sort(poVrsti);
+        sez=zlij(kid,sez);
         var slika=sez.filter(function(d){return /^image\//.test(d.tip);})[0];
         var video=sez.filter(function(d){return /^video\//.test(d.tip);})[0];
-        return slika||video||null;
+        var izbran=slika||video||null;
+        if(!izbran)return null;
+        if(izbran.blob)return izbran;
+        return Datoteke.zagotovi(izbran.id);   /* leži v oblaku — prenesi ga */
       });
     },
-    steviloZa:function(kid){return op("readonly",function(s){return s.index("kreativa").count(kid);});},
-    ena:function(id){return op("readonly",function(s){return s.get(id);});},
-    brisi:function(id){return op("readwrite",function(s){return s.delete(id);});},
+    steviloZa:function(kid){
+      return Promise.resolve(kazalo().filter(function(x){return x.kreativa===kid;}).length);
+    },
+    /* ena datoteka z bajti — po potrebi jo prej prenese iz oblaka */
+    ena:function(id){return this.zagotovi(id);},
+    brisi:function(id){
+      var v=kazalo().filter(function(x){return x.id===id;})[0];
+      izKazala(id);
+      Oblak.brisiDat(v||{id:id});
+      return op("readwrite",function(s){return s.delete(id);});
+    },
     brisiZaKreativo:function(kid){
+      kazalo().filter(function(x){return x.kreativa===kid;}).forEach(function(x){
+        izKazala(x.id);Oblak.brisiDat(x);
+      });
       return op("readwrite",function(s){
         var r=s.index("kreativa").getAllKeys(kid);
         r.onsuccess=function(){(r.result||[]).forEach(function(k){s.delete(k);});};
         return r;
       });
     },
-    stevilo:function(){return op("readonly",function(s){return s.count();});},
-    pocisti:function(){return op("readwrite",function(s){return s.clear();});}
+    stevilo:function(){return Promise.resolve(kazalo().length);},
+    /* koliko datotek iz kazala še ni v tej napravi */
+    manjka:function(){
+      return op("readonly",function(s){return s.getAllKeys();}).then(function(kljuci){
+        var imam={};(kljuci||[]).forEach(function(k){imam[k]=1;});
+        return kazalo().filter(function(x){return !imam[x.id];}).length;
+      },function(){return kazalo().length;});
+    },
+    pocisti:function(){
+      S.datoteke=[];shrani();
+      return op("readwrite",function(s){return s.clear();});
+    },
+    /* Datoteke, ki so bile naložene, preden je kazalo obstajalo, enkrat vpišemo
+       vanj — drugače bi bile za oblak in druge naprave nevidne.             */
+    zgradiKazalo:function(){
+      if(!naVoljo||S.datotekeMigrirano)return Promise.resolve(0);
+      return op("readonly",function(s){return s.getAll();}).then(function(sez){
+        var imam={};kazalo().forEach(function(x){imam[x.id]=1;});
+        var dodanih=0;
+        (sez||[]).forEach(function(z){
+          if(imam[z.id])return;
+          kazalo().push({id:z.id,kreativa:z.kreativa,ime:z.ime,tip:z.tip,
+            velikost:z.velikost,dodano:z.dodano,zap:z.zap});
+          dodanih++;
+        });
+        S.datotekeMigrirano=true;
+        shrani();
+        return dodanih;
+      },function(){return 0;});
+    }
   };
 })();
 
@@ -2251,6 +2354,13 @@ function narisiDatotekeV(c){
     if(c.zapis&&c.zapis.stDatotek!==sez.length){c.zapis.stDatotek=sez.length;shrani();}
     if(!sez.length){cilj.innerHTML='';return;}
     cilj.innerHTML=sez.map(function(d){
+      /* zapis brez bajtov je v oblaku — prenesemo ga takoj, ko se izriše */
+      if(!d.blob){
+        return '<div class="file cakam" data-fetch="'+d.id+'">'+
+          '<div class="prev"><span class="ikona">oblak</span></div>'+
+          '<div class="meta"><span class="fn">'+esc(d.ime)+'</span><span class="fs">'+mb(d.velikost)+' · prenašam …</span></div>'+
+        '</div>';
+      }
       var u="";
       try{u=URL.createObjectURL(d.blob);odprtiUrlji.push(u);}catch(err){}
       var jeSlika=/^image\//.test(d.tip)&&u, jeVideo=/^video\//.test(d.tip)&&u;
@@ -2263,6 +2373,13 @@ function narisiDatotekeV(c){
         '<div class="fa no-print"><button data-dl="'+d.id+'">prenesi</button><button class="d" data-ddel="'+d.id+'">izbriši</button></div>'+
       '</div>';
     }).join("");
+    /* kar visi v oblaku, poberemo takoj in seznam prerišemo */
+    var vrsta=Promise.resolve(), koliko=0;
+    qa("[data-fetch]",cilj).forEach(function(box){
+      koliko++;
+      vrsta=vrsta.then(function(){return Datoteke.zagotovi(box.dataset.fetch).catch(function(){return null;});});
+    });
+    if(koliko)vrsta.then(function(){narisiDatotekeV(c);});
   },function(err){
     cilj.innerHTML='<p class="note">Datotek ni bilo mogoče prebrati: '+esc(err&&err.message||"neznana napaka")+'</p>';
   });
@@ -2842,9 +2959,60 @@ var Oblak=(function(){
     if(!user)return {stopnja:"odjavljen",besedilo:"Nastavljeno, nisi prijavljen"};
     return {stopnja:"ok",besedilo:"Prijavljen kot "+user.email};
   }
+  /* ---- datoteke v Supabase Storage ----
+     Kazalo datotek gre skupaj s stanjem, bajti pa v svoje vedro. Ker ekipa dela
+     pod enim računom, vsi vidijo iste datoteke.                              */
+  var VEDRO="material";
+  function pot(z){return String(z&&z.id||"");}
+  function naloziDat(z,blob){
+    if(!sb||!user||!z)return Promise.resolve(null);
+    return sb.storage.from(VEDRO).upload(pot(z),blob,{contentType:z.tip||"application/octet-stream",upsert:true})
+      .then(function(res){
+        if(res.error)throw res.error;
+        return res;
+      }).catch(function(err){
+        toast("Datoteka je shranjena v napravi, v oblak pa ni šla: "+napakaVedra(err));
+        return null;
+      });
+  }
+  function prenesiDat(z){
+    if(!sb||!user||!z)return Promise.resolve(null);
+    return sb.storage.from(VEDRO).download(pot(z)).then(function(res){
+      if(res.error)throw res.error;
+      return res.data;
+    });
+  }
+  function brisiDat(z){
+    if(!sb||!user||!z)return Promise.resolve(null);
+    return sb.storage.from(VEDRO).remove([pot(z)]).then(function(){},function(){});
+  }
+  function napakaVedra(err){
+    var m=String(err&&(err.message||err.error)||err||"");
+    if(/Bucket not found/i.test(m))return "vedra „"+VEDRO+"“ še ni — zaženi SQL iz zavihka Podatki.";
+    if(/row-level security|not authorized|Unauthorized|violates/i.test(m))return "shramba je zavrnila dostop, preveri pravila vedra.";
+    if(/exceeded|too large|Payload/i.test(m))return "datoteka je prevelika za brezplačni Supabase.";
+    return m;
+  }
+  /* Vse, kar je v tej napravi in še ni v oblaku, potisni gor. Uporabno, ko oblak
+     vklopiš potem, ko si material že nalagal.                                */
+  function poriniDatoteke(){
+    if(!sb||!user)return Promise.resolve(0);
+    var kaz=Datoteke.kazalo().slice(), poslano=0;
+    var p=Promise.resolve();
+    kaz.forEach(function(x){
+      p=p.then(function(){
+        return Datoteke.zagotovi(x.id).then(function(z){
+          if(!z||!z.blob)return null;
+          return naloziDat(z,z.blob).then(function(r){if(r)poslano++;});
+        },function(){});
+      });
+    });
+    return p.then(function(){return poslano;});
+  }
   function osveziPanel(){if(view==="podatki")renderOblakPanel();}
   return {init:init,prijava:prijava,odjava:odjava,sinhroniziraj:sinhroniziraj,porini:porini,potegni:potegni,
     prevzemi:prevzemi,zaLezi:zaLezi,status:status,nastavljen:nastavljen,
+    naloziDat:naloziDat,prenesiDat:prenesiDat,brisiDat:brisiDat,poriniDatoteke:poriniDatoteke,
     prijavljen:function(){return !!user;},zadnja:function(){return zadnjaSink;}};
 })();
 
@@ -2857,7 +3025,15 @@ var SQL=
 "alter table public.stanje enable row level security;\n\n"+
 "create policy \"berem svoje\"     on public.stanje for select using (auth.uid() = uporabnik);\n"+
 "create policy \"vstavim svoje\"   on public.stanje for insert with check (auth.uid() = uporabnik);\n"+
-"create policy \"posodobim svoje\" on public.stanje for update using (auth.uid() = uporabnik) with check (auth.uid() = uporabnik);";
+"create policy \"posodobim svoje\" on public.stanje for update using (auth.uid() = uporabnik) with check (auth.uid() = uporabnik);\n\n"+
+"-- vedro za slike in videe kreativ\n"+
+"insert into storage.buckets (id, name, public)\n"+
+"values ('material', 'material', false)\n"+
+"on conflict (id) do nothing;\n\n"+
+"create policy \"ekipa bere material\"   on storage.objects for select to authenticated using (bucket_id = 'material');\n"+
+"create policy \"ekipa nalaga material\" on storage.objects for insert to authenticated with check (bucket_id = 'material');\n"+
+"create policy \"ekipa menja material\"  on storage.objects for update to authenticated using (bucket_id = 'material');\n"+
+"create policy \"ekipa brise material\"  on storage.objects for delete to authenticated using (bucket_id = 'material');";
 
 function renderOblakPanel(){
   var t=el("cloud-body");if(!t)return;
@@ -2867,7 +3043,7 @@ function renderOblakPanel(){
     (Oblak.zadnja()?' · zadnja sinhronizacija '+cas(Oblak.zadnja()):'')+'</p>';
   if(!Oblak.nastavljen()){
     t.innerHTML=glava+
-      '<p class="note">Sinhronizacija med napravami je vgrajena, manjkata samo dva podatka. Ko jih vpišeš, so vsi projekti, izdelki in kreative enaki na telefonu in računalniku. <b>Naložene slike in videi se ne sinhronizirajo</b> — ostanejo v napravi, kjer si jih naložil.</p>'+
+      '<p class="note">Sinhronizacija med napravami je vgrajena, manjkata samo dva podatka. Ko jih vpišeš, so vsi projekti, izdelki, kreative <b>in naložene slike ter videi</b> enaki na telefonu, računalniku in pri vseh, ki se prijavijo z istim računom.</p>'+
       '<ol class="steps" style="margin-top:12px">'+
         '<li>Naredi brezplačen projekt na <code>supabase.com</code>.</li>'+
         '<li>V SQL Editor prilepi in zaženi to:<pre>'+esc(SQL)+'</pre></li>'+
@@ -2885,15 +3061,26 @@ function renderOblakPanel(){
       '</div>'+
       '<div class="row" style="margin-top:12px"><button class="btn btn-p" id="ob-in">Prijava</button>'+
       '<button class="btn" id="ob-nov">Ustvari račun</button></div>'+
-      '<p class="note" style="margin-top:12px">Geslo gre neposredno v tvojo Supabase bazo, ta stran ga nikjer ne hrani. Po prijavi ostaneš prijavljen v tej napravi.</p>';
+      '<p class="note" style="margin-top:12px">Geslo gre neposredno v tvojo Supabase bazo, ta stran ga nikjer ne hrani. Po prijavi ostaneš prijavljen v tej napravi.<br>'+
+      '<b>Za ekipo uporabite en skupen račun.</b> Kdor se prijavi z njim, vidi iste mape, kreative in slike — to je namen. Ločeni računi pomenijo ločene, prazne delovne prostore.</p>';
     return;
   }
   t.innerHTML=glava+
     '<div class="row"><button class="btn btn-p" id="ob-sync">Sinhroniziraj zdaj</button>'+
+    '<button class="btn" id="ob-files">Pošlji slike v oblak</button>'+
     '<button class="btn" id="ob-push">Prepiši oblak z lokalnim</button>'+
     '<button class="btn" id="ob-pull">Prepiši lokalno z oblakom</button>'+
     '<button class="btn" id="ob-out">Odjava</button></div>'+
-    '<p class="note" style="margin-top:12px">Spremembe se same pošljejo v oblak nekaj sekund po vnosu. „Sinhroniziraj zdaj“ primerja časa in obdrži novejšo različico. Naložene slike in videi ostanejo lokalni.</p>';
+    '<p class="note" style="margin-top:12px" id="ob-dat">Preverjam datoteke …</p>'+
+    '<p class="note">Spremembe se same pošljejo v oblak nekaj sekund po vnosu. „Sinhroniziraj zdaj“ primerja časa in obdrži novejšo različico. '+
+    'Nove slike in videi gredo v oblak takoj ob nalaganju; <b>Pošlji slike v oblak</b> potisne gor še tisto, kar si naložil prej, ko oblak še ni bil vklopljen.</p>';
+  /* koliko datotek je v ekipi in koliko jih ta naprava še ni prenesla */
+  Promise.all([Datoteke.stevilo(),Datoteke.manjka()]).then(function(r){
+    var d=el("ob-dat");if(!d)return;
+    d.innerHTML=r[0]
+      ? '<b>Datotek v ekipi:</b> '+r[0]+(r[1]?' · '+r[1]+' jih ta naprava še ni prenesla — prenesejo se same, ko odpreš kreativo, kjer visijo.':' · vse so tudi v tej napravi.')
+      : 'Nobene slike ali videa še ni.';
+  },function(){});
 }
 
 /* ============ POGLED: podatki ============ */
@@ -4176,6 +4363,19 @@ document.addEventListener("click",function(ev){
     case "ob-nov": Oblak.prijava(el("ob-mail").value.trim(),el("ob-geslo").value,true);break;
     case "ob-out": Oblak.odjava();break;
     case "ob-sync": Oblak.sinhroniziraj();break;
+    case "ob-files": {
+      var gumb=el("ob-files");
+      if(gumb){gumb.disabled=true;gumb.textContent="Pošiljam …";}
+      Oblak.poriniDatoteke().then(function(st){
+        if(gumb){gumb.disabled=false;gumb.textContent="Pošlji slike v oblak";}
+        renderOblakPanel();
+        toast(st?st+" datotek poslanih v oblak.":"Vse datoteke so že v oblaku.");
+      },function(){
+        if(gumb){gumb.disabled=false;gumb.textContent="Pošlji slike v oblak";}
+        toast("Pošiljanje datotek ni uspelo.");
+      });
+      break;
+    }
     case "ob-push": if(confirm("Prepišem podatke v oblaku s tem, kar je v tej napravi?"))Oblak.porini().then(function(){toast("Oblak posodobljen.");},function(){toast("Pošiljanje ni uspelo.");});break;
     case "ob-pull": if(confirm("Prepišem podatke v tej napravi s tem, kar je v oblaku?"))Oblak.potegni().then(function(v){if(v)Oblak.prevzemi(v);else toast("V oblaku še ni ničesar.");},function(){toast("Branje ni uspelo.");});break;
   }
@@ -4242,6 +4442,9 @@ if(RENDER[zac])view=zac;
 if(el("verzija"))el("verzija").textContent=RAZLICICA;
 polniIzbirnik();
 render();
+Datoteke.zgradiKazalo().then(function(st){
+  if(st)toast(st+" že naloženih datotek vpisanih v kazalo — pošlji jih v oblak v zavihku Podatki.");
+},function(){});
 Oblak.init();
 
 if("serviceWorker" in navigator){

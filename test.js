@@ -318,6 +318,46 @@ Promise.resolve()
   .then(() => {
     ok(w.predVizual && w.predVizual.izdelkov === true,
       "kreativa brez svojega materiala vzame sliko izdelka");
+
+    console.log("\n== kazalo datotek in oblak ==");
+    const kaz = w.Datoteke.kazalo();
+    ok(kaz.length === 1 && kaz[0].ime === "vinil.png", "datoteka je v kazalu, ki se sinhronizira",
+      kaz.length + " zapisov");
+    ok(kaz[0].blob === undefined, "kazalo ne nosi bajtov — v JSON gre samo opis");
+    /* zapis brez lokalnih bajtov mora pripeljati datoteko iz oblaka */
+    const izOblaka = { id: "dat-oblak", kreativa: w.datLastnikIzdelka(pi), ime: "hr-vizual.png",
+      tip: "image/png", velikost: 8, dodano: new Date(0).toISOString(), zap: 1 };
+    kaz.push(izOblaka);
+    let prosil = null;
+    w.Oblak.prenesiDat = (z) => {
+      prosil = z.id;
+      return Promise.resolve(new w.Blob([Buffer.from("89504e470d0a1a0a", "hex")], { type: "image/png" }));
+    };
+    return w.Datoteke.zaKreativo(w.datLastnikIzdelka(pi))
+      .then((sez) => {
+        ok(sez.length === 2, "seznam pokaže tudi datoteko, ki je samo v oblaku", sez.length + "");
+        ok(sez.some((x) => x.id === "dat-oblak" && !x.blob && x.vOblaku),
+          "ta datoteka je označena kot še neprenesena");
+        return w.Datoteke.zagotovi("dat-oblak");
+      })
+      .then((z) => {
+        ok(prosil === "dat-oblak", "prenos je zahteval pravo datoteko", String(prosil));
+        ok(!!(z && z.blob), "po prenosu ima zapis bajte");
+        return w.Datoteke.zaKreativo(w.datLastnikIzdelka(pi));
+      })
+      .then((sez) => {
+        ok(sez.filter((x) => x.id === "dat-oblak")[0].blob != null,
+          "prenesena datoteka je zdaj shranjena v napravi");
+        /* brisanje mora pobrisati tudi iz kazala in iz oblaka */
+        let brisano = null;
+        w.Oblak.brisiDat = (z) => { brisano = z.id; return Promise.resolve(); };
+        return w.Datoteke.brisi("dat-oblak").then(() => {
+          ok(brisano === "dat-oblak", "brisanje gre tudi v oblak", String(brisano));
+          ok(!w.Datoteke.kazalo().some((x) => x.id === "dat-oblak"), "in iz kazala");
+        });
+      });
+  })
+  .then(() => {
     return w.brisiDatotekeIzdelka(pi);
   })
   .then(() => w.Datoteke.zaKreativo(w.datLastnikIzdelka(pi)))

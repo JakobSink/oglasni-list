@@ -45,9 +45,13 @@ V zavihku **Podatki** je izvoz in uvoz JSON — tako preneseš stanje na drugo n
 
 Uvoz je dvojen: **Uvozi in dodaj** mape, izdelke in stikala iz datoteke prilepi zraven obstoječim in ničesar ne povozi, **Uvozi in zamenjaj** pa vse nadomesti (prej vpraša). **Naloži pripravljeno mapo** vzame `mape/eureka.json`, ki je objavljena skupaj z aplikacijo, in jo doda — brez datoteke, kar je na telefonu edina znosna pot.
 
-## Oblačno shranjevanje (neobvezno)
+## Skupen delovni prostor (Supabase)
 
-Sinhronizacija med napravami je vgrajena, potrebuje pa svoj Supabase projekt:
+Sinhronizacija med napravami in ljudmi je vgrajena, potrebuje pa svoj Supabase projekt. Sinhronizirajo se **mape, izdelki, kreative, stikala, budgeti in tudi naložene slike ter videi** — besedila in številke gredo v tabelo `stanje`, datoteke pa v Storage vedro `material`. V sinhroniziranem stanju je samo *kazalo* datotek (ime, tip, velikost); bajti se prenesejo takrat, ko odpreš kreativo, kjer visijo, in ostanejo v napravi za naprej.
+
+**Ekipa dela pod enim skupnim računom.** Kdor se prijavi z njim, vidi iste mape, kreative in slike — to je namen. Ločeni računi pomenijo ločene, prazne delovne prostore, ker so vrstice v `stanje` vezane na račun.
+
+Postopek:
 
 1. Naredi brezplačen projekt na [supabase.com](https://supabase.com).
 2. V SQL Editor zaženi:
@@ -64,13 +68,24 @@ alter table public.stanje enable row level security;
 create policy "berem svoje"     on public.stanje for select using (auth.uid() = uporabnik);
 create policy "vstavim svoje"   on public.stanje for insert with check (auth.uid() = uporabnik);
 create policy "posodobim svoje" on public.stanje for update using (auth.uid() = uporabnik) with check (auth.uid() = uporabnik);
+
+-- vedro za slike in videe kreativ
+insert into storage.buckets (id, name, public)
+values ('material', 'material', false)
+on conflict (id) do nothing;
+
+create policy "ekipa bere material"   on storage.objects for select to authenticated using (bucket_id = 'material');
+create policy "ekipa nalaga material" on storage.objects for insert to authenticated with check (bucket_id = 'material');
+create policy "ekipa menja material"  on storage.objects for update to authenticated using (bucket_id = 'material');
+create policy "ekipa brise material"  on storage.objects for delete to authenticated using (bucket_id = 'material');
 ```
 
 3. V **Authentication → Sign In / Providers → Email** izklopi *Confirm email*, da se prijava zgodi takoj brez potrditvenega maila.
-4. V **Project Settings → API** prekopiraj `Project URL` in ključ `anon public` ter ju vpiši v `config.js`. Oba sta javna podatka, namenjena brskalniku — vrstice varuje RLS iz 2. koraka.
-5. Osveži stran, v zavihku Podatki se pojavi prijava.
+4. V **Project Settings → API** prekopiraj `Project URL` in ključ `anon public` ter ju vpiši v `config.js`. Oba sta javna podatka, namenjena brskalniku — dostop varujeta RLS in politike vedra iz 2. koraka.
+5. Osveži stran, v zavihku Podatki se pojavi prijava. Ustvari **en** račun za ekipo in ga daj sodelavcem.
+6. Ko so računi narejeni, v **Authentication → Sign In / Providers → Email** izklopi *Allow new users to sign up* — drugače si lahko kdorkoli z naslovom strani naredi račun v tvojem projektu.
 
-Naložene slike in videi ostanejo lokalni tudi ob vklopljenem oblaku.
+Če si material nalagal, preden je bil oblak vklopljen, ga v zavihku Podatki pošlji gor z gumbom **Pošlji slike v oblak**. Nove datoteke gredo v oblak takoj ob nalaganju. Brezplačni Supabase da 1 GB shrambe — velikim videom to hitro poide, zato je zavihek Podatki tudi mesto, kjer piše, koliko datotek je v ekipi.
 
 ## Namestitev na telefon
 

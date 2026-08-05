@@ -470,6 +470,11 @@ table.mtx th:first-child{text-align:left}
 /* stikala: vrednosti na kartici kreative in vrstica s filtrom nad seznamom */
 .tags.stik span{background:var(--surf2);border:1px solid var(--line2);color:var(--ink2)}
 .tags.stik span.vodi{border-color:var(--brand);color:var(--brand)}
+/* datoteka, ki je se v oblaku in se prenasa */
+.file.cakam{opacity:.62}
+.file.cakam .prev{display:flex;align-items:center;justify-content:center}
+.file.cakam .ikona{font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+
 /* urejanje stikal: eno stikalo je ena kartica, moznosti so cipi */
 .sg-l{display:flex;flex-direction:column;gap:12px}
 .sg{border:1px solid var(--line2);border-radius:14px;padding:12px 14px;background:var(--surf2)}
