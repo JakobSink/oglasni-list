@@ -471,6 +471,13 @@ Promise.resolve()
     ok(w.document.getElementById("verzija").textContent.length > 5,
       "oznaka različice je izpisana", w.document.getElementById("verzija").textContent);
 
+    /* stanje oblaka v stranski vrstici */
+    w.osveziSideOblak();
+    ok(w.document.getElementById("sideOblakN").textContent.length > 0,
+      "stanje oblaka je v stranski vrstici", w.document.getElementById("sideOblakN").textContent);
+    ok(w.document.getElementById("sideOblak").title.indexOf("ekipe") >= 0,
+      "in pove, da je račun skupen za ekipo");
+
     /* zamenjaj pobrise vse (w.confirm vraca true) */
     w.uvozi(JSON.stringify(paket), "zamenjaj");
     ok(w.S.izdelki.length === 1 && w.S.projekti.length === 1, "zamenjaj postavi samo vsebino datoteke",

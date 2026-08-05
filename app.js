@@ -6,7 +6,7 @@
 
 /* Oznaka različice. Poveča jo vsaka objava — v stranski vrstici je vidna, da se
    na prvi pogled loči, ali brskalnik strežé svežo kopijo ali staro iz cache-a. */
-var RAZLICICA="različica 10 · popravljena stranska vrstica";
+var RAZLICICA="različica 11 · prijava v stranski vrstici";
 
 /* ============ pomožne funkcije ============ */
 var LS="oglasni-list-v1", LS_TEMA="oglasni-list-tema";
@@ -2864,8 +2864,17 @@ var Oblak=(function(){
     naloziSDK(function(nap){
       if(nap){stanjeNapake=nap;osveziPanel();return;}
       try{
+        /* Sejo hranimo v localStorage pod svojim ključem in jo sami osvežujemo,
+           da se ni treba prijavljati ob vsakem obisku. detectSessionInUrl je
+           izklopljen, ker prijave iz naslovne vrstice ne uporabljamo.        */
         sb=window.supabase.createClient(String(CFG.url).trim(),String(CFG.anonKey).trim(),
-          {auth:{persistSession:true,autoRefreshToken:true,flowType:"implicit"}});
+          {auth:{
+            persistSession:true,
+            autoRefreshToken:true,
+            detectSessionInUrl:false,
+            storageKey:"oglasni-list-seja",
+            storage:window.localStorage
+          }});
       }catch(err){stanjeNapake="Napačen Supabase url ali ključ.";osveziPanel();return;}
       sb.auth.getSession().then(function(res){
         user=res&&res.data&&res.data.session?res.data.session.user:null;
@@ -3009,7 +3018,10 @@ var Oblak=(function(){
     });
     return p.then(function(){return poslano;});
   }
-  function osveziPanel(){if(view==="podatki")renderOblakPanel();}
+  function osveziPanel(){
+    osveziSideOblak();
+    if(view==="podatki")renderOblakPanel();
+  }
   return {init:init,prijava:prijava,odjava:odjava,sinhroniziraj:sinhroniziraj,porini:porini,potegni:potegni,
     prevzemi:prevzemi,zaLezi:zaLezi,status:status,nastavljen:nastavljen,
     naloziDat:naloziDat,prenesiDat:prenesiDat,brisiDat:brisiDat,poriniDatoteke:poriniDatoteke,
@@ -3034,6 +3046,28 @@ var SQL=
 "create policy \"ekipa nalaga material\" on storage.objects for insert to authenticated with check (bucket_id = 'material');\n"+
 "create policy \"ekipa menja material\"  on storage.objects for update to authenticated using (bucket_id = 'material');\n"+
 "create policy \"ekipa brise material\"  on storage.objects for delete to authenticated using (bucket_id = 'material');";
+
+/* Stanje oblaka v stranski vrstici. Prijava je stvar, ki jo moraš videti brez
+   iskanja — in ki mora povedati, da je račun skupen za vso ekipo.           */
+function osveziSideOblak(){
+  var g=el("sideOblak");if(!g)return;
+  var st=Oblak.status();
+  var barva={ni:"var(--side-ink2)",cakam:"var(--warn)",odjavljen:"var(--warn)",ok:"var(--pos)",napaka:"var(--neg)"}[st.stopnja];
+  var naslov={ni:"Oblak izklopljen",cakam:"Povezujem",odjavljen:"Prijavi se",ok:"Ekipa",napaka:"Napaka oblaka"}[st.stopnja];
+  var pod={
+    ni:"brez sinhronizacije",
+    cakam:"trenutek …",
+    odjavljen:"skupen račun ekipe",
+    ok:st.besedilo.replace(/^Prijavljen kot\s*/,""),
+    napaka:"klikni za podrobnosti"
+  }[st.stopnja];
+  el("sideOblakDot").style.color=barva;
+  el("sideOblakN").textContent=naslov;
+  el("sideOblakS").textContent=pod;
+  g.title=st.stopnja==="ok"
+    ? "Prijavljen v skupen račun ekipe. Vsi, ki uporabljajo ta račun, vidijo iste mape, kreative in slike. Klikni za sinhronizacijo."
+    : "Skupen račun ekipe — klikni za prijavo in sinhronizacijo.";
+}
 
 function renderOblakPanel(){
   var t=el("cloud-body");if(!t)return;
@@ -4307,6 +4341,13 @@ document.addEventListener("click",function(ev){
   if(goto_){nastaviView(goto_.dataset.goto);return;}
   if(t.closest("#drop")){el("dfile").click();return;}
   if(t.closest("#drop-izd")){el("dfile-izd").click();return;}
+  if(t.closest("#sideOblak")){
+    nastaviView("podatki");
+    /* če si prijavljen, klik naredi tudi to, kar od njega pričakuješ */
+    if(Oblak.prijavljen())Oblak.sinhroniziraj();
+    else setTimeout(function(){var m=el("ob-mail");if(m)m.focus();},60);
+    return;
+  }
   if(t.id==="logo-btn"){el("dfile-logo").click();return;}
   if(t.closest("#drop-ref")){el("dfile-ref").click();return;}
 
@@ -4442,6 +4483,7 @@ if(RENDER[zac])view=zac;
 if(el("verzija"))el("verzija").textContent=RAZLICICA;
 polniIzbirnik();
 render();
+osveziSideOblak();
 Datoteke.zgradiKazalo().then(function(st){
   if(st)toast(st+" že naloženih datotek vpisanih v kazalo — pošlji jih v oblak v zavihku Podatki.");
 },function(){});

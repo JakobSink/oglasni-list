@@ -64,6 +64,10 @@ try{var t=localStorage.getItem("oglasni-list-tema");if(t==="dark"||t==="light")d
     </nav>
 
     <div class="side-foot">
+      <button class="side-oblak" id="sideOblak" title="Skupen račun ekipe — klikni za prijavo in sinhronizacijo">
+        <span class="dot" id="sideOblakDot"></span>
+        <span class="side-oblak-t"><b id="sideOblakN">Oblak</b><em id="sideOblakS">preverjam …</em></span>
+      </button>
       <button class="btn btn-quiet btn-w" id="tema">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v1.8M12 19.2V21M4.8 12H3M21 12h-1.8M6.7 6.7 5.4 5.4M18.6 18.6l-1.3-1.3M6.7 17.3l-1.3 1.3M18.6 5.4l-1.3 1.3"/><circle cx="12" cy="12" r="3.8"/></svg>
         Svetlo / temno</button>

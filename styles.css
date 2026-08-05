@@ -176,6 +176,20 @@ svg{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}
 
 .side-foot{display:flex;flex-direction:column;gap:9px;padding:0 4px}
 .saved{font-size:11px;color:var(--side-ink2);text-align:center}
+/* stanje skupnega racuna: vedno vidno spodaj levo, klik pelje na Podatke */
+.side-oblak{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  background:var(--side2);border:1px solid transparent;color:var(--side-ink);
+  border-radius:11px;padding:9px 11px;font:inherit;cursor:pointer;
+  transition:border-color .13s,background .13s;
+}
+.side-oblak:hover{border-color:var(--brand);background:color-mix(in srgb,var(--side2) 70%,var(--brand) 12%)}
+@supports not (color:color-mix(in srgb,red,red)){.side-oblak:hover{background:var(--side2)}}
+.side-oblak .dot{flex:none}
+.side-oblak-t{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.side-oblak-t b{font-size:12px;font-weight:600}
+.side-oblak-t em{font-style:normal;font-size:10.5px;color:var(--side-ink2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* razlicica: da se na prvi pogled vidi, ali brskalnik strezi staro kopijo */
 .verzija{font-size:10.5px;color:var(--side-ink2);text-align:center;opacity:.65;letter-spacing:.02em}
 
