@@ -4,6 +4,10 @@
 (function(){
 "use strict";
 
+/* Oznaka različice. Poveča jo vsaka objava — v stranski vrstici je vidna, da se
+   na prvi pogled loči, ali brskalnik strežé svežo kopijo ali staro iz cache-a. */
+var RAZLICICA="5. 8. 2026 · umestitve, material, Excel, uvoz";
+
 /* ============ pomožne funkcije ============ */
 var LS="oglasni-list-v1", LS_TEMA="oglasni-list-tema";
 function n(v){if(typeof v==="number")return isFinite(v)?v:0;var x=parseFloat(String(v==null?"":v).replace(/\s/g,"").replace(",","."));return isFinite(x)?x:0;}
@@ -2422,12 +2426,14 @@ function renderPodatki(){
     '<div class="row" style="margin-top:14px">'+
       '<button class="btn btn-p" id="exp">Izvozi besedila (JSON)</button>'+
       '<button class="btn" id="impAdd">Uvozi in dodaj</button>'+
+      '<button class="btn" id="impUrl">Naloži pripravljeno mapo</button>'+
       '<button class="btn" id="impBtn">Uvozi in zamenjaj</button>'+
       '<input type="file" id="impFile" accept=".json,application/json" hidden>'+
       '<input type="file" id="impFileAdd" accept=".json,application/json" hidden>'+
       '<button class="btn" id="prn">Natisni / PDF</button>'+
     '</div>'+
-    '<p class="note" style="margin-top:10px"><b>Uvozi in dodaj</b> mape in izdelke iz datoteke prilepi zraven obstoječim — nič se ne povozi. '+
+    '<p class="note" style="margin-top:10px"><b>Naloži pripravljeno mapo</b> vzame mapo, ki je objavljena skupaj z aplikacijo ('+esc(MAPE_URL)+'), in jo doda k tvojim podatkom — brez datoteke in brez prepisovanja. Na telefonu je to najhitrejša pot.<br>'+
+    '<b>Uvozi in dodaj</b> mape in izdelke iz datoteke prilepi zraven obstoječim — nič se ne povozi. '+
     '<b>Uvozi in zamenjaj</b> odvrže vse, kar je zdaj v aplikaciji, in postavi na njegovo mesto vsebino datoteke; pred tem vpraša za potrditev.<br>'+
     'Izvoz vsebuje projekte, izdelke, kreative in vse številke — <b>ne pa naloženih slik in videov</b>, ker so za JSON preveliki. Te po potrebi prenesi posamično iz kreative.</p>'+
     '<div class="f" style="margin-top:18px"><label for="paste">Ali prilepi vsebino izvožene datoteke sem in klikni Uvozi</label>'+
@@ -2482,6 +2488,24 @@ function izvozi(){
     toast("Prenos ni uspel — besedilo je v polju spodaj, shrani ga ročno.");
   }
 }
+/* Mapa, pripravljena vnaprej in objavljena skupaj z aplikacijo. Obide datoteke
+   in kopiranje besedila — na telefonu je oboje mučno.                        */
+var MAPE_URL="mape/eureka.json";
+function naloziPripravljeno(){
+  var b=el("impUrl");
+  if(b){b.disabled=true;b.textContent="Nalagam …";}
+  function konec(){if(b){b.disabled=false;b.textContent="Naloži pripravljeno mapo";}}
+  if(typeof fetch!=="function"){konec();toast("Ta brskalnik ne podpira nalaganja s strani — uporabi Uvozi in dodaj.");return;}
+  fetch(MAPE_URL,{cache:"no-store"}).then(function(r){
+    if(!r.ok)throw new Error("strežnik je vrnil "+r.status);
+    return r.text();
+  }).then(function(txt){
+    konec();uvozi(txt,"dodaj");
+  }).catch(function(err){
+    konec();toast("Mape ni bilo mogoče naložiti: "+(err&&err.message||"ni povezave"));
+  });
+}
+
 /* nacin "zamenjaj" pobrise obstojece stanje, "dodaj" ga pusti pri miru in
    uvozene mape ter izdelke samo prilepi zraven                              */
 function uvozi(txt,nacin){
@@ -3314,6 +3338,7 @@ document.addEventListener("click",function(ev){
     case "exp": izvozi();break;
     case "impBtn": el("impFile").click();break;
     case "impAdd": el("impFileAdd").click();break;
+    case "impUrl": naloziPripravljeno();break;
     case "impPaste": uvozi(el("paste").value,"zamenjaj");break;
     case "impPasteAdd": uvozi(el("paste").value,"dodaj");break;
     case "prn": window.print();break;
@@ -3380,13 +3405,18 @@ document.addEventListener("paste",function(ev){
 /* ============ zagon ============ */
 var zac=String(location.hash||"").replace("#","");
 if(RENDER[zac])view=zac;
+if(el("verzija"))el("verzija").textContent=RAZLICICA;
 polniIzbirnik();
 render();
 Oblak.init();
 
 if("serviceWorker" in navigator){
   window.addEventListener("load",function(){
-    navigator.serviceWorker.register("sw.js").catch(function(){});
+    navigator.serviceWorker.register("sw.js").then(function(reg){
+      /* takoj preveri, ali je na strežniku novejša koda — brez tega brskalnik
+         lahko dneve strežé staro kopijo iz predpomnilnika                     */
+      try{reg.update();}catch(err){}
+    }).catch(function(){});
   });
 }
 })();

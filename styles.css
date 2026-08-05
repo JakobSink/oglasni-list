@@ -176,6 +176,8 @@ svg{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}
 
 .side-foot{display:flex;flex-direction:column;gap:9px;padding:0 4px}
 .saved{font-size:11px;color:var(--side-ink2);text-align:center}
+/* razlicica: da se na prvi pogled vidi, ali brskalnik strezi staro kopijo */
+.verzija{font-size:10.5px;color:var(--side-ink2);text-align:center;opacity:.65;letter-spacing:.02em}
 
 .side-veil{position:fixed;inset:0;background:rgba(8,10,16,.55);z-index:35;backdrop-filter:blur(2px)}
 .side-veil[hidden]{display:none}

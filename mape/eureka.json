@@ -1,0 +1,664 @@
+{
+  "v": 4,
+  "projekti": [
+    {
+      "id": "pr-eureka",
+      "ime": "TRGOVINA EUREKA",
+      "opis": "Osnutki kreativ za trgovinaeureka.si. Podatki so prepisani s strani 5. 8. 2026. Cene v ekonomiki so namenoma prazne, izračuni izklopljeni — vklopi jih na izdelku, ko boš imel nabavne cene."
+    }
+  ],
+  "izdelki": [
+    {
+      "id": "izd-vinil-klik",
+      "projekt": "pr-eureka",
+      "ime": "Vinil na klik",
+      "opis": "Vodoodporen vinil na klik, 5,5 mm, obrabni sloj 0,5 mm, razred 33/42. 13 dekorjev.",
+      "znamka": "Trgovina Eureka",
+      "domena": "trgovinaeureka.si",
+      "url": "https://trgovinaeureka.si/kategorija/vinil/vinil-na-klik/",
+      "izracuni": false,
+      "zapiski": "SPECIFIKACIJE (prepisano s strani izdelka, 5. 8. 2026)\n· debelina 5,5 mm, obrabni sloj 0,5 mm (Extra Protect)\n· razred obrabe 33/42 — stanovanjsko in poslovno\n· plošča 1220 × 184 mm; paket 2,23 m² = 10 plošč, 22 kg\n· integrirana podloga IXPE 1,5 mm (akustika)\n· 100 % vodoodporen, primeren za talno gretje\n· cena na strani: 16,40 €\n· 13 dekorjev; CHESTNUT je označen kot „Ni na zalogi“\n\nODPRTO — PREVERI PRED OBJAVO\nNa strani nikjer ni navedeno, ali je 16,40 € cena na m² ali na paket (2,23 m²).\nPreveril sem kategorijo in tri strani izdelkov — enote ni nikjer.\nZato v teh oglasih namenoma NI cene. Če je 16,40 € na paket, je to 7,35 €/m² in\nnajmočnejši kljuk, ki ga imamo; če je na m², bi bil oglas s „7 €/m²“ zavajajoč.\nKo potrdiš, dam ceno v hook in v Google naslove.\nOb tem: manjkajoča enota pri ceni znižuje konverzijo tudi na strani sami — kupec,\nki ne ve, kaj kupuje za 16,40 €, ne doda v košarico.",
+      "kreative": [
+        {
+          "id": "kr-vk-fb",
+          "naslov": "FB Feed · Vodoodporen — kopalnica brez ploščic",
+          "platforma": "facebook",
+          "format": "slika",
+          "umestitev": "fb-feed",
+          "status": "brief",
+          "tagi": "vinil, vodoodpornost, prenova, hladen start",
+          "kot": "Vodoodpornost kot ločnica: vinil gre v kopalnico in kuhinjo, laminat ne. Sekundarno: prenova brez rušenja.",
+          "publika": "M+Ž 28–55, SLO, lastniki stanovanj in hiš, prenova doma, DIY, „home improvement“. Široko targetiranje, izloči najemnike in interese za nepremičninske posrednike.",
+          "hooki": [
+            "Laminat v kopalnici zdrži dve leti. Ta vinil ne rabi niti fug.",
+            "Prenova tal brez rušenja — klikneš ga na obstoječa tla.",
+            "Kopalnica brez ploščic in brez silikona, ki po letu dni črni.",
+            "Vprašanje, ki ga dobimo vsak dan: „Ali gre vinil v kopalnico?“"
+          ],
+          "primarna": [
+            "Vinil na klik, 100 % vodoodporen. Klikneš ga direktno na stara tla — brez rušenja, brez lepila.\n\n· debelina 5,5 mm, obrabni sloj 0,5 mm\n· razred 33/42 — narejen tudi za poslovne prostore\n· integrirana akustična podloga, tiho pod nogami\n· primeren za talno gretje\n· 13 dekorjev, dostava 1–3 dni\n\nNaroči brezplačne vzorce in poglej barvo pri svoji svetlobi.",
+            "Vprašanje, ki ga dobimo vsak dan: „Ali gre vinil v kopalnico?“\n\nTa gre. 100 % vodoodporen, brez fug za čiščenje in brez silikona, ki potemni.\n\nKlik sistem pomeni, da ga položiš na obstoječa tla v enem dnevu. Razred 33/42 — doma ga ne boš izrabil.\n\nBrezplačni vzorci pred nakupom, dostava 1–3 dni.",
+            "Stara tla ostanejo, kjer so.\n\nVinil na klik se položi nanje: brez rušenja, brez prahu, brez kontejnerja pred hišo. En dan in soba je nova.\n\n100 % vodoodporen, primeren za talno gretje, razred 33/42."
+          ],
+          "naslovi": [
+            "Vodoodporen vinil na klik",
+            "V kopalnico brez ploščic",
+            "Nova tla v enem dnevu",
+            "Razred 33/42 — zdrži"
+          ],
+          "opisi": [
+            "Dostava 1–3 dni",
+            "Brezplačni vzorci",
+            "13 dekorjev na zalogi"
+          ],
+          "cta": "Nakupuj zdaj",
+          "url": "https://trgovinaeureka.si/kategorija/vinil/vinil-na-klik/",
+          "design": "Kvadratno-vertikalno 4:5, 1080 × 1350.\nGlavni vizual: kopalnica ali kuhinja z položenim vinilom, brez ljudi, dnevna svetloba od strani. Zgornja tretjina naj ostane mirna — tam sedi besedilo.\nOverlay, dve vrstici največ: „100 % vodoodporen“ / „brez rušenja starih tal“.\nCene NE daj na sliko, dokler ne potrdimo, ali je 16,40 € na m² ali na paket.\nDrugi vizual za test: split — levo napihnjen laminat na stiku z vodo, desno vinil pod isto vodo. Brez stock fotografij, uporabi svoje prostore ali fotke strank.\nTretji vizual: makro na klik spoj z merilnim trakom, ki pokaže 5,5 mm.",
+          "opombe": "Test: hook „ali gre v kopalnico“ proti hooku „brez rušenja“. Ločeni oglasni skupini, isti vizual, da meriš samo besedilo.",
+          "budget": "15",
+          "cpm": "8",
+          "ctr": "1,4",
+          "cvr": "1,8"
+        },
+        {
+          "id": "kr-vk-ig",
+          "naslov": "IG Reels · UGC — položen v enem dnevu",
+          "platforma": "instagram",
+          "format": "UGC video",
+          "umestitev": "ig-reels",
+          "status": "snemanje",
+          "tagi": "UGC, demo, prenova, Reels",
+          "kot": "Demonstracija: zvok klika in vidna hitrost polaganja. Prodaja gotovost, da to zmoreš sam.",
+          "publika": "Ž+M 25–45, IG, prvo stanovanje, prenova, DIY. Reels in Zgodbe ločeno od feeda, ker je kreativa vertikalna.",
+          "hooki": [
+            "Tri ure. Toliko je trajalo, da je soba dobila nova tla.",
+            "Brez rušenja, brez lepila, brez prahu.",
+            "Prvi klik je najlepši zvok pri prenovi.",
+            "Stara tla puščava kar spodaj."
+          ],
+          "primarna": [
+            "Nova tla v enem dnevu, brez rušenja starih. Klik sistem, 100 % vodoodporen, razred 33/42. Vzorci brezplačni.",
+            "Položiš ga sam, brez orodja in brez mojstra. Vodoodporen, primeren za talno gretje. Dostava 1–3 dni."
+          ],
+          "naslovi": [
+            "Nova tla v enem dnevu"
+          ],
+          "opisi": [
+            "Brezplačni vzorci"
+          ],
+          "cta": "Nakupuj zdaj",
+          "url": "https://trgovinaeureka.si/kategorija/vinil/vinil-na-klik/",
+          "design": "Vertikalno 9:16, 1080 × 1920, snemano s telefonom, brez studia in brez stock posnetkov.\nPrvi 2 s: roke sklopijo dve plošči in ZVOK KLIKA ostane v posnetku — brez glasbe na začetku, zvok je hook.\nNato trije rezi: prazna soba → polovica položena → končana soba s prižgano lučjo.\nPodnapisi veliki, spodnja tretjina, brez emojijev; varno območje 250 px zgoraj in spodaj, ker Reels tam prekrije vmesnik.\nZadnje 3 s: paket vinila v roki + napis „vzorci brezplačno“ + gumb.\nDolžina 15–20 s. Ista surovina se prereže še v 6-sekundno različico za Zgodbe.",
+          "opombe": "V Reels in Zgodbah se naslov in opis ne prikažeta — vse mora povedati posnetek in prva vrstica primarnega besedila.",
+          "budget": "15",
+          "cpm": "6",
+          "ctr": "1,2",
+          "cvr": "1,5"
+        },
+        {
+          "id": "kr-vk-g",
+          "naslov": "Google · Search — vinil na klik",
+          "platforma": "google",
+          "format": "RSA",
+          "umestitev": "g-search",
+          "status": "pripravljeno",
+          "tagi": "Search, namera, glavni izdelek",
+          "kot": "Namera nakupa: išče vinil in primerja ponudnike. Prodaja zaloga v SLO, dostava in vzorci.",
+          "publika": "Iskanja v SLO, exact + phrase. Ločena skupina za „vinil za kopalnico“, ker je namera drugačna.",
+          "naslovi": [
+            "Vinil na klik – zaloga SLO",
+            "Vodoodporen vinil na klik",
+            "Vinil za kopalnico",
+            "Vinil na klik, razred 33/42",
+            "Brezplačni vzorci vinila",
+            "Vinil brez lepila",
+            "Dostava vinila 1–3 dni",
+            "13 dekorjev na zalogi",
+            "Vinil 5,5 mm, sloj 0,5 mm",
+            "Položiš ga sam",
+            "Vinil na stara tla",
+            "Primeren za talno gretje"
+          ],
+          "opisi": [
+            "Vodoodporen vinil na klik, razred 33/42. Klikneš ga na obstoječa tla, brez lepila.",
+            "Debelina 5,5 mm, obrabni sloj 0,5 mm, integrirana akustična podloga. Talno gretje: da.",
+            "13 dekorjev na zalogi v Sloveniji. Dostava 1–3 dni, brezplačni vzorci pred nakupom.",
+            "Za kopalnico in kuhinjo. Brez fug za čiščenje in brez silikona, ki potemni."
+          ],
+          "kljucneBesede": "vinil na klik, vinilne plosce, vinil za kopalnico, vodoodporen vinil, vinil talna obloga, vinil na klik cena, spc vinil, vinil plosce cena",
+          "url": "https://trgovinaeureka.si/kategorija/vinil/vinil-na-klik/",
+          "pot1": "vinil",
+          "pot2": "na-klik",
+          "sitelinki": "Brezplačni vzorci, Vinil na klik, Vinil za lepljenje, Dostava in plačilo",
+          "design": "Search — brez vizuala.\nCallouti: zaloga v SLO, dostava 1–3 dni, brezplačni vzorci, obroki Leanpay.\nStrukturirani izvleček „Vrste“: vinil na klik, vinil za lepljenje, zaključne letvice.",
+          "opombe": "Negativne ključne besede: rabljeno, drugorabno, popravilo, obnova laminata, vinil folija, avto folija, vinilne plošče glasba, vinyl, LP, gramofon, tapeta.\nCene v naslovih ni, dokler ne potrdimo enote — konkurenca jo ima in nas bo prehitela, zato je to prva stvar, ki jo rabim.",
+          "budget": "10",
+          "ctr": "6",
+          "cvr": "2,5"
+        }
+      ]
+    },
+    {
+      "id": "izd-vinil-lep",
+      "projekt": "pr-eureka",
+      "ime": "Vinil za lepljenje",
+      "opis": "Vinil za lepljenje, 2,5 mm, obrabni sloj 0,5 mm, razred 33/42. Nizka vgradna višina.",
+      "znamka": "Trgovina Eureka",
+      "domena": "trgovinaeureka.si",
+      "url": "https://trgovinaeureka.si/kategorija/vinil/",
+      "izracuni": false,
+      "zapiski": "SPECIFIKACIJE (prepisano s strani izdelka, 5. 8. 2026)\n· debelina 2,5 mm, obrabni sloj 0,5 mm (Extra Protect)\n· razred obrabe 33/42\n· paket 3,47 m² = 16 plošč, 22 kg\n· vodoodporen, talno gretje do 26 °C\n· cena na strani: 13,40 €\n\nODPRTO — ista negotovost kot pri vinilu na klik: enota cene ni navedena\n(13,40 € na m² ali na paket 3,47 m²?). Zato v oglasih ni cene.\n\nKDAJ TA IN NE KLIK\nRazlika, ki jo kupec razume: 2,5 mm proti 5,5 mm pomeni, da gre pod vrata brez\nrezkanja in da ni stopnice na prehodu. To je edini pravi razlog, da izbere\nlepljenje — v oglasih naj bo to glavni kot, ne cena.",
+      "kreative": [
+        {
+          "id": "kr-vl-fb",
+          "naslov": "FB Feed · Nizka višina — brez stopnice na prehodu",
+          "platforma": "facebook",
+          "format": "slika",
+          "umestitev": "fb-feed",
+          "status": "brief",
+          "tagi": "vinil, lepljenje, nizka višina",
+          "kot": "Tehnična ovira: 2,5 mm gre pod vrata in ne naredi stopnice. Za prenove, kjer klik vinil ne gre.",
+          "publika": "M+Ž 30–60, SLO, prenova stanovanja, mojstri in polagalci kot ločena skupina.",
+          "hooki": [
+            "2,5 mm. Vrata ostanejo, kjer so.",
+            "Nova tla brez stopnice na prehodu v hodnik.",
+            "Klik vinil je predebel? Ta je pol nižji."
+          ],
+          "primarna": [
+            "Vinil za lepljenje, samo 2,5 mm. Pomeni: vrat ni treba rezkati in na prehodu ni stopnice.\n\n· obrabni sloj 0,5 mm, razred 33/42\n· vodoodporen, talno gretje do 26 °C\n· paket 3,47 m² = 16 plošč\n· dostava 1–3 dni\n\nBrezplačni vzorci pred nakupom.",
+            "Prenova, pri kateri vrata ostanejo, kjer so.\n\n2,5 mm vgradne višine namesto 5,5 mm: brez rezkanja vrat, brez stopnice na prehodu, brez prilagajanja pragov.\n\nVodoodporen, razred 33/42, primeren za talno gretje."
+          ],
+          "naslovi": [
+            "Vinil za lepljenje, 2,5 mm",
+            "Brez stopnice na prehodu",
+            "Vrata ostanejo, kjer so"
+          ],
+          "opisi": [
+            "Dostava 1–3 dni",
+            "Brezplačni vzorci"
+          ],
+          "cta": "Nakupuj zdaj",
+          "url": "https://trgovinaeureka.si/kategorija/vinil/",
+          "design": "4:5, 1080 × 1350. Vizual: makro prehoda med sobo in hodnikom, kjer se vidi, da ni stopnice; ob robu merilni trak, ki pokaže 2,5 mm. Overlay: „2,5 mm“ veliko, spodaj „brez rezkanja vrat“. Ta oglas prodaja meritev, zato mora biti številka berljiva na telefonu.",
+          "budget": "10",
+          "cpm": "8",
+          "ctr": "1,2",
+          "cvr": "1,6"
+        },
+        {
+          "id": "kr-vl-g",
+          "naslov": "Google · Search — vinil za lepljenje",
+          "platforma": "google",
+          "format": "RSA",
+          "umestitev": "g-search",
+          "status": "pripravljeno",
+          "tagi": "Search, namera",
+          "kot": "Išče konkreten tip vinila; pogosto mojster ali kupec, ki že ve, da rabi lepljenje.",
+          "publika": "Iskanja v SLO, exact + phrase na „vinil za lepljenje“, „lepljeni vinil“, „LVT lepljenje“.",
+          "naslovi": [
+            "Vinil za lepljenje 2,5 mm",
+            "Lepljeni vinil – zaloga SLO",
+            "Nizka vgradna višina",
+            "Obrabni sloj 0,5 mm",
+            "Razred 33/42",
+            "Brezplačni vzorci",
+            "Dostava 1–3 dni",
+            "Paket 3,47 m², 16 plošč",
+            "Vodoodporen vinil",
+            "Primeren za talno gretje"
+          ],
+          "opisi": [
+            "Vinil za lepljenje, 2,5 mm. Brez rezkanja vrat in brez stopnice na prehodu.",
+            "Obrabni sloj 0,5 mm, razred 33/42. Vodoodporen, talno gretje do 26 °C.",
+            "Paket pokrije 3,47 m² (16 plošč). Zaloga v Sloveniji, dostava 1–3 dni.",
+            "Brezplačni vzorci pred nakupom. Plačilo tudi na obroke z Leanpay."
+          ],
+          "kljucneBesede": "vinil za lepljenje, lepljeni vinil, lvt vinil, vinil 2,5 mm, vinil plosce za lepljenje, vinil lepilo",
+          "url": "https://trgovinaeureka.si/kategorija/vinil/",
+          "pot1": "vinil",
+          "pot2": "lepljenje",
+          "sitelinki": "Brezplačni vzorci, Vinil na klik, Zaključne letvice, Dostava in plačilo",
+          "design": "Search — brez vizuala. Callouti: nizka vgradna višina, zaloga v SLO, brezplačni vzorci.",
+          "opombe": "Negativne: vinil folija, avto folija, vinyl, LP, gramofon, lepilo za ploščice, rabljeno.",
+          "budget": "8",
+          "ctr": "6",
+          "cvr": "2,5"
+        }
+      ]
+    },
+    {
+      "id": "izd-paneli",
+      "projekt": "pr-eureka",
+      "ime": "SPC stenski paneli VinKraft",
+      "opis": "SPC stenski paneli, 100 % vodoodporni, lepijo se na obstoječe ploščice. 46,99 € namesto 60 €.",
+      "znamka": "Trgovina Eureka",
+      "domena": "trgovinaeureka.si",
+      "url": "https://trgovinaeureka.si/",
+      "izracuni": false,
+      "zapiski": "PODATKI (s strani, 5. 8. 2026)\n· znamka VinKraft, SPC, 100 % vodoodporno, visoka trdnost\n· cena 46,99 €, prečrtana redna 60,00 €, oznaka −22 %\n· 6 različic: Panel 8273 (dve), Golden, Grey Marble, White Marble, Dark Marble\n· pozicionirano za kopalnice, kuhinje in bivalne prostore\n· lepi se na obstoječo podlago — brez fug\n\nPREVERI\nDimenzij panela (2600 × 1220 × 3 mm) in pokritosti 3,17 m² na strani nisem mogel\npotrditi — v iskalnih zadetkih jih ni. Zato v oglasih NI trditve o m² in ne\npreračuna na €/m². Ko mi pošlješ dimenzije, dodam „en panel = X m²“, ker je to\nnajmočnejši del zgodbe: takrat postane 46,99 € razumljivo poceni.\n\nKOT, KI DELUJE\nTo ni „stenska obloga“, to je „kopalnica brez rušenja ploščic“. Prodajaj izognitev\nkramp-in-kontejner prenovi, ne materiala.",
+      "kreative": [
+        {
+          "id": "kr-pan-fb",
+          "naslov": "FB Feed · Kopalnica brez rušenja ploščic",
+          "platforma": "facebook",
+          "format": "slika",
+          "umestitev": "fb-feed",
+          "status": "brief",
+          "tagi": "paneli, prenova, brez rušenja, popust",
+          "kot": "Izognitev bolečini: prenova kopalnice brez rušenja, prahu in dvotedenskega kaosa.",
+          "publika": "M+Ž 30–60, SLO, lastniki stanovanj, starejša kopalnica, prenova, DIY. Izloči novogradnje.",
+          "hooki": [
+            "Kopalnica brez rušenja ploščic. Paneli gredo kar nanje.",
+            "Dva dni namesto dveh tednov — in brez kontejnerja pred hišo.",
+            "Fuge, ki jih ne bo treba nikoli več čistiti, ker jih ni.",
+            "Stare ploščice ostanejo. Nihče jih ne bo videl."
+          ],
+          "primarna": [
+            "Prenova kopalnice brez rušenja. SPC paneli se prilepijo na obstoječe ploščice — brez prahu, brez kontejnerja, brez dveh tednov brez kopalnice.\n\n· 100 % vodoodporno\n· brez fug, torej brez črne silikonske obrobe\n· 6 dekorjev, med njimi marmor\n· zdaj 46,99 € namesto 60,00 €\n\nDostava 1–3 dni.",
+            "Ploščice iz leta 1998 lahko ostanejo, kjer so.\n\nSPC panel se prilepi kar nanje: 100 % vodoodporno, brez fug, brez rušenja. Kopalnica je nova v dveh dneh in brez prahu po celem stanovanju.\n\nZdaj 46,99 € namesto 60,00 €."
+          ],
+          "naslovi": [
+            "Kopalnica brez rušenja",
+            "Paneli kar na ploščice",
+            "46,99 € namesto 60 €",
+            "100 % vodoodporno"
+          ],
+          "opisi": [
+            "6 dekorjev, dostava 1–3 dni",
+            "Brez fug in silikona",
+            "Zdaj −22 %"
+          ],
+          "cta": "Nakupuj zdaj",
+          "url": "https://trgovinaeureka.si/",
+          "design": "4:5, 1080 × 1350. Najmočnejši vizual je pred/po: leva polovica stare ploščice s temnimi fugami, desna polovica isti kader z marmornim panelom. Rez naj bo naveden po sredini, ne diagonalno — bolj berljivo na telefonu.\nOverlay: „brez rušenja“ zgoraj, „46,99 € namesto 60 €“ spodaj desno.\nDrugi vizual: roka, ki drži panel pred staro steno, da se vidi debelina roba.\nNujno: fotografija mora biti iz resnične slovenske kopalnice, ne stock render — render tu ubije zaupanje, ker izdelek prodaja „to je izvedljivo v mojem stanovanju“.",
+          "opombe": "Ko dobim dimenzije panela, dodaj v besedilo „en panel pokrije X m²“ — to je manjkajoči del, ki naredi ceno razumljivo.",
+          "budget": "20",
+          "cpm": "8",
+          "ctr": "1,5",
+          "cvr": "1,6"
+        },
+        {
+          "id": "kr-pan-reels",
+          "naslov": "FB/IG Reels · UGC — pred in po v 15 s",
+          "platforma": "facebook",
+          "format": "UGC video",
+          "umestitev": "fb-reels",
+          "status": "snemanje",
+          "tagi": "UGC, pred-po, Reels",
+          "kot": "Transformacija v realnem času; brez glasu, samo delo in rezultat.",
+          "publika": "M+Ž 28–55, Reels in Zgodbe, prenova doma.",
+          "hooki": [
+            "Ploščice iz leta 1998. Poglej, kaj je bilo v dveh dneh.",
+            "Brez kladiva. Brez prahu. Brez kontejnerja.",
+            "Prenova kopalnice, ki se je zgodila med vikendom."
+          ],
+          "primarna": [
+            "SPC paneli se prilepijo na obstoječe ploščice. 100 % vodoodporno, brez fug. Zdaj 46,99 € namesto 60 €.",
+            "Nova kopalnica brez rušenja. 6 dekorjev, dostava 1–3 dni."
+          ],
+          "cta": "Nakupuj zdaj",
+          "url": "https://trgovinaeureka.si/",
+          "design": "9:16, 1080 × 1920, telefon, brez studia.\nPrvi 2 s: kader stare kopalnice, roka pokaže na temne fuge — nič govora, samo ambient zvok.\nNato timelapse lepljenja treh panelov, 6–8 s.\nZadnjih 4 s: končana stena, luč prižgana, kamera se odmakne. Zadnja sekunda: napis „brez rušenja“ + gumb.\nPodnapisi veliki, spodnja tretjina, varno območje 250 px zgoraj in spodaj.\nDolžina 15–18 s. Ista surovina se prereže v 6 s za Zgodbe.",
+          "opombe": "V Reels se naslov in opis ne prikažeta — prva vrstica primarnega besedila je edino besedilo, ki ga kupec vidi.",
+          "budget": "20",
+          "cpm": "6",
+          "ctr": "1,3",
+          "cvr": "1,4"
+        },
+        {
+          "id": "kr-pan-g",
+          "naslov": "Google · Search — SPC stenski paneli",
+          "platforma": "google",
+          "format": "RSA",
+          "umestitev": "g-search",
+          "status": "pripravljeno",
+          "tagi": "Search, namera",
+          "kot": "Namera: išče stenske panele ali alternativo ploščicam.",
+          "publika": "Iskanja v SLO. Ločena skupina za „obloga za kopalnico brez ploščic“ — tam je namera šibkejša, drug oglas.",
+          "naslovi": [
+            "SPC stenski paneli",
+            "Paneli na stare ploščice",
+            "46,99 € namesto 60 €",
+            "100 % vodoodporni paneli",
+            "Kopalnica brez rušenja",
+            "6 dekorjev, tudi marmor",
+            "Brez fug in silikona",
+            "Dostava 1–3 dni",
+            "Stenska obloga za kopalnico",
+            "Zaloga v Sloveniji"
+          ],
+          "opisi": [
+            "SPC stenski paneli, 100 % vodoodporni. Lepijo se na obstoječe ploščice.",
+            "Brez rušenja, brez prahu, brez fug za čiščenje. 6 dekorjev, med njimi marmor.",
+            "Zdaj 46,99 € namesto 60,00 €. Zaloga v Sloveniji, dostava 1–3 dni.",
+            "Za kopalnico, kuhinjo in bivalne prostore. Plačilo na obroke z Leanpay."
+          ],
+          "kljucneBesede": "spc stenski paneli, stenski paneli kopalnica, obloga namesto ploscic, vodoodporni stenski paneli, stenske obloge kopalnica, pvc stenski paneli",
+          "url": "https://trgovinaeureka.si/",
+          "pot1": "stenski",
+          "pot2": "paneli",
+          "sitelinki": "Dekorji, Kopalnica, Dostava in plačilo, Obroki Leanpay",
+          "design": "Search — brez vizuala. Callouti: brez rušenja, 100 % vodoodporno, zaloga v SLO, obroki.",
+          "opombe": "Negativne: sendvič paneli, strešni paneli, solarni paneli, fasadni paneli, izolacijski paneli, ograja.\nCiljna stran: potrebujemo kategorijo samo za stenske panele. Zdaj kaže na domačo stran, kar bo požrlo konverzijo — to je hitrejši popravek kot katerikoli oglas tukaj.",
+          "budget": "12",
+          "ctr": "5,5",
+          "cvr": "2"
+        }
+      ]
+    },
+    {
+      "id": "izd-ariel",
+      "projekt": "pr-eureka",
+      "ime": "Ariel universal 130 pranj, 10 kg",
+      "opis": "Pralni prašek Ariel universal, 130 pranj, 10 kg. 26,70 € namesto 38 € (−30 %).",
+      "znamka": "Trgovina Eureka",
+      "domena": "trgovinaeureka.si",
+      "url": "https://trgovinaeureka.si/izdelek/ariel-pralni-prasek-universal-130-pranj-10kg/",
+      "izracuni": false,
+      "zapiski": "PODATKI (s strani, 5. 8. 2026)\n· ARIEL pralni prašek universal, 130 pranj, 10 kg\n· 26,70 €, prečrtana redna 38,00 €, oznaka −30 %\n· universal — za belo in barvno perilo\n\nZAKAJ TA IZDELEK DELUJE V OGLASU\nZnana znamka + jasen popust + izračun na pranje. 26,70 € / 130 pranj = 0,21 € na\npranje; to je edina številka, ki jo kupec rabi, in je preverljiva iz podatkov na\nstrani. Ta izračun uporabi kot hook.\n\nODPRTO — HRVAŠKA\nZa hrvaški promet se še nisva odločila: `.hr` trgovine ni. Slovensko besedilo in\n.si domena pri hrvaškem prometu pomenita nizko konverzijo — najprej rabimo\nodločitev, ali gremo v hrvaško ciljno stran ali samo v test s hrvaškim besedilom\nna obstoječo stran. Do takrat so ti oglasi pisani za SLO.",
+      "kreative": [
+        {
+          "id": "kr-ar-fb",
+          "naslov": "FB Feed · 0,21 € na pranje",
+          "platforma": "facebook",
+          "format": "slika",
+          "umestitev": "fb-feed",
+          "status": "pripravljeno",
+          "tagi": "Ariel, popust, gospodinjstvo, cena na enoto",
+          "kot": "Cena na pranje: znana znamka po ceni, ki jo je lahko preveriti.",
+          "publika": "Ž+M 25–65, SLO, gospodinjstva, večje družine, kuponi in akcije. Široko — to je izdelek za širok doseg, ne za nišo.",
+          "hooki": [
+            "0,21 € na pranje. Ariel, ne neznana znamka.",
+            "130 pranj za 26,70 €. Prej 38 €.",
+            "Deset kilogramov Ariela, en nakup, pol leta mir.",
+            "Toliko pralnega praška, da boš pozabil, kdaj si ga nazadnje kupil."
+          ],
+          "primarna": [
+            "Ariel universal, 10 kg = 130 pranj.\n\n26,70 € namesto 38,00 € (−30 %). To je 0,21 € na pranje.\n\nZa belo in barvno perilo. Dostava 1–3 dni, plačilo tudi na obroke.",
+            "130 pranj. Ena škatla. 26,70 €.\n\nAriel universal 10 kg, redno 38,00 €, zdaj −30 %. Na pranje pride 0,21 € — poglej, koliko plačaš zdaj za svoj prašek.\n\nZa belo in barvno perilo, dostava 1–3 dni."
+          ],
+          "naslovi": [
+            "0,21 € na pranje",
+            "130 pranj za 26,70 €",
+            "Ariel 10 kg, −30 %",
+            "26,70 € namesto 38 €"
+          ],
+          "opisi": [
+            "Dostava 1–3 dni",
+            "Belo in barvno perilo",
+            "Zaloga v Sloveniji"
+          ],
+          "cta": "Kupi zdaj",
+          "url": "https://trgovinaeureka.si/izdelek/ariel-pralni-prasek-universal-130-pranj-10kg/",
+          "design": "4:5, 1080 × 1350. Preprosto in bral se mora v pol sekunde: paket Ariela na čisti podlagi, veliko „0,21 € / pranje“ in pod tem manjše „26,70 € namesto 38 €“.\nDrugi vizual: paket ob 130 zloženih brisačah ali ob košari perila — vizualna predstava, kaj je 130 pranj.\nBrez ljudi, brez lifestyle scen. Ta oglas prodaja številka, ne vzdušje.\nPreveri, da je „−30 %“ v isti obliki kot na strani, da se oglas in stran ujemata.",
+          "opombe": "Prodaja izdelek z jasno primerljivo ceno — pričakuj nizek CPC in visok CTR, ampak preveri maržo, preden skaliraš. Pri prašku je marža v evrih majhna, zato ta oglas ni za skaliranje po ROAS, ampak za prvi nakup in ponovne stranke.",
+          "budget": "15",
+          "cpm": "7",
+          "ctr": "2",
+          "cvr": "2,5"
+        },
+        {
+          "id": "kr-ar-zgodba",
+          "naslov": "IG Zgodba · Akcija −30 %",
+          "platforma": "instagram",
+          "format": "zgodba",
+          "umestitev": "ig-zgodba",
+          "status": "brief",
+          "tagi": "Zgodba, popust, retargeting",
+          "kot": "Kratka akcijska objava za retargeting obiskovalcev strani.",
+          "publika": "Retargeting: obiskovalci strani zadnjih 30 dni + kupci, ki niso kupili praška.",
+          "hooki": [
+            "130 pranj za 26,70 €.",
+            "Ariel −30 %, dokler je na zalogi."
+          ],
+          "primarna": [
+            "Ariel universal 10 kg, 130 pranj. 26,70 € namesto 38 €. To je 0,21 € na pranje."
+          ],
+          "cta": "Kupi zdaj",
+          "url": "https://trgovinaeureka.si/izdelek/ariel-pralni-prasek-universal-130-pranj-10kg/",
+          "design": "9:16, 1080 × 1920. Paket na sredini, nad njim „−30 %“, pod njim „0,21 € na pranje“. Ozadje ena barva iz palete strani. Varno območje 250 px zgoraj in spodaj. Statična slika je dovolj, video ni potreben.",
+          "opombe": "V Zgodbi se naslov in opis ne prikažeta.",
+          "budget": "5",
+          "cpm": "5",
+          "ctr": "0,8",
+          "cvr": "3"
+        }
+      ]
+    },
+    {
+      "id": "izd-vitrine",
+      "projekt": "pr-eureka",
+      "ime": "Hladilne vitrine in barski hladilniki",
+      "opis": "STARCREST hladilniki s steklenimi vrati, 46–300 l, 160–535 €. Za gostinstvo in male lokale.",
+      "znamka": "Trgovina Eureka",
+      "domena": "trgovinaeureka.si",
+      "url": "https://trgovinaeureka.si/",
+      "izracuni": false,
+      "zapiski": "PODATKI (s strani, 5. 8. 2026) — 6 modelov v zadetkih\n· STARCREST SPS-300DC, gostinska vitrina, 300 l — 535,00 €\n· STARCREST SBC-138BK, 138 l — 330,00 €\n· STARCREST SBC-9202BK, 93 l — 260,00 €\n· STARCREST SBC-51WHE, 46 l — 160,00 €\n· STARCREST SBC-5010BK, 46 l — 160,00 €\n· PRIVILEG PRC12VF2E, vgradni — 239,00 €\nVsi navedeni imajo steklena vrata.\n\nPOPRAVEK PREJŠNJEGA POVZETKA\nPrej je bilo zapisano „160–550 €, 300–360 l, No Frost“. Preverjeno danes:\nrazpon je 160–535 €, prostornine 46–300 l, No Frost pri teh modelih NI naveden.\nV oglasih zato ni trditve o No Frost.\n\nKOMU PRODAJAMO\nTo ni gospodinjski nakup. Kupec je lokal, frizerski salon, pisarna, gostinec ali\nnajemodajalec apartmaja. B2B kupec ne kupi zaradi popusta, ampak zaradi zaloge in\nhitre dostave — v oglasu naj bo to na prvem mestu.",
+      "kreative": [
+        {
+          "id": "kr-vit-fb",
+          "naslov": "FB Feed · Za lokal, ne za dom",
+          "platforma": "facebook",
+          "format": "slika",
+          "umestitev": "fb-feed",
+          "status": "brief",
+          "tagi": "B2B, gostinstvo, vitrine",
+          "kot": "Zaloga in dostava: pijača mora biti hladna v ponedeljek, ne v treh tednih.",
+          "publika": "M+Ž 25–60, SLO, lastniki malih podjetij, gostinstvo, HoReCa, frizerski in kozmetični saloni, apartmaji. Interesi: podjetništvo, gostinska oprema.",
+          "hooki": [
+            "Hladilnik s steklenimi vrati, na zalogi v Sloveniji.",
+            "Od 160 € za 46 l — dovolj za pult v salonu.",
+            "Vitrina 300 l za 535 €, dostava 1–3 dni.",
+            "Gostinska vitrina, ki ni treba čakati šest tednov."
+          ],
+          "primarna": [
+            "Hladilniki s steklenimi vrati za lokale, salone in apartmaje.\n\n· 46 l od 160 €\n· 93 l — 260 €\n· 138 l — 330 €\n· gostinska vitrina 300 l — 535 €\n\nVse na zalogi v Sloveniji, dostava 1–3 dni. Plačilo na obroke z Leanpay.",
+            "Pijača mora biti hladna do ponedeljka, ne do naslednjega meseca.\n\nSTARCREST hladilniki s steklenimi vrati, od 46 do 300 l, 160–535 €. Zaloga v Sloveniji, dostava 1–3 dni, možni obroki.\n\nPovej mi kvadraturo pulta in ti povem, kateri model gre."
+          ],
+          "naslovi": [
+            "Vitrine od 160 €",
+            "Steklena vrata, 46–300 l",
+            "Na zalogi, dostava 1–3 dni",
+            "Za lokal in salon"
+          ],
+          "opisi": [
+            "Obroki z Leanpay",
+            "Zaloga v Sloveniji",
+            "Od 160 do 535 €"
+          ],
+          "cta": "Izvedi več",
+          "url": "https://trgovinaeureka.si/",
+          "design": "4:5, 1080 × 1350. Vizual: vitrina s prižgano lučjo in polnimi policami, posneta v resničnem lokalu ali salonu, ne na belem ozadju — B2B kupec mora videti napravo v svojem kontekstu.\nOverlay: „od 160 €“ in „dostava 1–3 dni“.\nDruga različica: karusel s štirimi modeli in litri pod vsakim; za B2B je primerjava močnejša od enega vizuala.",
+          "opombe": "Rabimo ciljno stran s kategorijo teh hladilnikov. Trenutni URL je domača stran — pri B2B nakupu nad 300 € to pomeni izgubljen obisk.\nPreveri No Frost pri dobavitelju; če ga model ima, gre v naslove.",
+          "budget": "12",
+          "cpm": "9",
+          "ctr": "1,1",
+          "cvr": "1,2"
+        },
+        {
+          "id": "kr-vit-g",
+          "naslov": "Google · Search — hladilne vitrine",
+          "platforma": "google",
+          "format": "RSA",
+          "umestitev": "g-search",
+          "status": "pripravljeno",
+          "tagi": "Search, B2B, namera",
+          "kot": "Visoka namera: išče gostinsko vitrino ali barski hladilnik za lokal.",
+          "publika": "Iskanja v SLO. Ločene skupine: „gostinska vitrina“, „barski hladilnik“, „hladilnik s steklenimi vrati“.",
+          "naslovi": [
+            "Gostinske vitrine od 160 €",
+            "Barski hladilnik, zaloga SLO",
+            "Steklena vrata, 46–300 l",
+            "Vitrina 300 l — 535 €",
+            "Dostava 1–3 dni",
+            "Hladilnik za lokal",
+            "Obroki z Leanpay",
+            "STARCREST hladilniki",
+            "Za salon in apartma",
+            "Na zalogi v Sloveniji"
+          ],
+          "opisi": [
+            "Hladilniki s steklenimi vrati za lokale in salone, od 46 do 300 l.",
+            "Zaloga v Sloveniji, dostava 1–3 dni. Plačilo tudi na obroke z Leanpay.",
+            "Gostinska vitrina 300 l za 535 €. Manjši modeli od 160 €.",
+            "Svetujemo, kateri model gre na tvoj pult. Pokliči ali napiši."
+          ],
+          "kljucneBesede": "gostinska vitrina, barski hladilnik, hladilnik s steklenimi vrati, hladilna vitrina, hladilnik za lokal, vitrina za pijaco",
+          "url": "https://trgovinaeureka.si/",
+          "pot1": "vitrine",
+          "pot2": "gostinstvo",
+          "sitelinki": "Vitrine, Barski hladilniki, Dostava in plačilo, Obroki Leanpay",
+          "design": "Search — brez vizuala. Callouti: zaloga v SLO, dostava 1–3 dni, obroki, svetovanje po telefonu. Razširitev s klicem — B2B kupec pogosto raje pokliče.",
+          "opombe": "Negativne: rabljeno, bolha, popravilo, servis, najem, avtomat za pijačo, hladilna torba.",
+          "budget": "12",
+          "ctr": "5",
+          "cvr": "1,8"
+        }
+      ]
+    },
+    {
+      "id": "izd-susilni",
+      "projekt": "pr-eureka",
+      "ime": "Sušilni stroji s toplotno črpalko",
+      "opis": "12 modelov, 345–469 €. Sušilni s toplotno črpalko od 359 €, energijski razredi C–E.",
+      "znamka": "Trgovina Eureka",
+      "domena": "trgovinaeureka.si",
+      "url": "https://trgovinaeureka.si/",
+      "izracuni": false,
+      "zapiski": "PODATKI (s strani, 5. 8. 2026) — 12 modelov, 345–469 €\nS toplotno črpalko:\n· HOOVER NDEH7A2TCES-84 — 359 € (E)\n· Hisense DHQE800BW2 — 379 € (D)\n· Beko BM3T37249W — 380 € (E)\n· GORENJE DHNE82 — 399 € (D)\n· BEKO BM3T3924WBW — 440 € (C)\n· BEKO B5T4824IF — 439 € (C)\n· HAIER HD90-A3959 — 449 € (C)\n· BEKO B5T69219 — 469 € (C)\nPralno-sušilni (NISO sušilni s toplotno črpalko — ne mešaj v isti oglas):\n· HOOVER HLW3DQ4752DE-84 — 345 € (D/E)\n· CANDY CSOW4966TWM/1-S — 359 € (D)\n· BEKO B3DFT512447W — 439 € (D)\n· CANDY ROW41494DWMCT-S — 445 € (A)\n\nPOPRAVEK PREJŠNJEGA POVZETKA\nPrej je bilo zapisano „8 modelov, 359–469 €, vsi s toplotno črpalko“. Preverjeno:\n12 modelov, 345–469 €, in štirje od teh so pralno-sušilni, ne sušilni. Zato v\noglasu piše „s toplotno črpalko od 359 €“ in ne „od 345 €“ — 345 € je pralno-sušilni\nin bi bila trditev napačna.\n\nKOT\nSušilni stroj se prodaja pozimi in v stanovanjih brez balkona. Toplotna črpalka\nje argument o strošku elektrike, ne o udobju.",
+      "kreative": [
+        {
+          "id": "kr-sus-g",
+          "naslov": "Google · Search — sušilni s toplotno črpalko",
+          "platforma": "google",
+          "format": "RSA",
+          "umestitev": "g-search",
+          "status": "pripravljeno",
+          "tagi": "Search, namera, bela tehnika",
+          "kot": "Visoka namera, primerjava cen. Zmaga zaloga, dostava in obroki.",
+          "publika": "Iskanja v SLO. Ločene skupine po znamkah (Beko, Gorenje, Hisense, Haier), ker so iskanja po znamki cenejša in bolje konvertirajo.",
+          "naslovi": [
+            "Sušilni stroji od 359 €",
+            "S toplotno črpalko",
+            "Beko, Gorenje, Hisense",
+            "Razred C — nižji račun",
+            "12 modelov na zalogi",
+            "Dostava 1–3 dni",
+            "Obroki z Leanpay",
+            "Sušilni stroj za stanovanje",
+            "Zaloga v Sloveniji",
+            "Sušilni stroj 8 kg"
+          ],
+          "opisi": [
+            "Sušilni stroji s toplotno črpalko od 359 €. Zaloga v Sloveniji, dostava 1–3 dni.",
+            "Beko, Gorenje, Hisense, Haier, Hoover. Energijski razredi C do E.",
+            "Toplotna črpalka porabi bistveno manj elektrike kot klasičen sušilni stroj.",
+            "Plačilo na obroke z Leanpay. Svetovanje pri izbiri modela."
+          ],
+          "kljucneBesede": "susilni stroj, susilni stroj s toplotno crpalko, susilni stroj cena, beko susilni stroj, gorenje susilni stroj, susilni stroj 8 kg",
+          "url": "https://trgovinaeureka.si/",
+          "pot1": "susilni",
+          "pot2": "stroji",
+          "sitelinki": "Sušilni stroji, Pralno-sušilni, Dostava in plačilo, Obroki Leanpay",
+          "design": "Search — brez vizuala. Callouti: zaloga v SLO, dostava 1–3 dni, obroki, svetovanje.",
+          "opombe": "Negativne: rabljeno, bolha, popravilo, servis, rezervni deli, najem, filter, sušilni za lase.\nPralno-sušilne daj v LOČENO oglasno skupino z lastnim besedilom — drug izdelek, druga namera, in cena 345 € ne sme nastopati v oglasu za sušilne s toplotno črpalko.",
+          "budget": "15",
+          "ctr": "5",
+          "cvr": "1,5"
+        },
+        {
+          "id": "kr-sus-fb",
+          "naslov": "FB Feed · Stanovanje brez balkona",
+          "platforma": "facebook",
+          "format": "slika",
+          "umestitev": "fb-feed",
+          "status": "brief",
+          "tagi": "bela tehnika, zima, prostor",
+          "kot": "Situacija: perilo se suši po radiatorjih in stanovanju, ker ni kje. Sekundarno: strošek elektrike.",
+          "publika": "Ž+M 28–55, SLO, stanovanja v mestih, družine z majhnimi otroki. Sezonsko močnejše od oktobra do marca.",
+          "hooki": [
+            "Perilo na radiatorjih je videti kot začasna rešitev. Že tri leta.",
+            "Stanovanje brez balkona in trije otroci. Sušilni stroj ni luksuz.",
+            "Sušilni s toplotno črpalko od 359 €, na zalogi.",
+            "Suho perilo v dveh urah, brez vlage po stanovanju."
+          ],
+          "primarna": [
+            "Sušilni stroji s toplotno črpalko od 359 €.\n\nPerilo je suho v nekaj urah, vlaga ne gre v stene in stanovanje ni ograjeno s stojali.\n\n· Beko, Gorenje, Hisense, Haier, Hoover\n· energijski razredi C–E\n· 12 modelov na zalogi, dostava 1–3 dni\n· obroki z Leanpay",
+            "Trije otroci in nobenega balkona.\n\nSušilni stroj s toplotno črpalko: perilo suho v dveh urah, brez vlage po stenah in brez stojal v dnevni sobi. Od 359 €, na zalogi v Sloveniji, dostava 1–3 dni.\n\nMožni obroki."
+          ],
+          "naslovi": [
+            "Sušilni stroji od 359 €",
+            "Suho perilo v dveh urah",
+            "S toplotno črpalko",
+            "12 modelov na zalogi"
+          ],
+          "opisi": [
+            "Dostava 1–3 dni",
+            "Obroki z Leanpay",
+            "Beko, Gorenje, Hisense"
+          ],
+          "cta": "Nakupuj zdaj",
+          "url": "https://trgovinaeureka.si/",
+          "design": "4:5, 1080 × 1350. Vizual naj pokaže problem, ne naprave: stojalo s perilom sredi dnevne sobe, zamegljeno okno. Naprava je manjša, v kotu kadra.\nDruga različica: sušilni stroj z odprtimi vrati in košem suhega perila, topla svetloba.\nOverlay: „od 359 €“ + „s toplotno črpalko“.\nBrez stock družine, ki se smeje perilu.",
+          "opombe": "Sezonsko: od oktobra do marca podvoji budget, poleti pusti nizko. Nad 400 € cene je smiselno v oglas dodati obroke — Leanpay pri tej ceni dvigne konverzijo bolj kot popust.",
+          "budget": "15",
+          "cpm": "8",
+          "ctr": "1,3",
+          "cvr": "1,4"
+        }
+      ]
+    },
+    {
+      "id": "izd-outlet",
+      "projekt": "pr-eureka",
+      "ime": "Bela tehnika – razprodaja (RABI CILJNO STRAN)",
+      "opis": "BLOKIRANO: kategorije outlet / razprodaja na strani ni. Oglasi so napisani, a jih ne zaganjaj, dokler ni ciljne strani.",
+      "znamka": "Trgovina Eureka",
+      "domena": "trgovinaeureka.si",
+      "url": "",
+      "izracuni": false,
+      "zapiski": "ZAKAJ JE TA IZDELEK BLOKIRAN\nNa trgovinaeureka.si ni kategorije „outlet“ ali „razprodaja“. Oglas za razprodajo\nbi torej moral peljati na splošno kategorijo bele tehnike — kupec, ki klikne na\n„−40 %“, tam ne najde nobene razprodaje in odide. To ni majhna izguba konverzije,\nto je zapravljen celoten budget te kampanje.\n\nKAJ RABIM, PREDEN SE TO ZAŽENE\n1. Stran /razprodaja ali /outlet z izdelki, ki imajo prečrtano redno ceno.\n2. Vsaj 8–10 izdelkov na njej, drugače ne zdrži obiska iz oglasa.\n3. Datum ali količinsko omejitev („do 15. 9.“ ali „do zaloge“) — brez roka\n   razprodaja ne ustvari nujnosti in ljudje samo pogledajo.\n\nBesedila spodaj so pripravljena in čakajo; ko stran obstaja, vpiši URL na izdelek,\nprestavi status na „pripravljeno“ in gre v zrak isti dan.",
+      "kreative": [
+        {
+          "id": "kr-out-fb",
+          "naslov": "FB Feed · Razprodaja bele tehnike (čaka stran)",
+          "platforma": "facebook",
+          "format": "slika",
+          "umestitev": "fb-feed",
+          "status": "ideja",
+          "tagi": "razprodaja, blokirano, rabi ciljno stran",
+          "kot": "Cena in rok. Deluje samo, če je za klikom res razprodajna stran.",
+          "publika": "M+Ž 25–65, SLO, prenova, prvi dom, akcije in kuponi. Retargeting obiskovalcev bele tehnike zadnjih 30 dni.",
+          "hooki": [
+            "Razprodaja bele tehnike, dokler je zaloga.",
+            "Pralni, sušilni, hladilniki — znižano do konca meseca.",
+            "Ista naprava, nižja cena, dostava v treh dneh."
+          ],
+          "primarna": [
+            "Razprodaja bele tehnike: pralni in sušilni stroji, hladilniki, pomivalni stroji.\n\nZaloga v Sloveniji, dostava 1–3 dni, plačilo tudi na obroke z Leanpay.\n\nAkcija velja do [DATUM] oziroma do zaloge."
+          ],
+          "naslovi": [
+            "Razprodaja bele tehnike",
+            "Znižano do [DATUM]",
+            "Dostava 1–3 dni"
+          ],
+          "opisi": [
+            "Obroki z Leanpay",
+            "Do zaloge"
+          ],
+          "cta": "Nakupuj zdaj",
+          "url": "",
+          "design": "NE PRODUCIRAJ, dokler ne stoji ciljna stran.\nKo bo: 4:5, 1080 × 1350, mreža štirih naprav s prečrtanimi cenami in datumom akcije. Cene na sliki se MORAJO ujemati s cenami na strani — če se ne, Meta oglas zavrne in kupec izgubi zaupanje.",
+          "opombe": "BLOKIRANO: ni ciljne strani. Ne zaganjaj. Ko stran obstaja: vpiši URL, zamenjaj [DATUM] s pravim rokom, status na „pripravljeno“.",
+          "budget": "",
+          "cpm": "",
+          "ctr": "",
+          "cvr": ""
+        }
+      ]
+    }
+  ],
+  "aktivenProjekt": "pr-eureka",
+  "aktiven": "izd-vinil-klik"
+}

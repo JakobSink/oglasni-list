@@ -256,6 +256,44 @@ Promise.resolve()
       "podvojeno ime dobi pripis");
     ok(w.S.izdelki.length === prejIzd + 2, "druga ponovitev nič ne povozi");
 
+    /* pripravljena mapa s streznika */
+    let klicanUrl = null;
+    w.fetch = (url) => {
+      klicanUrl = url;
+      return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify(paket)) });
+    };
+    const prejPredNalozi = w.S.izdelki.length;
+    return w.naloziPripravljeno === undefined
+      ? Promise.resolve()
+      : Promise.resolve(w.naloziPripravljeno())
+        .then(() => new Promise((r) => setTimeout(r, 60)))
+        .then(() => {
+          ok(klicanUrl === "mape/eureka.json", "pripravljena mapa se bere z prave poti", String(klicanUrl));
+          ok(w.S.izdelki.length === prejPredNalozi + 1, "pripravljena mapa se doda, nič se ne povozi",
+            w.S.izdelki.length + " (prej " + prejPredNalozi + ")");
+          /* neuspeh ne sme podrti pogleda niti pustiti gumba onemogočenega */
+          w.fetch = () => Promise.resolve({ ok: false, status: 404, text: () => Promise.resolve("") });
+          w.naloziPripravljeno();
+          return new Promise((r) => setTimeout(r, 60));
+        })
+        .then(() => {
+          ok(w.S.izdelki.length === prejPredNalozi + 1, "neuspešno nalaganje ničesar ne spremeni");
+          const b = w.document.getElementById("impUrl");
+          ok(!b || !b.disabled, "gumb se po neuspehu spet omogoči");
+        });
+  })
+  .then(() => {
+    const paket = {
+      v: 4,
+      projekti: [{ id: "pr-uvoz", ime: "TESTNA MAPA" }],
+      izdelki: [{
+        id: "izd-uvoz", projekt: "pr-uvoz", ime: "Uvožen izdelek", zapiski: "iz datoteke",
+        kreative: [{ id: "kr-uvoz", naslov: "Uvožena kreativa", platforma: "facebook" }],
+      }],
+    };
+    ok(w.document.getElementById("verzija").textContent.length > 5,
+      "oznaka različice je izpisana", w.document.getElementById("verzija").textContent);
+
     /* zamenjaj pobrise vse (w.confirm vraca true) */
     w.uvozi(JSON.stringify(paket), "zamenjaj");
     ok(w.S.izdelki.length === 1 && w.S.projekti.length === 1, "zamenjaj postavi samo vsebino datoteke",
