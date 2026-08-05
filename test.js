@@ -169,6 +169,59 @@ try {
   ok(izv.izdelki[0].kreative[0].umestitev != null, "umestitev se serializira");
 } catch (err) { ok(false, "serializacija", err.message); }
 
+console.log("\n== zlivanje z oblakom ==");
+{
+  const lok = {
+    v: 5, spremenjeno: "2026-08-05T10:00:00.000Z",
+    projekti: [{ id: "pr1", ime: "Mapa" }],
+    izdelki: [{ id: "i1", projekt: "pr1", ime: "Izdelek 1", kreative: [
+      { id: "k1", naslov: "moja kreativa", platforma: "facebook" },
+    ] }],
+    stikala: [{ id: "g1", ime: "Trg", moznosti: ["SLO", "HR"] }],
+    banka: [{ id: "b1", txt: "moj hook", kat: "cena" }],
+    datoteke: [{ id: "d1", kreativa: "k1", ime: "moja.png", tip: "image/png", velikost: 1 }],
+  };
+  /* kolega je na svoji napravi dodal kreativo in izdelek, mojih se ni dotaknil */
+  const obl = {
+    v: 5, spremenjeno: "2026-08-05T11:00:00.000Z",
+    projekti: [{ id: "pr1", ime: "Mapa" }, { id: "pr2", ime: "Kolegova mapa" }],
+    izdelki: [
+      { id: "i1", projekt: "pr1", ime: "Izdelek 1", kreative: [
+        { id: "k2", naslov: "kolegova kreativa", platforma: "google" },
+      ] },
+      { id: "i2", projekt: "pr2", ime: "Kolegov izdelek", kreative: [] },
+    ],
+    stikala: [{ id: "g9", ime: "Trg", moznosti: ["SLO", "SK"] }],
+    banka: [{ id: "b2", txt: "kolegov hook", kat: "dokaz" }],
+    datoteke: [{ id: "d1", kreativa: "k1", ime: "moja.png", tip: "image/png", velikost: 1, oblak: true }],
+  };
+  const r = w.zlijStanje(lok, obl);
+  const izd1 = r.stanje.izdelki.filter((x) => x.id === "i1")[0];
+  ok(izd1.kreative.length === 2, "obe kreativi preživita zlivanje — nič se ne prepiše",
+    izd1.kreative.map((k) => k.naslov).join(" + "));
+  ok(r.stanje.izdelki.length === 2, "kolegov izdelek se prevzame");
+  ok(r.stanje.projekti.length === 2, "in njegova mapa");
+  ok(r.stanje.banka.length === 2, "banka hookov se združi");
+  ok(r.stanje.stikala.length === 1 && r.stanje.stikala[0].moznosti.length === 3,
+    "isto stikalo se ne podvoji, možnosti se združijo",
+    JSON.stringify(r.stanje.stikala[0].moznosti));
+  ok(r.stanje.datoteke[0].oblak === true, "potrditev „je v oblaku“ obvelja");
+
+  /* brisanje se mora prenesti, drugace izbrisano vstane */
+  const lok2 = JSON.parse(JSON.stringify(r.stanje));
+  lok2.izdelki = lok2.izdelki.filter((x) => x.id !== "i2");
+  lok2.brisano = [{ id: "i2", kdaj: new Date().toISOString() }];
+  lok2.spremenjeno = "2026-08-05T12:00:00.000Z";
+  const r2 = w.zlijStanje(lok2, r.stanje);
+  ok(!r2.stanje.izdelki.some((x) => x.id === "i2"),
+    "izbrisan izdelek se ne vrne iz oblaka", r2.stanje.izdelki.map((x) => x.id).join(","));
+  ok(r2.stanje.brisano.length === 1, "sled brisanja se ohrani");
+
+  /* zlivanje s praznim oblakom ne sme nicesar pokvariti */
+  const r3 = w.zlijStanje(lok, null);
+  ok(r3.stanje === lok, "če v oblaku ni ničesar, ostane lokalno nedotaknjeno");
+}
+
 console.log("\n== CGP na mapi ==");
 const prCgp = w.PR();
 prCgp.cgp.barve = "#1F35C4, #F2B417";

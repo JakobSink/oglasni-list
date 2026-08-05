@@ -6,7 +6,7 @@
 
 /* Oznaka različice. Poveča jo vsaka objava — v stranski vrstici je vidna, da se
    na prvi pogled loči, ali brskalnik strežé svežo kopijo ali staro iz cache-a. */
-var RAZLICICA="različica 15 · Podatki pospravljeni, SQL v repozitoriju";
+var RAZLICICA="različica 16 · sinhronizacija zlije, ne prepiše";
 
 /* ============ pomožne funkcije ============ */
 var LS="oglasni-list-v1", LS_TEMA="oglasni-list-tema";
@@ -455,6 +455,11 @@ function migriraj(){
     g.moznosti=g.moznosti.map(function(m){return String(m==null?"":m).trim();}).filter(Boolean);
   });
   if(!S.stikaloPogled||typeof S.stikaloPogled!=="object")S.stikaloPogled={};
+
+  /* sledi brisanja: brez njih izbrisano vstane pri naslednji sinhronizaciji */
+  if(!Array.isArray(S.brisano))S.brisano=[];
+  S.brisano=S.brisano.filter(function(x){return x&&typeof x.id==="string";});
+  S.brisano.forEach(function(x){if(typeof x.kdaj!=="string")x.kdaj=new Date().toISOString();});
 
   /* kazalo datotek: pride iz oblaka skupaj s stanjem, zato ga preverimo */
   if(!Array.isArray(S.datoteke))S.datoteke=[];
@@ -2948,6 +2953,111 @@ function vodnikHtml(){
   '</p></div></div>';
 }
 
+/* ============ zlivanje dveh stanj ============
+   Dva človeka pod istim računom urejata vsak na svoji napravi. Zato se stanji
+   zlijeta po zapisih (id-jih), ne po tem, katero je novejše: kar obstaja samo
+   na eni strani, se ohrani; kjer isti zapis obstaja na obeh, obvelja tisti z
+   novejše strani. Brisanje se prenese prek sledi (S.brisano) — brez tega bi
+   izbrisan izdelek pri naslednji sinhronizaciji vstal od mrtvih.            */
+function sledBrisanja(id){
+  if(!Array.isArray(S.brisano))S.brisano=[];
+  if(!S.brisano.some(function(x){return x.id===id;}))
+    S.brisano.push({id:id,kdaj:new Date().toISOString()});
+}
+function zlijStanje(lok,obl){
+  if(!obl||typeof obl!=="object")return {stanje:lok,spremenjeno:false,opis:""};
+  var lokCas=lok.spremenjeno?new Date(lok.spremenjeno).getTime():0;
+  var oblCas=obl.spremenjeno?new Date(obl.spremenjeno).getTime():0;
+  var novejsiJeOblak=oblCas>lokCas;
+
+  /* sledi brisanja z obeh strani; kar je pobrisano, ne pride nazaj */
+  var sledi={};
+  [lok.brisano,obl.brisano].forEach(function(a){
+    (Array.isArray(a)?a:[]).forEach(function(x){if(x&&x.id)sledi[x.id]=x;});
+  });
+  var vseSledi=Object.keys(sledi).map(function(id){return sledi[id];});
+  /* sled starejša od 90 dni ne rabi več obstajati */
+  var meja=Date.now()-90*24*3600*1000;
+  vseSledi=vseSledi.filter(function(x){
+    var t=new Date(x.kdaj).getTime();
+    return !isFinite(t)||t>meja;
+  });
+  var jePobrisan={};
+  vseSledi.forEach(function(x){jePobrisan[x.id]=true;});
+
+  var dodanih=0, spojenih=0;
+  /* union po id: a je „naša“ stran, b druga; pri obojestranskih obvelja novejša */
+  function zlij(a,b,bJeNovejsi){
+    a=Array.isArray(a)?a:[];b=Array.isArray(b)?b:[];
+    var out=[], vzeto={};
+    a.forEach(function(x){
+      if(!x||!x.id||jePobrisan[x.id])return;
+      var par=b.filter(function(y){return y&&y.id===x.id;})[0];
+      vzeto[x.id]=true;
+      if(!par){out.push(x);return;}
+      spojenih++;
+      out.push(bJeNovejsi?par:x);
+    });
+    b.forEach(function(y){
+      if(!y||!y.id||vzeto[y.id]||jePobrisan[y.id])return;
+      dodanih++;
+      out.push(y);
+    });
+    return out;
+  }
+
+  var izdelki=zlij(lok.izdelki,obl.izdelki,novejsiJeOblak);
+  /* kreative zlijemo znotraj izdelka, drugače bi izgubil kolegovo kreativo */
+  izdelki=izdelki.map(function(x){
+    var vL=(Array.isArray(lok.izdelki)?lok.izdelki:[]).filter(function(y){return y.id===x.id;})[0];
+    var vO=(Array.isArray(obl.izdelki)?obl.izdelki:[]).filter(function(y){return y.id===x.id;})[0];
+    if(!vL||!vO)return x;
+    var kop=JSON.parse(JSON.stringify(x));
+    kop.kreative=zlij(vL.kreative,vO.kreative,novejsiJeOblak);
+    return kop;
+  });
+
+  /* stikala poleg id-ja ujemamo še po imenu, da se ne podvojijo */
+  var stikala=zlij(lok.stikala,obl.stikala,novejsiJeOblak);
+  var poImenu={}, brezDvojnikov=[];
+  stikala.forEach(function(g){
+    if(!g||!g.ime)return;
+    if(poImenu[g.ime]){
+      (g.moznosti||[]).forEach(function(m){
+        if(poImenu[g.ime].moznosti.indexOf(m)<0)poImenu[g.ime].moznosti.push(m);
+      });
+      return;
+    }
+    poImenu[g.ime]=g;brezDvojnikov.push(g);
+  });
+
+  /* kazalo datotek: potrditev „je v oblaku“ velja, če jo pozna katera stran */
+  var datoteke=zlij(lok.datoteke,obl.datoteke,novejsiJeOblak).map(function(d){
+    var vL=(Array.isArray(lok.datoteke)?lok.datoteke:[]).filter(function(y){return y.id===d.id;})[0];
+    var vO=(Array.isArray(obl.datoteke)?obl.datoteke:[]).filter(function(y){return y.id===d.id;})[0];
+    if((vL&&vL.oblak)||(vO&&vO.oblak))d.oblak=true;
+    return d;
+  });
+
+  var novo=novejsiJeOblak?JSON.parse(JSON.stringify(obl)):JSON.parse(JSON.stringify(lok));
+  novo.projekti=zlij(lok.projekti,obl.projekti,novejsiJeOblak);
+  novo.izdelki=izdelki;
+  novo.stikala=brezDvojnikov;
+  novo.banka=zlij(lok.banka,obl.banka,novejsiJeOblak);
+  novo.datoteke=datoteke;
+  novo.brisano=vseSledi;
+  novo.spremenjeno=new Date().toISOString();
+
+  var deli=[];
+  if(dodanih)deli.push(dodanih+" zapisov prevzetih iz oblaka");
+  if(spojenih)deli.push(spojenih+" usklajenih");
+  return {
+    stanje:novo,
+    spremenjeno:!!(dodanih||spojenih)||lokCas!==oblCas,
+    opis:deli.length?deli.join(", "):"brez razlik"
+  };
+}
+
 /* ============ oblak (Supabase) ============ */
 var Oblak=(function(){
   var CFG=window.OGLASNI_CONFIG||{url:"",anonKey:""};
@@ -3048,15 +3158,23 @@ var Oblak=(function(){
     zadnjaSink=vrstica.spremenjeno;
     polniIzbirnik();render();
   }
+  /* Sinhronizacija zlije obe strani: kar je v oblaku in kar je tu. Nič se ne
+     prepiše in nič ne izgubi — če kolega doda kreativo, medtem ko ti dodajaš
+     drugo, po sinhronizaciji obstajata obe.                                 */
   function sinhroniziraj(){
     if(!sb||!user)return;
     potegni().then(function(vrstica){
       if(!vrstica)return porini().then(function(){toast("Podatki poslani v oblak.");});
-      var oblakCas=new Date(vrstica.spremenjeno).getTime();
-      var lokalnoCas=S.spremenjeno?new Date(S.spremenjeno).getTime():0;
-      if(oblakCas>lokalnoCas){prevzemi(vrstica);toast("Naloženo iz oblaka ("+cas(vrstica.spremenjeno)+").");}
-      else if(lokalnoCas>oblakCas){porini().then(function(){toast("Poslano v oblak (lokalno je novejše).");});}
-      else{zadnjaSink=vrstica.spremenjeno;osveziPanel();toast("Že usklajeno.");}
+      var r=zlijStanje(S,vrstica.podatki);
+      S=r.stanje;migriraj();
+      odprtaKreativa=null;
+      try{localStorage.setItem(LS,JSON.stringify(S));}catch(err){}
+      polniIzbirnik();render();
+      return porini().then(function(){
+        toast(r.spremenjeno
+          ? "Usklajeno: "+r.opis+"."
+          : "Že usklajeno.");
+      });
     },function(err){stanjeNapake=napakaTabele(err);osveziPanel();toast(stanjeNapake);})
     /* ob vsaki sinhronizaciji stanja poskusi poslati še slike, ki čakajo */
     .then(function(){return sinhronizirajDatoteke();},function(){})
@@ -3227,11 +3345,10 @@ function renderOblakPanel(){
   t.innerHTML=glava+
     '<div class="row"><button class="btn btn-p" id="ob-sync">Sinhroniziraj zdaj</button>'+
     '<button class="btn" id="ob-files">Pošlji slike v oblak</button>'+
-    '<button class="btn" id="ob-push">Prepiši oblak z lokalnim</button>'+
-    '<button class="btn" id="ob-pull">Prepiši lokalno z oblakom</button>'+
     '<button class="btn" id="ob-out">Odjava</button></div>'+
     '<p class="note" style="margin-top:12px" id="ob-dat">Preverjam datoteke …</p>'+
-    '<p class="note">Spremembe se same pošljejo v oblak nekaj sekund po vnosu. „Sinhroniziraj zdaj“ primerja časa in obdrži novejšo različico. '+
+    '<p class="note">Spremembe se same pošljejo v oblak nekaj sekund po vnosu. <b>Sinhroniziraj zdaj</b> zlije obe strani: kar je samo v oblaku, prevzame, kar je samo tu, pošlje gor. '+
+    'Nič se ne prepiše — če kolega doda kreativo, medtem ko ti dodajaš drugo, po sinhronizaciji obstajata obe. Kar kdo izbriše, ostane izbrisano. '+
     'Nove slike in videi gredo v oblak takoj ob nalaganju; <b>Pošlji slike v oblak</b> potisne gor še tisto, kar si naložil prej, ko oblak še ni bil vklopljen.</p>';
   /* koliko datotek je v ekipi, koliko čaka na oblak in koliko jih ta naprava nima */
   Promise.all([Datoteke.stevilo(),Datoteke.manjka()]).then(function(r){
@@ -4475,6 +4592,7 @@ document.addEventListener("click",function(ev){
     if(!izd5)return;
     if(!confirm('Izbrišem izdelek "'+izd5.ime+'" z vsemi kreativami in naloženimi datotekami?'))return;
     brisiDatotekeIzdelka(izd5);
+    sledBrisanja(id);
     S.izdelki=S.izdelki.filter(function(x){return x.id!==id;});
     if(S.aktiven===id)S.aktiven=null;
     odprtaKreativa=null;shrani();polniIzbirnik();render();toast("Izdelek izbrisan.");return;
@@ -4486,6 +4604,11 @@ document.addEventListener("click",function(ev){
     var vsebina=izdelkiVProjektu(pid);
     if(!confirm('Izbrišem mapo "'+pr3.ime+'"'+(vsebina.length?' skupaj z '+vsebina.length+' izdelki, njihovimi kreativami in datotekami':'')+'?'))return;
     vsebina.forEach(function(x){brisiDatotekeKreativ(x.kreative);});
+    S.izdelki.filter(function(x){return x.projekt===pid;}).forEach(function(x){
+      sledBrisanja(x.id);
+      (x.kreative||[]).forEach(function(k){sledBrisanja(k.id);});
+    });
+    sledBrisanja(pid);
     S.izdelki=S.izdelki.filter(function(x){return x.projekt!==pid;});
     S.projekti=S.projekti.filter(function(x){return x.id!==pid;});
     if(!S.projekti.length)S.projekti=[novProjekt("Moj projekt")];
@@ -4561,6 +4684,7 @@ document.addEventListener("click",function(ev){
       var kd=K();if(!kd)break;
       if(!confirm('Izbrišem kreativo "'+kd.naslov+'" in njene datoteke?'))break;
       Datoteke.brisiZaKreativo(kd.id).catch(function(){});
+      sledBrisanja(kd.id);
       P().kreative=P().kreative.filter(function(x){return x.id!==kd.id;});
       odprtaKreativa=null;pocistiUrlje();shrani();render();toast("Izbrisano.");break;
     }
@@ -4590,8 +4714,6 @@ document.addEventListener("click",function(ev){
       });
       break;
     }
-    case "ob-push": if(confirm("Prepišem podatke v oblaku s tem, kar je v tej napravi?"))Oblak.porini().then(function(){toast("Oblak posodobljen.");},function(){toast("Pošiljanje ni uspelo.");});break;
-    case "ob-pull": if(confirm("Prepišem podatke v tej napravi s tem, kar je v oblaku?"))Oblak.potegni().then(function(v){if(v)Oblak.prevzemi(v);else toast("V oblaku še ni ničesar.");},function(){toast("Branje ni uspelo.");});break;
   }
 });
 document.addEventListener("keydown",function(ev){

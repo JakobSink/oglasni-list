@@ -664,8 +664,12 @@ table.mtx th:first-child{text-align:left}
 /* statusna vrstica se umakne Dynamic Islandu: ura levo, ikone desno */
 .fon-s{display:flex;align-items:center;gap:5px;padding:6px 22px 6px;font-size:12px;font-weight:600;position:relative;z-index:21}
 .fon-s .ura{min-width:52px}
-/* logo oglasevalca v avatarju */
-.fb-av img,.gg-fav img,.tt-av .fb-av img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
+/* Logo oglasevalca v avatarju. object-fit:contain, da se velik ali podolgovat
+   logo pomanjsa in ostane cel - cover bi mu odrezal robove.                 */
+.fb-av img,.gg-fav img,.tt-av .fb-av img{
+  width:100%;height:100%;object-fit:contain;object-position:center;
+  border-radius:inherit;display:block;padding:1px;box-sizing:border-box;
+}
 .fb-av.ima-logo,.gg-fav.ima-logo{background:#fff;padding:0;overflow:hidden}
 /* seznam z enim samim logotipom stoji ob gumbu, ne pod njim */
 .files-logo{display:flex;gap:8px;margin:0}
