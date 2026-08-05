@@ -291,23 +291,35 @@ console.log("\n== izdelek: material, zapiski, vklopljivi izračuni ==");
 const pi = w.P();
 ok(w.datLastnikIzdelka(pi) === "izd:" + pi.id, "lastnik materiala izdelka");
 pi.izracuni = false;
-w.view = "ekonomika";
-w.renderEkon();
-ok(!!w.document.getElementById("f-zapiski"), "polje za zapiske brez izračunov");
-ok(!!w.document.getElementById("drop-izd"), "nalaganje materiala izdelka brez izračunov");
-ok(w.document.getElementById("v-ekonomika").textContent.indexOf("Prodajna cena") < 0,
-  "brez izračunov ni polj za ceno");
+w.view = "pregled";
+w.render();
+ok(!!w.document.getElementById("f-zapiski"), "izdelek se ureja v Pregledu — polje za zapiske");
+ok(!!w.document.getElementById("drop-izd"), "in nalaganje materiala izdelka");
+ok(w.document.getElementById("v-pregled").textContent.indexOf("Prodajna cena") < 0,
+  "cene ni v Pregledu — ta je v Kalkulatorju");
 ok(!w.imaEkon(pi), "imaEkon() je false");
 w.view = "pregled";
 w.render();
 ok(w.document.getElementById("v-pregled").textContent.indexOf("Izračuni za ta izdelek so izklopljeni") >= 0,
   "pregled pove, da so izračuni izklopljeni");
 pi.izracuni = true;
-w.view = "ekonomika";
-w.renderEkon();
-ok(w.document.getElementById("v-ekonomika").textContent.indexOf("Prodajna cena") >= 0,
-  "z izračuni so polja za ceno");
-ok(!!w.document.getElementById("f-zapiski"), "zapiski ostanejo tudi z izračuni");
+w.view = "kalkulator";
+w.render();
+ok(w.document.getElementById("v-kalkulator").textContent.indexOf("Prodajna cena") >= 0,
+  "z vklopljenimi izračuni so polja za ceno v Kalkulatorju");
+ok(!!w.document.getElementById("razrez"), "razrez je v Kalkulatorju");
+w.view = "pregled";
+w.render();
+ok(!!w.document.getElementById("f-zapiski"), "zapiski ostanejo v Pregledu");
+
+/* stara zavihka Ekonomika in Vodnik ne obstajata vec */
+ok(w.pravView("ekonomika") === "pregled", "stara povezava na Ekonomiko pelje na Pregled");
+ok(w.pravView("vodnik") === "podatki", "stara povezava na Vodnik pelje na Podatke");
+w.view = "podatki";
+w.render();
+ok(w.document.getElementById("v-podatki").textContent.indexOf("Kje se kaj vnaša") >= 0,
+  "vodnik je zdaj na dnu Podatkov");
+ok(!!w.document.getElementById("cloud-body"), "in oblak je še vedno tam");
 
 pi.zapiski = "Debelina 5,5 mm, obrabni sloj 0,5 mm.";
 ok(w.briefText(pi.kreative[0]).indexOf("O IZDELKU") >= 0, "zapiski izdelka gredo v brief");
@@ -322,8 +334,8 @@ Promise.resolve()
   .then(() => w.Datoteke.zaKreativo(w.datLastnikIzdelka(pi)))
   .then((sez) => {
     ok(sez.length === 1, "material je shranjen na izdelku", sez.length + " datotek");
-    w.view = "ekonomika";
-    w.renderEkon();
+    w.view = "pregled";
+    w.render();
     return new Promise((r) => setTimeout(r, 60));
   })
   .then(() => {

@@ -6,7 +6,7 @@
 
 /* Oznaka različice. Poveča jo vsaka objava — v stranski vrstici je vidna, da se
    na prvi pogled loči, ali brskalnik strežé svežo kopijo ali staro iz cache-a. */
-var RAZLICICA="različica 11 · prijava v vrstici, CGP na mapi";
+var RAZLICICA="različica 12 · pet zavihkov, izračuni v Kalkulatorju";
 
 /* ============ pomožne funkcije ============ */
 var LS="oglasni-list-v1", LS_TEMA="oglasni-list-tema";
@@ -967,7 +967,7 @@ function renderPregled(){
   el("v-pregled").innerHTML=
   glava(p.ime,
     "Vse na tej strani izhaja iz ene številke: koliko ti ostane od enega naročila. Spodaj lahko takoj spremeniš budget in pričakovani CPA in vidiš, kaj to naredi z mesečnim profitom.",
-    '<button class="btn" data-goto="ekonomika">Uredi ceno in stroške</button>'+
+    '<button class="btn" data-goto="kalkulator">Cena in stroški</button>'+
     '<button class="btn btn-p" data-goto="kreative">Kreative</button>',
     [{t:PR().ime,v:"projekti"},{t:p.ime}])+
 
@@ -1030,8 +1030,15 @@ function renderPregled(){
   '<div class="block">'+
     '<header><div class="head-t"><span class="eyebrow">5 — Vzvodi</span><h2>Kaj premakne to številko najhitreje</h2></div></header>'+
     '<div class="pad" id="pr-vzvodi"></div>'+
-  '</div>';
+  '</div>'+
 
+  /* 6 — izdelek sam: ime, znamka, material, zapiski, stikala */
+  '<div class="block"><header><div class="head-t"><span class="eyebrow">6 — Izdelek</span>'+
+    '<h2>Podatki izdelka</h2></div>'+
+    '<p>Ime, znamka, logo, material in zapiski. Prej je bilo to v svojem zavihku Ekonomika.</p></header></div>'+
+  izdelekHtml(p);
+
+  narisiDatoteke();
   paintPregled();
 }
 function paintPregled(){
@@ -1178,128 +1185,120 @@ function verdictHtml(ek,cpa,p){
   return '<div class="verdict '+cls+'"><div>'+txt+'</div></div>';
 }
 
-/* ============ POGLED: ekonomika ============ */
-function renderEkon(){
-  var p=P();
-  if(!p){el("v-ekonomika").innerHTML=praznoHtml();return;}
-  var naVklop=imaEkon(p);
-
-  /* Izdelek, material in zapiski — to velja ne glede na izračune */
-  var osnova=
-  '<div class="block" id="ekon-form">'+
+/* ============ izdelek in njegovi izracuni ============
+   Izdelek (ime, znamka, material, zapiski, stikala) se izrise v Pregledu, ker
+   tam gledas prav ta izdelek. Izracuni (cena, stroski, marza, razrez,
+   scenariji) so v Kalkulatorju, ker so racunanje in ne urejanje izdelka.
+   Samostojnega zavihka Ekonomika ni vec.                                    */
+function izdelekHtml(p){
+  return '<div class="block" id="ekon-form">'+
     '<fieldset class="sect"><div class="lg"><h3>Izdelek</h3><p>Ime in kam sodi</p></div>'+
       '<div class="grid">'+
         txtFld("ime","Ime izdelka")+
         '<div class="f"><label for="f-projekt">Mapa / projekt</label><select class="txt" id="f-projekt" data-p="projekt">'+
           S.projekti.map(function(x){return '<option value="'+x.id+'"'+(p.projekt===x.id?" selected":"")+'>'+esc(x.ime)+'</option>';}).join("")+
         '</select><span class="hint">Sprememba izdelek takoj prestavi v drugo mapo.</span></div>'+
-        txtFld("opis","Kratek opis / ponudba","Pokaže se na Pregledu in v briefu.")+
-        txtFld("znamka","Ime strani / znamke","Uporabi se kot ime oglaševalca v predogledu oglasa.","npr. Moja trgovina")+
+        txtFld("opis","Kratek opis / ponudba","Poka\u017ee se na Pregledu in v briefu.")+
+        txtFld("znamka","Ime strani / znamke","Uporabi se kot ime ogla\u0161evalca v predogledu oglasa.","npr. Moja trgovina")+
         (Datoteke.naVoljo
           ? '<div class="f"><span class="lbl">Logo podjetja</span>'+
-              '<div class="row"><button class="btn btn-s btn-soft no-print" id="logo-btn">Naloži logo</button>'+
+              '<div class="row"><button class="btn btn-s btn-soft no-print" id="logo-btn">Nalo\u017ei logo</button>'+
                 '<input type="file" id="dfile-logo" accept="image/*" hidden>'+
                 '<div class="files files-logo" id="datoteke-logo"></div></div>'+
-              '<span class="hint">Kvadratna slika. V predogledu oglasa nadomesti začetnice v krogcu — na Facebooku, Instagramu, TikToku in kot favikon v Googlu.</span></div>'
+              '<span class="hint">Kvadratna slika. V predogledu oglasa nadomesti za\u010detnice v krogcu \u2014 na Facebooku, Instagramu, TikToku in kot favikon v Googlu.</span></div>'
           : '')+
-        txtFld("domena","Domena","Prikaže se v predogledu FB in Google oglasa.","npr. mojatrgovina.si")+
-        txtFld("url","Povezava na izdelek","Privzeti ciljni URL za nove kreative tega izdelka.","https://…")+
+        txtFld("domena","Domena","Prika\u017ee se v predogledu FB in Google oglasa.","npr. mojatrgovina.si")+
+        txtFld("url","Povezava na izdelek","Privzeti ciljni URL za nove kreative tega izdelka.","https://\u2026")+
       '</div>'+
     '</fieldset>'+
 
-    /* material in zapiski izdelka */
     '<fieldset class="sect"><div class="lg"><h3>Material in zapiski</h3>'+
-      '<p>Slike, videi in vse, kar si ugotovil o tem izdelku. Material je skupen vsem kreativam tega izdelka — če kreativa nima svojega, se v predogledu uporabi prva slika od tu.</p></div>'+
+      '<p>Slike, videi in vse, kar si ugotovil o tem izdelku. Material je skupen vsem kreativam tega izdelka \u2014 \u010de kreativa nima svojega, se v predogledu uporabi prva slika od tu.</p></div>'+
       '<div class="f"><label for="f-zapiski">Zapiski o izdelku</label>'+
-        '<textarea id="f-zapiski" data-p="zapiski" rows="5" placeholder="Specifikacije, kaj vprašajo stranke, kaj je na zalogi, dobavni rok, konkurenca, kaj deluje v oglasih …">'+esc(p.zapiski||"")+'</textarea>'+
+        '<textarea id="f-zapiski" data-p="zapiski" rows="5" placeholder="Specifikacije, kaj vpra\u0161ajo stranke, kaj je na zalogi, dobavni rok, konkurenca, kaj deluje v oglasih \u2026">'+esc(p.zapiski||"")+'</textarea>'+
         '<span class="hint">Gre v brief kreativ tega izdelka.</span></div>'+
       (Datoteke.naVoljo
         ? '<div class="drop no-print" id="drop-izd" style="margin-top:16px">'+
             '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>'+
-            '<b>Naloži slike in videe izdelka</b>'+
-            '<span>Klikni ali povleci sem. Shrani se v to napravo.</span>'+
+            '<b>Nalo\u017ei slike in videe izdelka</b>'+
+            '<span>Klikni ali povleci sem. Shrani se v to napravo in v oblak.</span>'+
           '</div>'+
           '<input type="file" id="dfile-izd" multiple accept="image/*,video/*,.pdf" hidden>'+
           '<div class="files" id="datoteke-izd"></div>'
         : '<p class="note">Ta brskalnik ne dovoli shranjevanja datotek (IndexedDB ni na voljo).</p>')+
     '</fieldset>'+
 
-    /* stikala izdelka — privzetki za nove kreative tega izdelka */
     (stikRabljena().length
       ? '<fieldset class="sect"><div class="lg"><h3>Stikala</h3>'+
-          '<p>Privzete vrednosti za nove kreative tega izdelka. Na kreativi jih lahko povoziš, v seznamu kreativ pa s stikalom izbereš, katere oglase vidiš.</p></div>'+
+          '<p>Privzete vrednosti za nove kreative tega izdelka. Na kreativi jih lahko povozi\u0161, v seznamu kreativ pa s stikalom izbere\u0161, katere oglase vidi\u0161.</p></div>'+
           stikRabljena().map(function(g){
             return '<div class="f"><span class="lbl">'+esc(g.ime)+'</span>'+
               stikPills("p",g,stikVrednost(p,g),false)+'</div>';
           }).join("")+
-          '<p class="note" style="margin-top:12px">Stikala urejaš v zavihku <b>Podatki</b>.</p>'+
+          '<p class="note" style="margin-top:12px">Stikala ureja\u0161 v zavihku <b>Podatki</b>.</p>'+
         '</fieldset>'
       : '')+
 
-    /* stikalo za izračune */
-    '<fieldset class="sect"><div class="lg"><h3>Izračuni</h3>'+
-      '<p>Marža, break-even CPA, ROAS in napoved profita. Dodatek — če ga ne rabiš, ga pusti izklopljenega in izdelek uporabljaj samo za kreative.</p></div>'+
-      '<label class="chk"><input type="checkbox" data-p="izracuni"'+(naVklop?" checked":"")+'> Vklopi izračune za ta izdelek</label>'+
-      (naVklop?'':'<p class="note" style="margin-top:12px">Izklopljeno: pregled in kreative prikazujejo budget, prikaze in klike, ne pa marže, CPA-ja in profita. Vklopi, ko boš imel ceno in stroške.</p>')+
+    '<fieldset class="sect"><div class="lg"><h3>Izra\u010duni</h3>'+
+      '<p>Mar\u017ea, break-even CPA, ROAS in napoved profita. Dodatek \u2014 \u010de ga ne rabi\u0161, ga pusti izklopljenega in izdelek uporabljaj samo za kreative.</p></div>'+
+      '<label class="chk"><input type="checkbox" data-p="izracuni"'+(imaEkon(p)?" checked":"")+'> Vklopi izra\u010dune za ta izdelek</label>'+
+      (imaEkon(p)
+        ? '<p class="note" style="margin-top:12px">Vklopljeno. Ceno in stro\u0161ke vpi\u0161e\u0161 v zavihku <b>Kalkulator</b>. '+
+          '<button class="btn btn-s btn-soft no-print" data-goto="kalkulator">Odpri Kalkulator</button></p>'
+        : '<p class="note" style="margin-top:12px">Izklopljeno: pregled in kreative prikazujejo budget, prikaze in klike, ne pa mar\u017ee, CPA-ja in profita. Vklopi, ko bo\u0161 imel ceno in stro\u0161ke.</p>')+
     '</fieldset>'+
-  (naVklop?
-    '<fieldset class="sect"><div class="lg"><h3>Prihodek</h3><p>Kar stranka plača</p></div>':'');
-
-  if(!naVklop){
-    el("v-ekonomika").innerHTML=
-      glava(p.ime,"Ime, material in zapiski izdelka. Izračuni so izklopljeni.",
-        '<button class="btn" data-goto="kreative">Kreative izdelka</button>',
-        [{t:PR().ime,v:"projekti"},{t:p.ime}])+
-      osnova+'</div>';
-    narisiDatoteke();
-    return;
+  '</div>';
+}
+/* cena, stroski, razrez in scenariji - to zivi v Kalkulatorju */
+function ekonBlokiHtml(p){
+  if(!imaEkon(p)){
+    return '<div class="block"><header><div class="head-t"><span class="eyebrow">Izra\u010duni</span>'+
+      '<h2>Izra\u010duni za \u201e'+esc(p.ime)+'\u201c so izklopljeni</h2></div>'+
+      '<p>Kalkulator zgoraj dela tudi brez njih. Za mar\u017eo, break-even CPA in napoved profita jih vklopi na izdelku.</p></header>'+
+      '<div class="pad"><button class="btn btn-p no-print" data-goto="pregled">Odpri izdelek</button></div></div>';
   }
-
-  el("v-ekonomika").innerHTML=
-  glava("Ekonomika izdelka",
-    "Vse na <b>eno naročilo</b>. Vpiši, kar stranka plača, in vse, kar ti to naročilo vzame — od nabavne cene do provizije in vračil. Številke spodaj se preračunajo med tipkanjem.",
-    "",[{t:PR().ime,v:"projekti"},{t:p.ime}])+
-  osnova+
+  return '<div class="block">'+
+    '<header><div class="head-t"><span class="eyebrow">Ekonomika izdelka</span><h2>'+esc(p.ime)+'</h2></div>'+
+      '<p>Vse na <b>eno naro\u010dilo</b>. Vpi\u0161i, kar stranka pla\u010da, in vse, kar ti to naro\u010dilo vzame \u2014 od nabavne cene do provizije in vra\u010dil.</p></header>'+
+    '<fieldset class="sect"><div class="lg"><h3>Prihodek</h3><p>Kar stranka pla\u010da</p></div>'+
       '<div class="grid">'+
-        fld("cena","Prodajna cena","€","Cena izdelka, kot jo vidi stranka")+
-        fld("posiljanjePlaca","Poštnina, ki jo plača stranka","€","0, če je dostava brezplačna")+
+        fld("cena","Prodajna cena","\u20ac","Cena izdelka, kot jo vidi stranka")+
+        fld("posiljanjePlaca","Po\u0161tnina, ki jo pla\u010da stranka","\u20ac","0, \u010de je dostava brezpla\u010dna")+
         fld("ddv","DDV","%","V Sloveniji 22 %, za nekatere izdelke 9,5 %")+
-        '<div class="f"><span class="lbl">&nbsp;</span><label class="chk"><input type="checkbox" data-p="ddvVkljucen" '+(p.ddvVkljucen?"checked":"")+'> Cena je z vključenim DDV</label>'+
-          '<span class="hint">Če nisi zavezanec za DDV, odkljukaj in pusti DDV na 0.</span></div>'+
+        '<div class="f"><span class="lbl">&nbsp;</span><label class="chk"><input type="checkbox" data-p="ddvVkljucen" '+(p.ddvVkljucen?"checked":"")+'> Cena je z vklju\u010denim DDV</label>'+
+          '<span class="hint">\u010ce nisi zavezanec za DDV, odkljukaj in pusti DDV na 0.</span></div>'+
       '</div>'+
     '</fieldset>'+
-    '<fieldset class="sect"><div class="lg"><h3>Stroški na naročilo</h3><p>Vse, kar odide pri enem prodanem kosu</p></div>'+
+    '<fieldset class="sect"><div class="lg"><h3>Stro\u0161ki na naro\u010dilo</h3><p>Vse, kar odide pri enem prodanem kosu</p></div>'+
       '<div class="grid">'+
-        fld("nabavna","Nabavna cena izdelka","€","Kar plačaš dobavitelju, s carino in prevozom do tebe")+
-        fld("posiljanje","Dostava do stranke","€","Kar plačaš pošti ali kurirju")+
-        fld("embalaza","Embalaža in pakiranje","€","")+
-        fld("provizijaPct","Provizija plačila","%","Stripe, PayPal, banka — običajno 1,5–3 %")+
-        fld("provizijaFix","Fiksni del provizije","€","Na transakcijo, npr. 0,25 €")+
-        fld("ostalo","Ostalo na naročilo","€","Podpora, darilo, listek, odpadek")+
-        fld("vracilaPct","Vračila in neprevzeti paketi","%","Delež naročil, ki se ne obnesejo. Pri povzetju v SLO pogosto 5–15 %.")+
+        fld("nabavna","Nabavna cena izdelka","\u20ac","Kar pla\u010da\u0161 dobavitelju, s carino in prevozom do tebe")+
+        fld("posiljanje","Dostava do stranke","\u20ac","Kar pla\u010da\u0161 po\u0161ti ali kurirju")+
+        fld("embalaza","Embala\u017ea in pakiranje","\u20ac","")+
+        fld("provizijaPct","Provizija pla\u010dila","%","Stripe, PayPal, banka \u2014 obi\u010dajno 1,5\u20133 %")+
+        fld("provizijaFix","Fiksni del provizije","\u20ac","Na transakcijo, npr. 0,25 \u20ac")+
+        fld("ostalo","Ostalo na naro\u010dilo","\u20ac","Podpora, darilo, listek, odpadek")+
+        fld("vracilaPct","Vra\u010dila in neprevzeti paketi","%","Dele\u017e naro\u010dil, ki se ne obnesejo. Pri povzetju v SLO pogosto 5\u201315 %.")+
       '</div>'+
     '</fieldset>'+
-    '<fieldset class="sect"><div class="lg"><h3>Budget in fiksni stroški</h3><p>Za napoved profita</p></div>'+
+    '<fieldset class="sect"><div class="lg"><h3>Budget in fiksni stro\u0161ki</h3><p>Za napoved profita</p></div>'+
       '<div class="grid">'+
-        fld("dnevniBudget","Načrtovan dnevni budget","€","Skupni načrt za ta izdelek. Dejanski budget vnašaš na posamezni kreativi.")+
-        fld("predvidenCPA","Predviden CPA","€","Kolikor pričakuješ, da te stane eno naročilo")+
-        fld("fiksniMesecni","Fiksni mesečni stroški","€","Shopify, orodja, agencija, tvoja plača — vse, kar teče ne glede na prodajo")+
+        fld("dnevniBudget","Na\u010drtovan dnevni budget","\u20ac","Skupni na\u010drt za ta izdelek. Dejanski budget vna\u0161a\u0161 na posamezni kreativi.")+
+        fld("predvidenCPA","Predviden CPA","\u20ac","Kolikor pri\u010dakuje\u0161, da te stane eno naro\u010dilo")+
+        fld("fiksniMesecni","Fiksni mese\u010dni stro\u0161ki","\u20ac","Shopify, orodja, agencija, tvoja pla\u010da \u2014 vse, kar te\u010de ne glede na prodajo")+
       '</div>'+
     '</fieldset>'+
   '</div>'+
   '<div class="block">'+
-    '<header><div class="head-t"><span class="eyebrow">Razrez</span><h2>Od plačila do marže</h2></div>'+
-      '<p>Vrstica za vrstico, kaj se odšteje.</p></header>'+
-    '<div class="scroll"><table><thead><tr><th>Postavka</th><th>Znesek</th><th>Delež plačila</th></tr></thead><tbody id="razrez"></tbody></table></div>'+
+    '<header><div class="head-t"><span class="eyebrow">Razrez</span><h2>Od pla\u010dila do mar\u017ee</h2></div>'+
+      '<p>Vrstica za vrstico, kaj se od\u0161teje.</p></header>'+
+    '<div class="scroll"><table><thead><tr><th>Postavka</th><th>Znesek</th><th>Dele\u017e pla\u010dila</th></tr></thead><tbody id="razrez"></tbody></table></div>'+
   '</div>'+
   '<div class="block">'+
-    '<header><div class="head-t"><span class="eyebrow">Scenariji</span><h2>Koliko moraš prodati</h2></div>'+
+    '<header><div class="head-t"><span class="eyebrow">Scenariji</span><h2>Koliko mora\u0161 prodati</h2></div>'+
       '<p id="scen-note"></p></header>'+
     '<div class="scroll"><table><thead><tr><th>Prodaj / dan</th><th>Budget / dan</th><th>Prihodek / dan</th><th>Profit / dan</th><th>Profit / mesec</th><th>Po fiksnih</th><th>ROAS</th></tr></thead><tbody id="scen"></tbody></table></div>'+
     '<div class="pad" id="scen-info"></div>'+
   '</div>';
-  narisiDatoteke();
-  paintEkon();
 }
 function paintEkon(){
   var p=P();if(!p||!el("razrez"))return;
@@ -2659,8 +2658,11 @@ function renderKalk(){
     '<header><div class="head-t"><span class="eyebrow">Občutljivost</span><h2>Kaj se zgodi, če se CPA premakne</h2></div>'+
       '<p>Isti budget, drugačna cena naročila.</p></header>'+
     '<div class="scroll"><table><thead><tr><th>CPA</th><th>Naročila / dan</th><th>Profit / dan</th><th>Profit / mesec</th><th>ROAS</th></tr></thead><tbody id="obc"></tbody></table></div>'+
-  '</div>';
+  '</div>'+
+  /* ekonomika izdelka je zdaj tukaj, ne v svojem zavihku */
+  (p?ekonBlokiHtml(p):'');
   paintKalk();
+  if(p&&imaEkon(p))paintEkon();
 }
 function paintKalk(){
   if(!el("kalk-verdict"))return;
@@ -2800,11 +2802,11 @@ function paintKalk(){
   }).join("");
 }
 
-/* ============ POGLED: vodnik ============ */
-function renderVodnik(){
-  el("v-vodnik").innerHTML=
-  glava("Vodnik","Kje se kaj vnaša, kaj pomenijo številke in kako se Facebook razlikuje od Googla.",
-    "",[{t:"Vodnik"}])+
+/* ============ vodnik (spodnji del zavihka Podatki) ============ */
+function vodnikHtml(){
+  return '<div class="block"><header><div class="head-t"><span class="eyebrow">Vodnik</span>'+
+    '<h2>Kje se kaj vnaša</h2></div>'+
+    '<p>Kaj pomenijo številke in kako se Facebook razlikuje od Googla.</p></header></div>'+
 
   '<div class="block"><header><div class="head-t"><span class="eyebrow">Prvo vprašanje</span>'+
     '<h2>Kje vnesem budget?</h2></div></header><div class="pad">'+
@@ -3217,7 +3219,8 @@ function renderPodatki(){
   '<div class="block"><header><div class="head-t"><span class="eyebrow">Nevarno</span><h2>Počisti vse</h2></div></header><div class="pad">'+
     '<p class="note">Izbriše vse projekte, izdelke, kreative in naložene datoteke iz te naprave. Prej izvozi, če želiš obdržati. Če je vklopljen oblak, se prazno stanje pošlje tudi tja.</p>'+
     '<div class="row" style="margin-top:12px"><button class="btn btn-d" id="reset">Pobriši vse in začni znova</button></div>'+
-  '</div></div>';
+  '</div></div>'+
+  vodnikHtml();
   renderOblakPanel();
   osveziProstor();
 }
@@ -3933,28 +3936,32 @@ function osveziIzvozStevec(){
 }
 
 /* ============ render / navigacija ============ */
-var RENDER={projekti:renderProjekti,pregled:renderPregled,ekonomika:renderEkon,kreative:renderKreative,
-  kalkulator:renderKalk,vodnik:renderVodnik,podatki:renderPodatki};
+/* Zavihkov Ekonomika in Vodnik ni več: izdelek je v Pregledu, izračuni v
+   Kalkulatorju, vodnik pa na dnu Podatkov. Stare povezave preusmerimo.     */
+var RENDER={projekti:renderProjekti,pregled:renderPregled,kreative:renderKreative,
+  kalkulator:renderKalk,podatki:renderPodatki};
+var STARI_VIEW={ekonomika:"pregled",vodnik:"podatki"};
+function pravView(v){return STARI_VIEW[v]||(RENDER[v]?v:"projekti");}
 function render(){
+  view=pravView(view);
   qa(".view").forEach(function(s){s.hidden=true;});
   qa(".tab").forEach(function(t){t.setAttribute("aria-selected",t.dataset.v===view?"true":"false");});
   el("v-"+view).hidden=false;
   RENDER[view]();
 }
 function paint(){
-  if(view==="ekonomika")paintEkon();
-  else if(view==="kreative"&&odprtaKreativa&&K())paintKreativa();
-  else if(view==="kalkulator")paintKalk();
+  if(view==="kreative"&&odprtaKreativa&&K())paintKreativa();
+  else if(view==="kalkulator"){paintKalk();if(P()&&imaEkon(P()))paintEkon();}
   else if(view==="pregled")paintPregled();
 }
-var IMENA={projekti:"Projekti",pregled:"Pregled",ekonomika:"Ekonomika",kreative:"Kreative",
-  kalkulator:"Kalkulator",vodnik:"Vodnik",podatki:"Podatki"};
+var IMENA={projekti:"Projekti",pregled:"Pregled",kreative:"Kreative",
+  kalkulator:"Kalkulator",podatki:"Podatki in vodnik"};
 function nastaviView(v){
-  view=v;if(view!=="kreative")odprtaKreativa=null;
+  view=pravView(v);if(view!=="kreative")odprtaKreativa=null;
   render();window.scrollTo(0,0);
-  var mt=el("mobTitle");if(mt)mt.textContent=IMENA[v]||"Oglasni list";
+  var mt=el("mobTitle");if(mt)mt.textContent=IMENA[view]||"Oglasni list";
   zapriMeni();
-  try{location.hash=v;}catch(err){}
+  try{location.hash=view;}catch(err){}
 }
 /* stranski meni na telefonu */
 function odpriMeni(){document.body.classList.add("menu");el("sideVeil").hidden=false;}
@@ -3970,7 +3977,7 @@ function dodajIzdelek(pid){
   var projekt=pid||S.aktivenProjekt;
   var p=novIzdelek("Izdelek "+(izdelkiVProjektu(projekt).length+1),projekt);
   S.izdelki.push(p);S.aktivenProjekt=projekt;S.aktiven=p.id;odprtaKreativa=null;
-  shrani();polniIzbirnik();nastaviView("ekonomika");toast("Izdelek dodan.");
+  shrani();polniIzbirnik();nastaviView("pregled");toast("Izdelek dodan.");
 }
 function dodajProjekt(){
   var ime=prompt("Ime nove mape / projekta:","Projekt "+(S.projekti.length+1));
@@ -4219,7 +4226,7 @@ document.addEventListener("click",function(ev){
     if(stikG.dataset.stik==="p"){
       var pp=P();if(!pp)return;
       if(!pp.stikala||typeof pp.stikala!=="object")pp.stikala={};
-      pp.stikala[g.id]=nv;shrani();renderEkon();return;
+      pp.stikala[g.id]=nv;shrani();render();return;
     }
     var kk=K();if(!kk)return;
     var jeVodeno=stikVodi(kk)&&kk.vodi===g.id;
@@ -4565,7 +4572,7 @@ document.addEventListener("paste",function(ev){
 
 /* ============ zagon ============ */
 var zac=String(location.hash||"").replace("#","");
-if(RENDER[zac])view=zac;
+if(zac)view=pravView(zac);
 if(el("verzija"))el("verzija").textContent=RAZLICICA;
 polniIzbirnik();
 render();

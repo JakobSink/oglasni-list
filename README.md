@@ -10,7 +10,9 @@ Odpre se v brskalniku na telefonu ali računalniku, brez namestitve. Deluje tudi
 
 **Material in zapiski na izdelku.** Slike, videi in vse, kar si ugotovil o izdelku, so na izdelku, ne na posamezni kreativi. Material je skupen vsem kreativam tega izdelka: če kreativa nima svoje slike, predogled vzame prvo sliko izdelka. Zapiski gredo v brief vsake kreative tega izdelka.
 
-**Ekonomika izdelka — neobvezna.** Privzeto izklopljena; izdelek lahko uporabljaš samo za kreative. Ko jo vklopiš: cena, DDV, nabavna, dostava, embalaža, provizija plačila, vračila → marža na naročilo, **break-even CPA** (največ, kar smeš plačati za naročilo) in **break-even ROAS**. Zraven razrez enega naročila vrstico po vrstico in tabela scenarijev od 1 do 50 prodaj na dan.
+**Pet zavihkov.** *Projekti* (mape, izdelki, celostna podoba) → *Pregled* (kreative na vrhu, številke, podatki izdelka) → *Kreative* (pisanje oglasov) → *Kalkulator* (what-if in ekonomika izdelka) → *Podatki in vodnik* (izvoz, uvoz, oblak, stikala, razlage). Samostojnega zavihka Ekonomika ni — cena in stroški sodita h kalkulatorju, podatki izdelka pa k pregledu tega izdelka.
+
+**Ekonomika izdelka — neobvezna.** Privzeto izklopljena; izdelek lahko uporabljaš samo za kreative. Vklopiš jo na izdelku v Pregledu, vpisuješ pa v Kalkulatorju: cena, DDV, nabavna, dostava, embalaža, provizija plačila, vračila → marža na naročilo, **break-even CPA** (največ, kar smeš plačati za naročilo) in **break-even ROAS**. Zraven razrez enega naročila vrstico po vrstico in tabela scenarijev od 1 do 50 prodaj na dan.
 
 **Predogled v telefonu.** Vsak predogled je v okvirju iPhona, vmesnik platforme pa je v angleščini — *Sponsored*, *Like / Comment / Share*, *Shop now*, *For You* — ker je tak tudi v resnici. Tvoje besedilo ostane slovensko. Logo podjetja naložiš na izdelku in nadomesti začetnice v krogcu, tudi kot favikon v Googlu.
 
