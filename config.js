@@ -10,6 +10,6 @@
    med napravami — vse ostane shranjeno v tem brskalniku.
 ------------------------------------------------------------------ */
 window.OGLASNI_CONFIG = {
-  url: "",
-  anonKey: ""
+  url: "https://jrkgfwfeezanahqgvhbs.supabase.co",
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impya2dmd2ZlZXphbmFocWd2aGJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MjQ3ODgsImV4cCI6MjEwMTUwMDc4OH0.pYgjcFAmaoSewXPz76I_kAJA4GBGHj3_VIaJcAe12V0"
 };
