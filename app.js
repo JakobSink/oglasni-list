@@ -6,7 +6,7 @@
 
 /* Oznaka različice. Poveča jo vsaka objava — v stranski vrstici je vidna, da se
    na prvi pogled loči, ali brskalnik strežé svežo kopijo ali staro iz cache-a. */
-var RAZLICICA="različica 13 · slike se pošiljajo sproti in ne obtičijo";
+var RAZLICICA="različica 14 · SQL vedno dosegljiv v Podatkih";
 
 /* ============ pomožne funkcije ============ */
 var LS="oglasni-list-v1", LS_TEMA="oglasni-list-tema";
@@ -3194,6 +3194,26 @@ function osveziSideOblak(){
     : "Skupen račun ekipe — klikni za prijavo in sinhronizacijo.";
 }
 
+/* SQL mora biti dosegljiv vedno, ne samo dokler oblak ni nastavljen — vedro za
+   slike je prišlo pozneje kot tabela in ga je treba dodati tudi naknadno.   */
+var sqlOdprt=false;
+function sqlHtml(){
+  return '<div class="block"><header><div class="head-t"><span class="eyebrow">Nastavitev</span>'+
+    '<h2>SQL za Supabase</h2></div>'+
+    '<p>To zaženeš enkrat v svojem Supabase projektu. Naredi tabelo za besedila in vedro za slike. Če si SQL že poganjal prej, ga poženi še enkrat — manjkajoče doda, obstoječega ne pokvari.</p>'+
+    '<span class="sp"></span>'+
+    '<button class="btn btn-s no-print" id="sql-copy">Kopiraj SQL</button>'+
+    '<button class="btn btn-s btn-soft no-print" id="sql-toggle">'+(sqlOdprt?"Skrij":"Pokaži")+'</button>'+
+    '</header><div class="pad">'+
+    '<ol class="steps">'+
+      '<li>Odpri <code>supabase.com</code> → svoj projekt → <b>SQL Editor</b>.</li>'+
+      '<li>Prilepi spodnje besedilo in klikni <b>Run</b>.</li>'+
+      '<li>V <b>Authentication → Sign In / Providers → Email</b> izklopi <i>Confirm email</i>.</li>'+
+    '</ol>'+
+    (sqlOdprt?'<pre id="sql-txt">'+esc(SQL)+'</pre>':'')+
+  '</div></div>';
+}
+
 function renderOblakPanel(){
   var t=el("cloud-body");if(!t)return;
   var st=Oblak.status();
@@ -3285,6 +3305,7 @@ function renderPodatki(){
         '<button class="btn" id="impPaste">Uvozi prilepljeno in zamenjaj</button>'+
       '</div></div>'+
   '</div></div>'+
+  sqlHtml()+
   stikalaUrediHtml()+
   '<div class="block"><header><div class="head-t"><span class="eyebrow">Telefon</span><h2>Namesti kot aplikacijo</h2></div></header><div class="pad">'+
     '<p class="note"><b>Android / Chrome:</b> meni ⋮ → „Dodaj na začetni zaslon“. <b>iPhone / Safari:</b> gumb za deljenje → „Dodaj na domači zaslon“. '+
@@ -3602,18 +3623,20 @@ function briefText(k){
   if(k.ugotovitve){L.push("");L.push("── KAJ SMO UGOTOVILI ──");L.push(k.ugotovitve);}
   return L.join("\n");
 }
-function kopiraj(txt){
+function kopiraj(txt,kaj){
+  kaj=kaj||"Brief";
   if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(txt).then(function(){toast("Brief kopiran.");},function(){rocnoKopiraj(txt);});
-  }else rocnoKopiraj(txt);
+    navigator.clipboard.writeText(txt).then(function(){toast(kaj+" kopiran.");},function(){rocnoKopiraj(txt,kaj);});
+  }else rocnoKopiraj(txt,kaj);
 }
-function rocnoKopiraj(txt){
+function rocnoKopiraj(txt,kaj){
+  kaj=kaj||"Brief";
   var ta=document.createElement("textarea");
   ta.value=txt;ta.setAttribute("readonly","");
   ta.style.cssText="position:fixed;left:8px;bottom:70px;width:calc(100% - 16px);height:120px;z-index:70";
   document.body.appendChild(ta);ta.select();
   var ok=false;try{ok=document.execCommand("copy");}catch(err){}
-  if(ok){document.body.removeChild(ta);toast("Brief kopiran.");}
+  if(ok){document.body.removeChild(ta);toast(kaj+" kopiran.");}
   else{toast("Kopiraj ročno iz polja spodaj.");setTimeout(function(){if(ta.parentNode)ta.parentNode.removeChild(ta);},15000);}
 }
 
@@ -4333,6 +4356,11 @@ document.addEventListener("click",function(ev){
     gd.moznosti.splice(i2,1);
     stikPreimenujMoznost(gd,odstranjena,gd.moznosti[0]);
     migriraj();shrani();render();return;
+  }
+  if(t.id==="sql-toggle"){sqlOdprt=!sqlOdprt;render();return;}
+  if(t.id==="sql-copy"){
+    kopiraj(SQL,"SQL");
+    return;
   }
   if(t.id==="sgnew"){dodajStikalo("Novo stikalo",["Prva","Druga"]);return;}
   if(t.id==="sgtrg"){dodajStikalo("Trg",["Slovenija","Hrvaška","Slovaška"]);return;}

@@ -320,6 +320,10 @@ w.render();
 ok(w.document.getElementById("v-podatki").textContent.indexOf("Kje se kaj vnaša") >= 0,
   "vodnik je zdaj na dnu Podatkov");
 ok(!!w.document.getElementById("cloud-body"), "in oblak je še vedno tam");
+/* SQL mora biti dosegljiv tudi ko je oblak ze nastavljen */
+ok(!!w.document.getElementById("sql-copy"), "SQL je dosegljiv v Podatkih vedno");
+ok(w.SQL.indexOf("storage.buckets") >= 0, "SQL vsebuje vedro za slike");
+ok(w.SQL.indexOf("create table if not exists public.stanje") >= 0, "in tabelo za besedila");
 
 pi.zapiski = "Debelina 5,5 mm, obrabni sloj 0,5 mm.";
 ok(w.briefText(pi.kreative[0]).indexOf("O IZDELKU") >= 0, "zapiski izdelka gredo v brief");
