@@ -484,12 +484,22 @@ table.mtx th:first-child{text-align:left}
 /* stikala: vrednosti na kartici kreative in vrstica s filtrom nad seznamom */
 .tags.stik span{background:var(--surf2);border:1px solid var(--line2);color:var(--ink2)}
 .tags.stik span.vodi{border-color:var(--brand);color:var(--brand)}
-/* CGP mape: vzorci barv */
-.cgp-sw{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.cgp-sw i{
-  width:26px;height:26px;border-radius:8px;border:1px solid var(--line2);
-  display:block;flex:none;
+/* CGP mape: paleta barv z scipalko in imenom */
+.pal{display:flex;flex-direction:column;gap:8px}
+.pal-v{display:flex;align-items:center;gap:8px}
+.pal-c{
+  flex:none;width:38px;height:38px;padding:0;border:1px solid var(--line2);
+  border-radius:10px;background:none;cursor:pointer;
 }
+.pal-c::-webkit-color-swatch-wrapper{padding:3px}
+.pal-c::-webkit-color-swatch{border:none;border-radius:7px}
+.pal-h{flex:0 0 10ch;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+.pal-i{flex:1 1 120px;min-width:0}
+.pal-x{
+  flex:none;border:1px solid var(--line2);background:var(--surf);color:var(--ink3);
+  border-radius:9px;width:32px;height:32px;font-size:12px;cursor:pointer;
+}
+.pal-x:hover{color:var(--neg);border-color:var(--neg)}
 
 /* datoteka, ki je se v oblaku in se prenasa */
 .file.cakam{opacity:.62}
@@ -514,7 +524,13 @@ table.mtx th:first-child{text-align:left}
 .sg-mo{display:inline-flex;align-items:stretch}
 .sg-mo input{
   border:1px solid var(--line2);border-radius:999px;background:var(--surf);color:var(--ink);
-  padding:6px 12px;font:inherit;font-size:12.5px;font-weight:600;min-width:5ch;
+  padding:6px 12px;font:inherit;font-size:12.5px;font-weight:600;min-width:8ch;max-width:100%;
+  text-overflow:clip;
+}
+/* locilni naslov med razdelki v istem zavihku */
+.locilo{
+  font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);
+  margin:34px 0 -6px;padding-top:22px;border-top:1px solid var(--line);
 }
 .sg-mo input:focus{outline:2px solid var(--brand);outline-offset:1px}
 .sg-mo:has(.sg-mx) input{border-radius:999px 0 0 999px;border-right:none}

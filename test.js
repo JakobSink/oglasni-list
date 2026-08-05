@@ -175,14 +175,20 @@ prCgp.cgp.barve = "#1F35C4, #F2B417";
 prCgp.cgp.pisave = "Naslovi: Inter Bold";
 prCgp.cgp.pravila = "Logo vedno v kotu.";
 prCgp.zapiski = "Dostop do Drive ima Ana.";
-ok(w.cgpBarve("#1F35C4, #F2B417").length === 2, "barve se poberejo iz besedila",
-  w.cgpBarve("#1F35C4, #F2B417").join(" "));
-ok(w.cgpBarve("brez barv").length === 0, "besedilo brez barv ne da vzorcev");
+ok(w.cgpBarve("#1F35C4, #F2B417").length === 2, "stare barve iz besedila se pretvorijo v seznam",
+  JSON.stringify(w.cgpBarve("#1F35C4, #F2B417")));
+ok(w.cgpBarve("brez barv").length === 0, "besedilo brez barv ne da nič");
+prCgp.cgp.barve = [{ hex: "#1F35C4", ime: "modra" }, { hex: "#F2B417", ime: "rumena" }];
 w.view = "projekti";
 w.render();
 ok(w.document.getElementById("v-projekti").textContent.indexOf("Celostna podoba") >= 0,
   "razdelek Celostna podoba je v pogledu Projekti");
-ok(!!w.document.querySelector('[data-cgp="barve"]'), "polje za barve obstaja");
+ok(w.document.querySelectorAll('[data-cgpbarva="hex"]').length === 4,
+  "vsaka barva ima ščipalko in polje s kodo",
+  w.document.querySelectorAll('[data-cgpbarva="hex"]').length + " polj");
+ok(w.document.querySelectorAll('[data-cgpbarva="ime"]').length === 2, "in polje za ime");
+ok(w.cgpBarveTekst(prCgp) === "modra #1F35C4, rumena #F2B417", "barve gredo v brief z imeni",
+  w.cgpBarveTekst(prCgp));
 ok(!!w.document.querySelector("[data-dropcgp]"), "nalaganje logotipov in pisav obstaja");
 const briefCgp = w.briefText(w.P().kreative[0]);
 ok(briefCgp.indexOf("CELOSTNA PODOBA") >= 0, "CGP gre v brief");
@@ -317,13 +323,21 @@ ok(w.pravView("ekonomika") === "pregled", "stara povezava na Ekonomiko pelje na 
 ok(w.pravView("vodnik") === "podatki", "stara povezava na Vodnik pelje na Podatke");
 w.view = "podatki";
 w.render();
-ok(w.document.getElementById("v-podatki").textContent.indexOf("Kje se kaj vnaša") >= 0,
-  "vodnik je zdaj na dnu Podatkov");
+const podatkiTxt = w.document.getElementById("v-podatki").textContent;
+ok(podatkiTxt.indexOf("Kje vnesem budget?") >= 0, "vodnik je zdaj na dnu Podatkov");
 ok(!!w.document.getElementById("cloud-body"), "in oblak je še vedno tam");
-/* SQL mora biti dosegljiv tudi ko je oblak ze nastavljen */
-ok(!!w.document.getElementById("sql-copy"), "SQL je dosegljiv v Podatkih vedno");
-ok(w.SQL.indexOf("storage.buckets") >= 0, "SQL vsebuje vedro za slike");
-ok(w.SQL.indexOf("create table if not exists public.stanje") >= 0, "in tabelo za besedila");
+/* nastavitvenih in nevarnih stvari v aplikaciji ni vec */
+ok(w.SQL === undefined, "SQL ni več v aplikaciji — je v supabase.sql");
+ok(podatkiTxt.indexOf("Namesti kot aplikacijo") < 0, "navodil za namestitev ni več v Podatkih");
+ok(podatkiTxt.indexOf("Pobriši vse") < 0, "gumba za brisanje vsega ni več");
+
+/* SQL v repozitoriju mora biti ponovljiv, sicer drugo poganjanje pade na 42710 */
+const sql = fs.readFileSync(path.join(REPO, "supabase.sql"), "utf8");
+ok(sql.indexOf("storage.buckets") >= 0, "supabase.sql naredi vedro za slike");
+ok(sql.indexOf("create table if not exists public.stanje") >= 0, "in tabelo za besedila");
+ok((sql.match(/create policy/g) || []).length === (sql.match(/drop policy if exists/g) || []).length,
+  "vsak create policy ima svoj drop policy if exists — SQL se sme poganjati večkrat",
+  (sql.match(/create policy/g) || []).length + " pravil");
 
 pi.zapiski = "Debelina 5,5 mm, obrabni sloj 0,5 mm.";
 ok(w.briefText(pi.kreative[0]).indexOf("O IZDELKU") >= 0, "zapiski izdelka gredo v brief");
@@ -354,6 +368,33 @@ Promise.resolve()
   .then(() => {
     ok(w.predVizual && w.predVizual.izdelkov === true,
       "kreativa brez svojega materiala vzame sliko izdelka");
+
+    console.log("\n== logo je na mapi, ne na izdelku ==");
+    const prLogo = w.PR();
+    ok(w.datLastnikLogo(prLogo) === "cgp:" + prLogo.id, "logo visi na celostni podobi mape");
+    const logo = new w.Blob([Buffer.from("89504e470d0a1a0a", "hex")], { type: "image/png" });
+    logo.name = "logo.png";
+    return w.Datoteke.dodaj(w.datLastnikLogo(prLogo), logo)
+      .then(() => {
+        w.view = "projekti";
+        w.render();
+        return new Promise((r) => setTimeout(r, 80));
+      })
+      .then(() => {
+        const box = w.document.getElementById("datoteke-cgp-" + prLogo.id);
+        ok(!!box, "polje za CGP datoteke obstaja");
+        ok(box.innerHTML.indexOf("logo.png") >= 0, "naložen logo se vidi",
+          box.innerHTML.slice(0, 80));
+        w.osveziLogo();
+        return new Promise((r) => setTimeout(r, 80));
+      })
+      .then(() => {
+        ok(!!w.predLogo, "predogled oglasa vzame logo iz mape");
+        ok(!w.document.getElementById("dfile-logo"), "polja za logo na izdelku ni več");
+        return w.Datoteke.brisiZaKreativo(w.datLastnikLogo(prLogo));
+      });
+  })
+  .then(() => {
 
     console.log("\n== kazalo datotek in oblak ==");
     const kaz = w.Datoteke.kazalo();

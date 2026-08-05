@@ -56,7 +56,7 @@ Sinhronizacija med napravami in ljudmi je vgrajena, potrebuje pa svoj Supabase p
 Postopek:
 
 1. Naredi brezplačen projekt na [supabase.com](https://supabase.com).
-2. V SQL Editor zaženi:
+2. V **SQL Editor** zaženi vsebino datoteke [`supabase.sql`](supabase.sql) iz tega repozitorija. Poganjanje več kot enkrat je varno — vsako pravilo se prej pobriše, zato ne dobiš napake `42710: policy already exists`. Za referenco je isti SQL tudi tu:
 
 ```sql
 create table if not exists public.stanje (
@@ -67,6 +67,10 @@ create table if not exists public.stanje (
 
 alter table public.stanje enable row level security;
 
+drop policy if exists "berem svoje"     on public.stanje;
+drop policy if exists "vstavim svoje"   on public.stanje;
+drop policy if exists "posodobim svoje" on public.stanje;
+
 create policy "berem svoje"     on public.stanje for select using (auth.uid() = uporabnik);
 create policy "vstavim svoje"   on public.stanje for insert with check (auth.uid() = uporabnik);
 create policy "posodobim svoje" on public.stanje for update using (auth.uid() = uporabnik) with check (auth.uid() = uporabnik);
@@ -76,11 +80,18 @@ insert into storage.buckets (id, name, public)
 values ('material', 'material', false)
 on conflict (id) do nothing;
 
+drop policy if exists "ekipa bere material"   on storage.objects;
+drop policy if exists "ekipa nalaga material" on storage.objects;
+drop policy if exists "ekipa menja material"  on storage.objects;
+drop policy if exists "ekipa brise material"  on storage.objects;
+
 create policy "ekipa bere material"   on storage.objects for select to authenticated using (bucket_id = 'material');
 create policy "ekipa nalaga material" on storage.objects for insert to authenticated with check (bucket_id = 'material');
 create policy "ekipa menja material"  on storage.objects for update to authenticated using (bucket_id = 'material');
 create policy "ekipa brise material"  on storage.objects for delete to authenticated using (bucket_id = 'material');
 ```
+
+Namestitev na telefon: Android / Chrome → meni ⋮ → *Dodaj na začetni zaslon*; iPhone / Safari → gumb za deljenje → *Dodaj na domači zaslon*.
 
 3. V **Authentication → Sign In / Providers → Email** izklopi *Confirm email*, da se prijava zgodi takoj brez potrditvenega maila.
 4. V **Project Settings → API** prekopiraj `Project URL` in ključ `anon public` ter ju vpiši v `config.js`. Oba sta javna podatka, namenjena brskalniku — dostop varujeta RLS in politike vedra iz 2. koraka.

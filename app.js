@@ -6,7 +6,7 @@
 
 /* Oznaka različice. Poveča jo vsaka objava — v stranski vrstici je vidna, da se
    na prvi pogled loči, ali brskalnik strežé svežo kopijo ali staro iz cache-a. */
-var RAZLICICA="različica 14 · SQL vedno dosegljiv v Podatkih";
+var RAZLICICA="različica 15 · Podatki pospravljeni, SQL v repozitoriju";
 
 /* ============ pomožne funkcije ============ */
 var LS="oglasni-list-v1", LS_TEMA="oglasni-list-tema";
@@ -391,9 +391,13 @@ function migriraj(){
     znani[x.id]=1;
     if(typeof x.zapiski!=="string")x.zapiski="";
     if(!x.cgp||typeof x.cgp!=="object")x.cgp={};
-    ["barve","pisave","pravila","povezave"].forEach(function(f){
+    ["pisave","pravila","povezave"].forEach(function(f){
       if(typeof x.cgp[f]!=="string")x.cgp[f]="";
     });
+    /* barve so bile prej besedilo z vejicami, zdaj so seznam {hex, ime} */
+    if(!Array.isArray(x.cgp.barve))x.cgp.barve=cgpBarve(x.cgp.barve);
+    x.cgp.barve=x.cgp.barve.filter(function(b){return b&&typeof b.hex==="string"&&b.hex;});
+    x.cgp.barve.forEach(function(b){if(typeof b.ime!=="string")b.ime="";});
   });
   S.izdelki.forEach(function(x){
     if(!x.projekt||!znani[x.projekt])x.projekt=S.projekti[0].id;
@@ -835,8 +839,6 @@ function brisiDatotekeKreativ(kreative){
 function brisiDatotekeIzdelka(izd){
   if(!Datoteke.naVoljo)return Promise.resolve();
   return brisiDatotekeKreativ(izd.kreative||[]).then(function(){
-    return Datoteke.brisiZaKreativo(datLastnikLogo(izd)).catch(function(){});
-  }).then(function(){
     return Datoteke.brisiZaKreativo(datLastnikIzdelka(izd)).catch(function(){});
   });
 }
@@ -846,24 +848,46 @@ function brisiDatotekeIzdelka(izd){
    barve, pisave in pravila. Gre v brief vsake kreative v tej mapi, da izvajalec
    ne ugiba in ne rabi ločenega PDF-ja.                                       */
 function datLastnikCgp(pr){return "cgp:"+(pr&&pr.id);}
-/* iz besedila poberemo barve, da jih lahko pokažemo kot vzorce */
+/* Barve so seznam vrstic {hex, ime}, ne besedilo z vejicami — barvo izbereš s
+   ščipalko in ji pripišeš ime, ki ga uporabljate v pogovoru („rjava“).      */
 function cgpBarve(s){
-  return String(s||"").match(/#[0-9a-fA-F]{3,8}\b|\b(?:rgb|hsl)a?\([^)]+\)/g)||[];
+  /* iz starega besedila naredimo seznam; sprejme tudi ze pripravljen seznam */
+  if(Array.isArray(s))return s;
+  return (String(s||"").match(/#[0-9a-fA-F]{3,8}\b/g)||[]).map(function(h){
+    return {hex:h,ime:""};
+  });
+}
+function cgpPaleta(pr){
+  if(!pr.cgp||typeof pr.cgp!=="object")pr.cgp={};
+  if(!Array.isArray(pr.cgp.barve))pr.cgp.barve=cgpBarve(pr.cgp.barve);
+  return pr.cgp.barve;
+}
+/* zapis barv za brief in izvoz */
+function cgpBarveTekst(pr){
+  return cgpPaleta(pr).map(function(b){
+    return (b.ime?b.ime+" ":"")+b.hex;
+  }).join(", ");
 }
 function cgpHtml(pr){
   var c=pr.cgp||{};
-  var barve=cgpBarve(c.barve);
+  var barve=cgpPaleta(pr);
   return '<fieldset class="sect cgp" style="margin-top:18px"><div class="lg"><h3>Celostna podoba</h3>'+
     '<p>Logotipi, barve, pisave in pravila te znamke. Gre v brief vsake kreative v tej mapi.</p></div>'+
-    '<div class="grid">'+
-      '<div class="f"><label for="cgp-b-'+pr.id+'">Barve</label>'+
-        '<input class="txt" id="cgp-b-'+pr.id+'" type="text" data-cgp="barve" data-pr="'+pr.id+'" value="'+esc(c.barve||"")+'" placeholder="#1F35C4, #F2B417, #F4F5F7">'+
-        (barve.length
-          ? '<span class="cgp-sw">'+barve.map(function(b){
-              return '<i style="background:'+esc(b)+'" title="'+esc(b)+'"></i>';
-            }).join("")+'</span>'
-          : '<span class="hint">Vpiši hex kode, ločene z vejico — pokazale se bodo kot vzorci.</span>')+
-      '</div>'+
+    '<div class="f"><span class="lbl">Barve</span>'+
+      (barve.length
+        ? '<div class="pal">'+barve.map(function(b,i){
+            return '<div class="pal-v">'+
+              '<input type="color" class="pal-c" data-cgpbarva="hex" data-pr="'+pr.id+'" data-i="'+i+'" value="'+esc(/^#[0-9a-fA-F]{6}$/.test(b.hex)?b.hex:"#000000")+'" aria-label="Barva '+(i+1)+'">'+
+              '<input type="text" class="txt pal-h" data-cgpbarva="hex" data-pr="'+pr.id+'" data-i="'+i+'" value="'+esc(b.hex)+'" aria-label="Koda barve">'+
+              '<input type="text" class="txt pal-i" data-cgpbarva="ime" data-pr="'+pr.id+'" data-i="'+i+'" value="'+esc(b.ime||"")+'" placeholder="ime, npr. rjava" aria-label="Ime barve">'+
+              '<button class="pal-x no-print" data-cgpbdel="'+pr.id+'" data-i="'+i+'" title="Odstrani barvo" aria-label="Odstrani barvo">✕</button>'+
+            '</div>';
+          }).join("")+'</div>'
+        : '<p class="hint">Barv še ni.</p>')+
+      '<div class="row no-print" style="margin-top:9px"><button class="btn btn-s btn-soft" data-cgpbadd="'+pr.id+'">+ Barva</button></div>'+
+      '<span class="hint">Klikni kvadratek za ščipalko ali vpiši kodo. Ime je tisto, ki ga uporabljate v pogovoru — gre v brief skupaj s kodo.</span>'+
+    '</div>'+
+    '<div class="grid" style="margin-top:16px">'+
       '<div class="f"><label for="cgp-p-'+pr.id+'">Pisave</label>'+
         '<input class="txt" id="cgp-p-'+pr.id+'" type="text" data-cgp="pisave" data-pr="'+pr.id+'" value="'+esc(c.pisave||"")+'" placeholder="Naslovi: Inter Bold · Besedilo: Inter Regular">'+
         '<span class="hint">Kaj za naslove, kaj za besedilo, kaj za cene.</span></div>'+
@@ -880,7 +904,7 @@ function cgpHtml(pr){
       ? '<div class="drop no-print" id="drop-cgp-'+pr.id+'" data-dropcgp="'+pr.id+'" style="margin-top:14px">'+
           '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>'+
           '<b>Naloži logotipe, pisave in CGP dokument</b>'+
-          '<span>SVG, PNG, PDF, datoteke pisav. Sinhronizira se z ekipo.</span>'+
+          '<span>SVG, PNG, PDF, datoteke pisav. <b>Prva slika je logo oglaševalca v predogledu oglasa.</b> Sinhronizira se z ekipo.</span>'+
         '</div>'+
         '<input type="file" id="dfile-cgp-'+pr.id+'" data-filecgp="'+pr.id+'" multiple hidden>'+
         '<div class="files" id="datoteke-cgp-'+pr.id+'"></div>'
@@ -964,6 +988,9 @@ function renderProjekti(){
       '<div class="kv"><h4>Kreativa</h4><p>Kot in publika, tekst, slike in videi, design brief, <b>dnevni budget tega oglasa</b> ter izmerjeni rezultati.</p></div>'+
     '</div>'+
   '</div></div>';
+
+  /* brez tega naložene datoteke celostne podobe ostanejo nevidne */
+  narisiDatoteke();
 }
 
 /* ============ POGLED: pregled ============ */
@@ -1045,9 +1072,7 @@ function renderPregled(){
   '</div>'+
 
   /* 6 — izdelek sam: ime, znamka, material, zapiski, stikala */
-  '<div class="block"><header><div class="head-t"><span class="eyebrow">6 — Izdelek</span>'+
-    '<h2>Podatki izdelka</h2></div>'+
-    '<p>Ime, znamka, logo, material in zapiski. Prej je bilo to v svojem zavihku Ekonomika.</p></header></div>'+
+  '<h2 class="locilo">Podatki izdelka</h2>'+
   izdelekHtml(p);
 
   narisiDatoteke();
@@ -1204,21 +1229,16 @@ function verdictHtml(ek,cpa,p){
    Samostojnega zavihka Ekonomika ni vec.                                    */
 function izdelekHtml(p){
   return '<div class="block" id="ekon-form">'+
-    '<fieldset class="sect"><div class="lg"><h3>Izdelek</h3><p>Ime in kam sodi</p></div>'+
+    '<fieldset class="sect"><div class="lg"><h3>Osnovno</h3><p>Ime, znamka in kam ta izdelek sodi</p></div>'+
       '<div class="grid">'+
         txtFld("ime","Ime izdelka")+
         '<div class="f"><label for="f-projekt">Mapa / projekt</label><select class="txt" id="f-projekt" data-p="projekt">'+
           S.projekti.map(function(x){return '<option value="'+x.id+'"'+(p.projekt===x.id?" selected":"")+'>'+esc(x.ime)+'</option>';}).join("")+
         '</select><span class="hint">Sprememba izdelek takoj prestavi v drugo mapo.</span></div>'+
-        txtFld("opis","Kratek opis / ponudba","Poka\u017ee se na Pregledu in v briefu.")+
+        '<div class="f full"><label for="f-opis">Kratek opis / ponudba</label>'+
+          '<input class="txt" id="f-opis" type="text" data-p="opis" value="'+esc(p.opis||"")+'" placeholder="Ena vrstica: kaj je in za koga">'+
+          '<span class="hint">Poka\u017ee se na kartici izdelka in v briefu.</span></div>'+
         txtFld("znamka","Ime strani / znamke","Uporabi se kot ime ogla\u0161evalca v predogledu oglasa.","npr. Moja trgovina")+
-        (Datoteke.naVoljo
-          ? '<div class="f"><span class="lbl">Logo podjetja</span>'+
-              '<div class="row"><button class="btn btn-s btn-soft no-print" id="logo-btn">Nalo\u017ei logo</button>'+
-                '<input type="file" id="dfile-logo" accept="image/*" hidden>'+
-                '<div class="files files-logo" id="datoteke-logo"></div></div>'+
-              '<span class="hint">Kvadratna slika. V predogledu oglasa nadomesti za\u010detnice v krogcu \u2014 na Facebooku, Instagramu, TikToku in kot favikon v Googlu.</span></div>'
-          : '')+
         txtFld("domena","Domena","Prika\u017ee se v predogledu FB in Google oglasa.","npr. mojatrgovina.si")+
         txtFld("url","Povezava na izdelek","Privzeti ciljni URL za nove kreative tega izdelka.","https://\u2026")+
       '</div>'+
@@ -1227,7 +1247,7 @@ function izdelekHtml(p){
     '<fieldset class="sect"><div class="lg"><h3>Material in zapiski</h3>'+
       '<p>Slike, videi in vse, kar si ugotovil o tem izdelku. Material je skupen vsem kreativam tega izdelka \u2014 \u010de kreativa nima svojega, se v predogledu uporabi prva slika od tu.</p></div>'+
       '<div class="f"><label for="f-zapiski">Zapiski o izdelku</label>'+
-        '<textarea id="f-zapiski" data-p="zapiski" rows="5" placeholder="Specifikacije, kaj vpra\u0161ajo stranke, kaj je na zalogi, dobavni rok, konkurenca, kaj deluje v oglasih \u2026">'+esc(p.zapiski||"")+'</textarea>'+
+        '<textarea id="f-zapiski" data-p="zapiski" rows="10" placeholder="Specifikacije, kaj vpra\u0161ajo stranke, kaj je na zalogi, dobavni rok, konkurenca, kaj deluje v oglasih \u2026">'+esc(p.zapiski||"")+'</textarea>'+
         '<span class="hint">Gre v brief kreativ tega izdelka.</span></div>'+
       (Datoteke.naVoljo
         ? '<div class="drop no-print" id="drop-izd" style="margin-top:16px">'+
@@ -2379,7 +2399,9 @@ function predSplosno(p,k,spec){
 /* Datoteke visijo na lastniku: kreativa (njen id) ali izdelek ("izd:"+id).
    Material izdelka je skupen vsem njegovim kreativam.                      */
 function datLastnikIzdelka(p){return "izd:"+(p&&p.id);}
-function datLastnikLogo(p){return "logo:"+(p&&p.id);}
+/* Logo oglasevalca je logo MAPE (celostna podoba), ne izdelka - drugace bi
+   isto stvar vpisoval pri vsakem izdelku iste znamke.                     */
+function datLastnikLogo(pr){return "cgp:"+(pr&&pr.id);}
 /* reference kreative so ločene od materiala — v predogled ne gredo nikoli */
 function datLastnikRef(k){return "ref:"+(k&&k.id);}
 /* Material kreative. Če stikalo vodi besedila, vodi tudi material: hrvaška
@@ -2404,7 +2426,6 @@ function datCilji(){
   var out=[], k=K(), p=P();
   if(el("datoteke")&&k)out.push({cilj:"datoteke",lastnik:datLastnik(k),zapis:k});
   if(el("datoteke-izd")&&p)out.push({cilj:"datoteke-izd",lastnik:datLastnikIzdelka(p),zapis:p});
-  if(el("datoteke-logo")&&p)out.push({cilj:"datoteke-logo",lastnik:datLastnikLogo(p)});
   if(el("datoteke-ref")&&k)out.push({cilj:"datoteke-ref",lastnik:datLastnikRef(k)});
   /* CGP je na vsaki mapi v pogledu Projekti, zato jih naštejemo iz DOM */
   qa("[id^='datoteke-cgp-']").forEach(function(box){
@@ -2490,9 +2511,9 @@ function dodajDatoteke(files,lastnik){
 }
 /* logo izdelka za avatar oglasevalca v predogledu */
 function osveziLogo(){
-  var p=P();
-  if(!p||!Datoteke.naVoljo){predLogo=null;return;}
-  Datoteke.prviVizual(datLastnikLogo(p)).then(function(d){
+  var pr=PR();
+  if(!pr||!Datoteke.naVoljo){predLogo=null;return;}
+  Datoteke.prviVizual(datLastnikLogo(pr)).then(function(d){
     if(!d){predLogo=null;risiPredogled();return;}
     try{var u=URL.createObjectURL(d.blob);odprtiUrlji.push(u);predLogo=u;}
     catch(err){predLogo=null;}
@@ -2830,9 +2851,7 @@ function paintKalk(){
 
 /* ============ vodnik (spodnji del zavihka Podatki) ============ */
 function vodnikHtml(){
-  return '<div class="block"><header><div class="head-t"><span class="eyebrow">Vodnik</span>'+
-    '<h2>Kje se kaj vnaša</h2></div>'+
-    '<p>Kaj pomenijo številke in kako se Facebook razlikuje od Googla.</p></header></div>'+
+  return '<h2 class="locilo">Vodnik</h2>'+
 
   '<div class="block"><header><div class="head-t"><span class="eyebrow">Prvo vprašanje</span>'+
     '<h2>Kje vnesem budget?</h2></div></header><div class="pad">'+
@@ -3114,7 +3133,7 @@ var Oblak=(function(){
   }
   function napakaVedra(err){
     var m=String(err&&(err.message||err.error)||err||"");
-    if(/Bucket not found/i.test(m))return "vedra „"+VEDRO+"“ še ni — zaženi SQL iz zavihka Podatki.";
+    if(/Bucket not found/i.test(m))return "vedra „"+VEDRO+"“ še ni — naredi ga v Supabase pod Storage.";
     if(/row-level security|not authorized|Unauthorized|violates/i.test(m))return "shramba je zavrnila dostop, preveri pravila vedra.";
     if(/exceeded|too large|Payload/i.test(m))return "datoteka je prevelika za brezplačni Supabase.";
     return m;
@@ -3151,25 +3170,6 @@ var Oblak=(function(){
     prijavljen:function(){return !!user;},zadnja:function(){return zadnjaSink;}};
 })();
 
-var SQL=
-"create table if not exists public.stanje (\n"+
-"  uporabnik   uuid primary key references auth.users(id) on delete cascade,\n"+
-"  podatki     jsonb not null default '{}'::jsonb,\n"+
-"  spremenjeno timestamptz not null default now()\n"+
-");\n\n"+
-"alter table public.stanje enable row level security;\n\n"+
-"create policy \"berem svoje\"     on public.stanje for select using (auth.uid() = uporabnik);\n"+
-"create policy \"vstavim svoje\"   on public.stanje for insert with check (auth.uid() = uporabnik);\n"+
-"create policy \"posodobim svoje\" on public.stanje for update using (auth.uid() = uporabnik) with check (auth.uid() = uporabnik);\n\n"+
-"-- vedro za slike in videe kreativ\n"+
-"insert into storage.buckets (id, name, public)\n"+
-"values ('material', 'material', false)\n"+
-"on conflict (id) do nothing;\n\n"+
-"create policy \"ekipa bere material\"   on storage.objects for select to authenticated using (bucket_id = 'material');\n"+
-"create policy \"ekipa nalaga material\" on storage.objects for insert to authenticated with check (bucket_id = 'material');\n"+
-"create policy \"ekipa menja material\"  on storage.objects for update to authenticated using (bucket_id = 'material');\n"+
-"create policy \"ekipa brise material\"  on storage.objects for delete to authenticated using (bucket_id = 'material');";
-
 /* Stanje oblaka v stranski vrstici. Prijava je stvar, ki jo moraš videti brez
    iskanja — in ki mora povedati, da je račun skupen za vso ekipo.           */
 function osveziSideOblak(){
@@ -3194,26 +3194,6 @@ function osveziSideOblak(){
     : "Skupen račun ekipe — klikni za prijavo in sinhronizacijo.";
 }
 
-/* SQL mora biti dosegljiv vedno, ne samo dokler oblak ni nastavljen — vedro za
-   slike je prišlo pozneje kot tabela in ga je treba dodati tudi naknadno.   */
-var sqlOdprt=false;
-function sqlHtml(){
-  return '<div class="block"><header><div class="head-t"><span class="eyebrow">Nastavitev</span>'+
-    '<h2>SQL za Supabase</h2></div>'+
-    '<p>To zaženeš enkrat v svojem Supabase projektu. Naredi tabelo za besedila in vedro za slike. Če si SQL že poganjal prej, ga poženi še enkrat — manjkajoče doda, obstoječega ne pokvari.</p>'+
-    '<span class="sp"></span>'+
-    '<button class="btn btn-s no-print" id="sql-copy">Kopiraj SQL</button>'+
-    '<button class="btn btn-s btn-soft no-print" id="sql-toggle">'+(sqlOdprt?"Skrij":"Pokaži")+'</button>'+
-    '</header><div class="pad">'+
-    '<ol class="steps">'+
-      '<li>Odpri <code>supabase.com</code> → svoj projekt → <b>SQL Editor</b>.</li>'+
-      '<li>Prilepi spodnje besedilo in klikni <b>Run</b>.</li>'+
-      '<li>V <b>Authentication → Sign In / Providers → Email</b> izklopi <i>Confirm email</i>.</li>'+
-    '</ol>'+
-    (sqlOdprt?'<pre id="sql-txt">'+esc(SQL)+'</pre>':'')+
-  '</div></div>';
-}
-
 function renderOblakPanel(){
   var t=el("cloud-body");if(!t)return;
   var st=Oblak.status();
@@ -3225,7 +3205,7 @@ function renderOblakPanel(){
       '<p class="note">Sinhronizacija med napravami je vgrajena, manjkata samo dva podatka. Ko jih vpišeš, so vsi projekti, izdelki, kreative <b>in naložene slike ter videi</b> enaki na telefonu, računalniku in pri vseh, ki se prijavijo z istim računom.</p>'+
       '<ol class="steps" style="margin-top:12px">'+
         '<li>Naredi brezplačen projekt na <code>supabase.com</code>.</li>'+
-        '<li>V SQL Editor prilepi in zaženi to:<pre>'+esc(SQL)+'</pre></li>'+
+        '<li>V <b>SQL Editor</b> prilepi in zaženi datoteko <code>supabase.sql</code> iz repozitorija aplikacije.</li>'+
         '<li>V <b>Authentication → Sign In / Providers → Email</b> izklopi <b>Confirm email</b>, da se lahko prijaviš takoj brez potrditvenega maila.</li>'+
         '<li>V <b>Project Settings → API</b> prekopiraj <code>Project URL</code> in ključ <code>anon public</code> ter ju vpiši v datoteko <code>config.js</code>. To sta javna podatka za brskalnik — tvoje vrstice varuje RLS iz 2. koraka.</li>'+
         '<li>Osveži stran. Tu se pojavi obrazec za prijavo.</li>'+
@@ -3305,16 +3285,7 @@ function renderPodatki(){
         '<button class="btn" id="impPaste">Uvozi prilepljeno in zamenjaj</button>'+
       '</div></div>'+
   '</div></div>'+
-  sqlHtml()+
   stikalaUrediHtml()+
-  '<div class="block"><header><div class="head-t"><span class="eyebrow">Telefon</span><h2>Namesti kot aplikacijo</h2></div></header><div class="pad">'+
-    '<p class="note"><b>Android / Chrome:</b> meni ⋮ → „Dodaj na začetni zaslon“. <b>iPhone / Safari:</b> gumb za deljenje → „Dodaj na domači zaslon“. '+
-    'Odpre se kot aplikacija, brez naslovne vrstice, in dela tudi brez signala.</p>'+
-  '</div></div>'+
-  '<div class="block"><header><div class="head-t"><span class="eyebrow">Nevarno</span><h2>Počisti vse</h2></div></header><div class="pad">'+
-    '<p class="note">Izbriše vse projekte, izdelke, kreative in naložene datoteke iz te naprave. Prej izvozi, če želiš obdržati. Če je vklopljen oblak, se prazno stanje pošlje tudi tja.</p>'+
-    '<div class="row" style="margin-top:12px"><button class="btn btn-d" id="reset">Pobriši vse in začni znova</button></div>'+
-  '</div></div>'+
   vodnikHtml();
   renderOblakPanel();
   osveziProstor();
@@ -3375,8 +3346,10 @@ function stikalaUrediHtml(){
             '<div class="sg-m">'+
               g.moznosti.map(function(m,i){
                 return '<span class="sg-mo">'+
+                  /* +3 znake rezerve: pisava ni enakomerna, zato bi „Slovenija“
+                     pri natančni širini izgubila zadnjo črko                  */
                   '<input type="text" data-sgmoz="'+g.id+'" data-i="'+i+'" value="'+esc(m)+'" aria-label="Možnost '+(i+1)+'" '+
-                    'style="width:'+Math.max(6,Math.min(20,m.length+1))+'ch">'+
+                    'style="width:'+Math.max(8,Math.min(24,m.length+3))+'ch">'+
                   (g.moznosti.length>2?'<button class="sg-mx no-print" data-sgmdel="'+g.id+'" data-i="'+i+'" title="Odstrani možnost" aria-label="Odstrani možnost">✕</button>':'')+
                 '</span>';
               }).join("")+
@@ -3571,9 +3544,10 @@ function briefText(k){
   if(k.publika)L.push("PUBLIKA: "+k.publika);
   var prb=PR(), cgp=prb.cgp||{};
   if(String(prb.zapiski||"").trim()){L.push("");L.push("── O MAPI ──");L.push(prb.zapiski);}
-  if(cgp.barve||cgp.pisave||cgp.pravila||cgp.povezave){
+  var barveT=cgpBarveTekst(prb);
+  if(barveT||cgp.pisave||cgp.pravila||cgp.povezave){
     L.push("");L.push("── CELOSTNA PODOBA ──");
-    if(cgp.barve)L.push("Barve: "+cgp.barve);
+    if(barveT)L.push("Barve: "+barveT);
     if(cgp.pisave)L.push("Pisave: "+cgp.pisave);
     if(cgp.pravila)L.push("Pravila: "+cgp.pravila);
     if(cgp.povezave)L.push("CGP dokument: "+cgp.povezave);
@@ -4144,19 +4118,28 @@ document.addEventListener("input",function(ev){
       });
     }
     t.selectionStart=t.selectionEnd=pos;
+  }else if(t.dataset.cgpbarva!=null){
+    var prb2=S.projekti.filter(function(x){return x.id===t.dataset.pr;})[0];
+    if(prb2){
+      var pal=cgpPaleta(prb2), i3=parseInt(t.dataset.i,10);
+      if(pal[i3]){
+        pal[i3][t.dataset.cgpbarva]=t.value;
+        shrani();
+        /* ščipalka in polje s kodo kažeta isto barvo, zato ju uskladimo */
+        if(t.dataset.cgpbarva==="hex"){
+          var vrsta=t.closest(".pal-v");
+          qa("[data-cgpbarva='hex']",vrsta).forEach(function(o){
+            if(o!==t&&/^#[0-9a-fA-F]{6}$/.test(t.value))o.value=t.value;
+          });
+        }
+      }
+    }
   }else if(t.dataset.cgp!=null){
     var prc=S.projekti.filter(function(x){return x.id===t.dataset.pr;})[0];
     if(prc){
       if(!prc.cgp||typeof prc.cgp!=="object")prc.cgp={};
       prc.cgp[t.dataset.cgp]=t.value;
       shrani();
-      /* vzorce barv osvežimo brez ponovnega izrisa celega pogleda */
-      if(t.dataset.cgp==="barve"){
-        var sw=q(".cgp-sw",t.parentNode);
-        if(sw)sw.innerHTML=cgpBarve(t.value).map(function(b){
-          return '<i style="background:'+esc(b)+'" title="'+esc(b)+'"></i>';
-        }).join("");
-      }
     }
   }else if(t.dataset.przap!=null){
     var pr0=S.projekti.filter(function(x){return x.id===t.dataset.przap;})[0];
@@ -4176,7 +4159,7 @@ document.addEventListener("input",function(ev){
     if(g2.moznosti.indexOf(nova)>=0&&g2.moznosti.indexOf(nova)!==idx)return;   /* podvojeno ime */
     g2.moznosti[idx]=nova;
     stikPreimenujMoznost(g2,stara,nova);
-    t.style.width=Math.max(6,Math.min(20,nova.length+1))+"ch";
+    t.style.width=Math.max(8,Math.min(24,nova.length+3))+"ch";
     shrani();
   }
 });
@@ -4221,16 +4204,6 @@ document.addEventListener("change",function(ev){
   if(t.id==="dfile-ref"){
     var kr0=K();
     if(kr0)dodajDatoteke(t.files,datLastnikRef(kr0));
-    t.value="";return;
-  }
-  if(t.id==="dfile-logo"){
-    var pl=P();
-    if(pl){
-      /* logo je en sam — star pobrišemo, da se ne nabirajo */
-      Datoteke.brisiZaKreativo(datLastnikLogo(pl)).then(function(){
-        dodajDatoteke(t.files,datLastnikLogo(pl));
-      },function(){dodajDatoteke(t.files,datLastnikLogo(pl));});
-    }
     t.value="";return;
   }
   if(t.dataset.move!=null){
@@ -4356,11 +4329,6 @@ document.addEventListener("click",function(ev){
     gd.moznosti.splice(i2,1);
     stikPreimenujMoznost(gd,odstranjena,gd.moznosti[0]);
     migriraj();shrani();render();return;
-  }
-  if(t.id==="sql-toggle"){sqlOdprt=!sqlOdprt;render();return;}
-  if(t.id==="sql-copy"){
-    kopiraj(SQL,"SQL");
-    return;
   }
   if(t.id==="sgnew"){dodajStikalo("Novo stikalo",["Prva","Druga"]);return;}
   if(t.id==="sgtrg"){dodajStikalo("Trg",["Slovenija","Hrvaška","Slovaška"]);return;}
@@ -4547,8 +4515,19 @@ document.addEventListener("click",function(ev){
     else setTimeout(function(){var m=el("ob-mail");if(m)m.focus();},60);
     return;
   }
-  if(t.id==="logo-btn"){el("dfile-logo").click();return;}
   if(t.closest("#drop-ref")){el("dfile-ref").click();return;}
+  var badd=t.closest("[data-cgpbadd]");
+  if(badd){
+    var pra=S.projekti.filter(function(x){return x.id===badd.dataset.cgpbadd;})[0];
+    if(pra){cgpPaleta(pra).push({hex:"#1F35C4",ime:""});shrani();render();}
+    return;
+  }
+  var bdel2=t.closest("[data-cgpbdel]");
+  if(bdel2){
+    var prd=S.projekti.filter(function(x){return x.id===bdel2.dataset.cgpbdel;})[0];
+    if(prd){cgpPaleta(prd).splice(parseInt(bdel2.dataset.i,10),1);shrani();render();}
+    return;
+  }
   var dcgp=t.closest("[data-dropcgp]");
   if(dcgp){var vhod=el("dfile-cgp-"+dcgp.dataset.dropcgp);if(vhod)vhod.click();return;}
 
@@ -4594,13 +4573,6 @@ document.addEventListener("click",function(ev){
     case "prn": window.print();break;
     case "prnew": dodajProjekt();break;
     case "pnew3": dodajIzdelek();break;
-    case "reset": {
-      if(!confirm("Pobrišem prav vse podatke in datoteke iz te naprave?"))break;
-      if(Datoteke.naVoljo)Datoteke.pocisti().catch(function(){});
-      S=seed();S.izdelki=[];S.projekti=[novProjekt("Moj projekt")];S.aktivenProjekt=S.projekti[0].id;
-      S.aktiven=null;S.kalk=privzetiKalk();migriraj();
-      odprtaKreativa=null;pocistiUrlje();shrani();polniIzbirnik();nastaviView("projekti");toast("Vse pobrisano.");break;
-    }
     case "ob-in": Oblak.prijava(el("ob-mail").value.trim(),el("ob-geslo").value,false);break;
     case "ob-nov": Oblak.prijava(el("ob-mail").value.trim(),el("ob-geslo").value,true);break;
     case "ob-out": Oblak.odjava();break;
