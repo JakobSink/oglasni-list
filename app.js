@@ -6,7 +6,7 @@
 
 /* Oznaka različice. Poveča jo vsaka objava — v stranski vrstici je vidna, da se
    na prvi pogled loči, ali brskalnik strežé svežo kopijo ali staro iz cache-a. */
-var RAZLICICA="5. 8. 2026 · stikala, umestitve, Excel, uvoz";
+var RAZLICICA="različica 6 · stikala in mapa Eureka";
 
 /* ============ pomožne funkcije ============ */
 var LS="oglasni-list-v1", LS_TEMA="oglasni-list-tema";
@@ -2665,7 +2665,10 @@ function renderPodatki(){
       '<input type="file" id="impFileAdd" accept=".json,application/json" hidden>'+
       '<button class="btn" id="prn">Natisni / PDF</button>'+
     '</div>'+
-    '<p class="note" style="margin-top:10px"><b>Naloži pripravljeno mapo</b> vzame mapo, ki je objavljena skupaj z aplikacijo ('+esc(MAPE_URL)+'), in jo doda k tvojim podatkom — brez datoteke in brez prepisovanja. Na telefonu je to najhitrejša pot.<br>'+
+    '<p class="note" style="margin-top:10px"><b>Naloži pripravljeno mapo</b> vzame mapo, ki je objavljena skupaj z aplikacijo ('+esc(MAPE_URL)+'), in jo doda k tvojim podatkom — brez datoteke in brez prepisovanja. Na telefonu je to najhitrejša pot. '+
+    (pripravljenaNalozena()
+      ? '<b>Mapa „'+esc(MAPA_IME)+'“ je že naložena</b> — ponoven klik naredi drugo kopijo s pripisom „(uvoženo)“.'
+      : 'Mape „'+esc(MAPA_IME)+'“ še ni v tvojih podatkih.')+'<br>'+
     '<b>Uvozi in dodaj</b> mape in izdelke iz datoteke prilepi zraven obstoječim — nič se ne povozi. '+
     '<b>Uvozi in zamenjaj</b> odvrže vse, kar je zdaj v aplikaciji, in postavi na njegovo mesto vsebino datoteke; pred tem vpraša za potrditev.<br>'+
     'Izvoz vsebuje projekte, izdelke, kreative in vse številke — <b>ne pa naloženih slik in videov</b>, ker so za JSON preveliki. Te po potrebi prenesi posamično iz kreative.</p>'+
@@ -2773,7 +2776,10 @@ function brisiStikalo(gid){
 
 /* Mapa, pripravljena vnaprej in objavljena skupaj z aplikacijo. Obide datoteke
    in kopiranje besedila — na telefonu je oboje mučno.                        */
-var MAPE_URL="mape/eureka.json";
+var MAPE_URL="mape/eureka.json", MAPA_IME="TRGOVINA EUREKA";
+function pripravljenaNalozena(){
+  return S.projekti.some(function(x){return x.ime===MAPA_IME;});
+}
 function naloziPripravljeno(){
   var b=el("impUrl");
   if(b){b.disabled=true;b.textContent="Nalagam …";}
@@ -2806,7 +2812,7 @@ function uvozi(txt,nacin){
    vedno dodajo na novo z novimi id-ji — uvoz torej nikoli nicesar ne izgubi.
    Ce izdelek s tem imenom v mapi ze obstaja, dobi pripis, da se vidi razlika. */
 function uvoziDodaj(d){
-  var mape={}, novihMap=0, novihIzd=0, novihKr=0, novihStik=0;
+  var mape={}, novihMap=0, novihIzd=0, novihKr=0, novihStik=0, prviUvozen=null;
   /* Stikala iz paketa: tisto z istim imenom je isto stikalo, zato prevzamemo
      obstoječe in samo dopolnimo možnosti, ki jih še ni.                     */
   var stikPreslikava={};
@@ -2852,12 +2858,25 @@ function uvoziDodaj(d){
       k.id=uid();k.stDatotek=0;prevezi(k);novihKr++;
     });
     S.izdelki.push(kopija);novihIzd++;
+    if(!prviUvozen)prviUvozen=kopija;
   });
   migriraj();
+  /* Filter stikal postavi na „vse“ — sicer bi uvožene kreative lahko takoj
+     padle iz pogleda in bi izgledalo, kot da jih ni.                         */
+  S.stikaloPogled={};
+  /* Skoči na uvoženo mapo in njen prvi izdelek. Brez tega ostaneš v stari mapi
+     in izgleda, kot da uvoz ni naredil nič.                                  */
+  if(prviUvozen){
+    S.aktivenProjekt=prviUvozen.projekt;
+    S.aktiven=prviUvozen.id;
+    view="kreative";
+  }
   odprtaKreativa=null;shrani();polniIzbirnik();render();
+  try{location.hash=view;}catch(err){}
   toast("Dodano: "+novihIzd+" izdelkov, "+novihKr+" kreativ"+
     (novihMap?", "+novihMap+" novih map":"")+
-    (novihStik?", "+novihStik+" stikal":"")+". Nič obstoječega ni povoženo.");
+    (novihStik?", "+novihStik+" stikal":"")+
+    (prviUvozen?". Odprl sem „"+prviUvozen.ime+"“.":". Nič obstoječega ni povoženo."));
 }
 
 /* ============ brief ============ */

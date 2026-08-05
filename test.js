@@ -397,6 +397,14 @@ Promise.resolve()
           ok(klicanUrl === "mape/eureka.json", "pripravljena mapa se bere z prave poti", String(klicanUrl));
           ok(w.S.izdelki.length === prejPredNalozi + 1, "pripravljena mapa se doda, nič se ne povozi",
             w.S.izdelki.length + " (prej " + prejPredNalozi + ")");
+          /* uvoz mora skociti na uvozeno mapo, drugace izgleda, da se ni nic zgodilo.
+             Paket ima en izdelek, zato je cilj skoka nazadnje dodani.            */
+          const skok = w.S.izdelki[w.S.izdelki.length - 1];
+          ok(w.S.aktiven === skok.id && w.S.aktivenProjekt === skok.projekt,
+            "uvoz preklopi na uvoženo mapo in izdelek");
+          ok(w.view === "kreative", "uvoz odpre pogled Kreative", w.view);
+          ok(Object.keys(w.S.stikaloPogled || {}).length === 0,
+            "uvoz sprosti filter stikal, da uvoženo ni skrito");
           /* neuspeh ne sme podrti pogleda niti pustiti gumba onemogočenega */
           w.fetch = () => Promise.resolve({ ok: false, status: 404, text: () => Promise.resolve("") });
           w.naloziPripravljeno();
