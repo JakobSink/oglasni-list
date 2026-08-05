@@ -33,19 +33,124 @@ function cas(iso){
 }
 
 /* ============ model ============ */
+/* ============ model oglasa: platforma → umestitev → format ============
+   Umestitev je tisto, kar v oglasnem računu izbereš pod "placements": ista
+   kreativa izgleda v feedu drugače kot v zgodbi in tam se ne prikažejo ista
+   polja. Zato umestitev, ne platforma, določa obliko predogleda.               */
+var PLATFORME=[["facebook","Facebook"],["instagram","Instagram"],["google","Google"],["tiktok","TikTok"],["youtube","YouTube"],["drugo","Drugo"]];
+var FORMATI=["slika","UGC video","video 9:16","karusel","kolekcija","RSA","Performance Max","zgodba","besedilo"];
+
+/* gumbi, kot jih dejansko ponudi posamezen oglasni račun */
+var CTA_PLAT={
+  facebook:["Kupi zdaj","Nakupuj zdaj","Izvedi več","Naroči zdaj","Prijavi se","Pošlji sporočilo","Rezerviraj","Prenesi","Poišči ponudbo","Pokliči"],
+  instagram:["Kupi zdaj","Nakupuj zdaj","Izvedi več","Naroči zdaj","Prijavi se","Rezerviraj","Prenesi","Poišči ponudbo"],
+  tiktok:["Kupi zdaj","Nakupuj zdaj","Izvedi več","Naroči zdaj","Prenesi","Prijavi se","Rezerviraj"],
+  youtube:["Kupi zdaj","Nakupuj zdaj","Izvedi več","Naroči zdaj","Prenesi","Prijavi se"],
+  google:["Izvedi več","Kupi zdaj","Nakupuj zdaj","Naroči zdaj","Prijavi se","Prenesi"],
+  drugo:["Kupi zdaj","Izvedi več","Naroči zdaj","Prijavi se","Prenesi"]
+};
+function ctaSeznam(pl){return CTA_PLAT[pl]||CTA_PLAT.drugo;}
+function privzetiCTA(pl){return ctaSeznam(pl)[0];}
+
+/* omejitve znakov po platformi; "priporočeno" je meja, kjer platforma reže */
+var LIM={
+  facebook:{primarni:125,naslov:40,opis:30,naslovVarno:27,opisVarno:27},
+  instagram:{primarni:125,naslov:40,opis:30,naslovVarno:27,opisVarno:27},
+  tiktok:{primarni:100,naslov:40,opis:30,naslovVarno:40,opisVarno:30},
+  youtube:{primarni:100,naslov:40,opis:30,naslovVarno:40,opisVarno:30},
+  google:{primarni:90,naslov:30,opis:90,pot:15,naslovVarno:30,opisVarno:90},
+  drugo:{primarni:200,naslov:60,opis:90,naslovVarno:60,opisVarno:90}
+};
+
+/* risi = kateri predogled se nariše; rabi = katera polja se v tej umestitvi
+   sploh vidijo; zlozi = po koliko vrsticah besedilo dobi „Več“             */
+var UMESTITVE={
+  facebook:[
+    ["fb-feed","Feed",{risi:"fbfeed",r:"4 / 5",px:"1080 × 1350",zlozi:3,rabi:["primarna","naslovi","opisi","cta","url"]}],
+    ["fb-reels","Reels",{risi:"reels",r:"9 / 16",px:"1080 × 1920",zlozi:2,rabi:["primarna","cta"]}],
+    ["fb-zgodba","Zgodba",{risi:"zgodba",r:"9 / 16",px:"1080 × 1920",zlozi:2,rabi:["primarna","cta"]}],
+    ["fb-market","Marketplace",{risi:"market",r:"1 / 1",px:"1080 × 1080",rabi:["naslovi","cta"]}]
+  ],
+  instagram:[
+    ["ig-feed","Feed",{risi:"igfeed",r:"4 / 5",px:"1080 × 1350",zlozi:1,rabi:["primarna","cta"]}],
+    ["ig-reels","Reels",{risi:"reels",r:"9 / 16",px:"1080 × 1920",zlozi:2,rabi:["primarna","cta"]}],
+    ["ig-zgodba","Zgodba",{risi:"zgodba",r:"9 / 16",px:"1080 × 1920",zlozi:2,rabi:["primarna","cta"]}],
+    ["ig-razisci","Razišči",{risi:"igfeed",r:"4 / 5",px:"1080 × 1350",zlozi:1,rabi:["primarna","cta"]}]
+  ],
+  google:[
+    ["g-search","Iskanje",{risi:"search",rabi:["naslovi","opisi","url","pot","sitelinki"]}],
+    ["g-display","Display",{risi:"display",r:"1.91 / 1",px:"1200 × 628",rabi:["naslovi","opisi","cta","url"]}],
+    ["g-pmax","Performance Max",{risi:"pmax",r:"1.91 / 1",px:"1200 × 628",rabi:["naslovi","opisi","url","pot"]}]
+  ],
+  tiktok:[
+    ["tt-feed","Za vas",{risi:"tiktok",r:"9 / 16",px:"1080 × 1920",zlozi:2,rabi:["primarna","cta"]}]
+  ],
+  youtube:[
+    ["yt-instream","In-stream",{risi:"ytinstream",r:"16 / 9",px:"1920 × 1080",rabi:["naslovi","cta","url"]}],
+    ["yt-shorts","Shorts",{risi:"reels",r:"9 / 16",px:"1080 × 1920",zlozi:2,rabi:["primarna","cta"]}]
+  ],
+  drugo:[
+    ["x-splosno","Splošno",{risi:"splosno",rabi:["primarna","naslovi","opisi","cta","url"]}]
+  ]
+};
+/* kje se dani format sploh lahko vrti */
+var FORMAT_UM={
+  "slika":           ["fb-feed","fb-market","fb-zgodba","fb-reels","ig-feed","ig-razisci","ig-zgodba","ig-reels","g-display","g-pmax","x-splosno"],
+  "UGC video":       ["fb-feed","fb-reels","fb-zgodba","fb-market","ig-feed","ig-reels","ig-zgodba","ig-razisci","tt-feed","yt-shorts","yt-instream","g-pmax","x-splosno"],
+  "video 9:16":      ["fb-reels","fb-zgodba","ig-reels","ig-zgodba","tt-feed","yt-shorts","fb-feed","ig-feed","x-splosno"],
+  "zgodba":          ["fb-zgodba","ig-zgodba","fb-reels","ig-reels","yt-shorts","x-splosno"],
+  "karusel":         ["fb-feed","ig-feed","fb-market","ig-razisci","x-splosno"],
+  "kolekcija":       ["fb-feed","ig-feed","x-splosno"],
+  "RSA":             ["g-search"],
+  "Performance Max": ["g-pmax","g-display","g-search"],
+  "besedilo":        ["fb-feed","x-splosno"]
+};
+function umSeznam(pl){return UMESTITVE[pl]||UMESTITVE.drugo;}
+/* formati, ki jih dana platforma sploh pozna */
+function formatiZa(pl){
+  var kljuci=umSeznam(pl).map(function(x){return x[0];});
+  return FORMATI.filter(function(f){
+    var a=FORMAT_UM[f];
+    if(!a)return true;
+    return a.some(function(kk){return kljuci.indexOf(kk)>=0;});
+  });
+}
+function umOK(format,key){var a=FORMAT_UM[format];return !a||a.indexOf(key)>=0;}
+function umNajdi(pl,key){
+  return umSeznam(pl).filter(function(u){return u[0]===key;})[0]||null;
+}
+function privzetaUmestitev(pl,format){
+  var s=umSeznam(pl).filter(function(u){return umOK(format,u[0]);});
+  return (s[0]||umSeznam(pl)[0])[0];
+}
+/* veljavna umestitev kreative — če je format ne dopušča, pade na prvo možno */
+function um(k){
+  var n=umNajdi(k.platforma,k.umestitev);
+  if(!n||!umOK(k.format,n[0]))n=umNajdi(k.platforma,privzetaUmestitev(k.platforma,k.format));
+  return n||umSeznam("drugo")[0];
+}
+function umIme(k){var u=um(k);return u[1];}
+function platIme(pl){return (PLATFORME.filter(function(x){return x[0]===pl;})[0]||["","?"])[1];}
+/* ali se dano polje v tej umestitvi sploh prikaže */
+function seVidi(spec,polje){return !spec.rabi||spec.rabi.indexOf(polje)>=0;}
+
 function novProjekt(ime){return {id:uid(),ime:ime||"Nov projekt",opis:""};}
 function novIzdelek(ime,projekt){
-  return {id:uid(),projekt:projekt||null,ime:ime||"Nov izdelek",opis:"",znamka:"",domena:"",
+  return {id:uid(),projekt:projekt||null,ime:ime||"Nov izdelek",opis:"",znamka:"",domena:"",url:"",
+    zapiski:"",stDatotek:0,izracuni:false,
     cena:"",ddv:"22",ddvVkljucen:true,posiljanjePlaca:"",
     nabavna:"",posiljanje:"",embalaza:"",provizijaPct:"2,9",provizijaFix:"0,25",ostalo:"",vracilaPct:"5",
     fiksniMesecni:"",dnevniBudget:"",predvidenCPA:"",
     kreative:[]};
 }
 function novaKreativa(pl){
-  return {id:uid(),naslov:"Nova kreativa",platforma:pl||"facebook",format:"slika",status:"ideja",
+  pl=pl||"facebook";
+  var fmt=pl==="google"?"RSA":(pl==="tiktok"?"UGC video":"slika");
+  return {id:uid(),naslov:"Nova kreativa",platforma:pl,format:fmt,
+    umestitev:privzetaUmestitev(pl,fmt),status:"ideja",
     kot:"",publika:"",tagi:"",
-    hooki:[""],primarna:[""],naslovi:[""],opisi:[""],cta:"Kupi zdaj",
-    kljucneBesede:"",url:"",design:"",izvajalec:"",rok:"",opombe:"",stDatotek:0,
+    hooki:[""],primarna:[""],naslovi:[""],opisi:[""],cta:privzetiCTA(pl),
+    kljucneBesede:"",url:"",pot1:"",pot2:"",sitelinki:"",design:"",izvajalec:"",rok:"",opombe:"",stDatotek:0,
     budget:"",cpm:"",ctr:"",cvr:"",
     rSpend:"",rImpr:"",rClicks:"",rOrders:""};
 }
@@ -137,6 +242,11 @@ function migriraj(){
     if(!x.projekt||!znani[x.projekt])x.projekt=S.projekti[0].id;
     if(typeof x.znamka!=="string")x.znamka="";
     if(typeof x.domena!=="string")x.domena="";
+    if(typeof x.url!=="string")x.url="";
+    if(typeof x.zapiski!=="string")x.zapiski="";
+    if(typeof x.stDatotek!=="number")x.stDatotek=0;
+    /* izračuni so dodatek: starim izdelkom s ceno ostanejo vklopljeni */
+    if(typeof x.izracuni!=="boolean")x.izracuni=n(x.cena)>0;
     if(!Array.isArray(x.kreative))x.kreative=[];
     x.kreative.forEach(function(k){
       /* eno besedilo → seznam različic */
@@ -151,10 +261,21 @@ function migriraj(){
       if(typeof k.stDatotek!=="number")k.stDatotek=0;
       if(STATUS_STARI[k.status])k.status=STATUS_STARI[k.status];
       if(!STATUSI.some(function(s){return s[0]===k.status;}))k.status="ideja";
+      /* umestitev je nova — starim kreativam jo izpelji iz platforme in formata */
+      if(typeof k.umestitev!=="string"||!umNajdi(k.platforma,k.umestitev))
+        k.umestitev=privzetaUmestitev(k.platforma,k.format);
+      /* prikazna pot pri Googlu: če je bila v URL-ju, jo prenesi v polji */
+      if(typeof k.pot1!=="string"||typeof k.pot2!=="string"){
+        var pot=potIz(k);
+        k.pot1=typeof k.pot1==="string"?k.pot1:(pot[0]||"");
+        k.pot2=typeof k.pot2==="string"?k.pot2:(pot[1]||"");
+      }
+      if(typeof k.sitelinki!=="string")k.sitelinki="";
+      if(!k.cta||ctaSeznam(k.platforma).indexOf(k.cta)<0)k.cta=privzetiCTA(k.platforma);
     });
   });
   if(!S.aktivenProjekt||!znani[S.aktivenProjekt])S.aktivenProjekt=S.projekti[0].id;
-  S.v=3;
+  S.v=4;
 }
 
 var S;
@@ -202,6 +323,8 @@ function najdiKreativo(kid){
 }
 
 /* ============ izračuni ============ */
+/* izračuni so dodatek na izdelku — brez njih ni marže, CPA-ja in profita */
+function imaEkon(p){return !!(p&&p.izracuni);}
 function ekon(p){
   var ddvF = p.ddvVkljucen ? (1+n(p.ddv)/100) : 1;
   var bruto = n(p.cena)+n(p.posiljanjePlaca);
@@ -386,6 +509,13 @@ function brisiDatotekeKreativ(kreative){
   kreative.forEach(function(k){p=p.then(function(){return Datoteke.brisiZaKreativo(k.id).catch(function(){});});});
   return p;
 }
+/* z izdelkom gre tudi njegov material */
+function brisiDatotekeIzdelka(izd){
+  if(!Datoteke.naVoljo)return Promise.resolve();
+  return brisiDatotekeKreativ(izd.kreative||[]).then(function(){
+    return Datoteke.brisiZaKreativo(datLastnikIzdelka(izd)).catch(function(){});
+  });
+}
 
 /* ============ POGLED: projekti ============ */
 function renderProjekti(){
@@ -561,7 +691,7 @@ function paintPregled(){
   if(mn)mn.textContent="Od "+e(ek.bruto)+", ki jih plača stranka, ti po vseh stroških in "+p1(ek.vracila*100)+" vračil ostane toliko.";
   put("becpa",e(ek.beCPA));
   put("beroas",x2(ek.beROAS));
-  el("pr-verdict").innerHTML=verdictHtml(ek,cpa);
+  el("pr-verdict").innerHTML=verdictHtml(ek,cpa,p);
 
   /* razrez v pas */
   var dostava=n(p.posiljanje)+n(p.embalaza)+n(p.ostalo);
@@ -658,8 +788,12 @@ function paintPregled(){
     '</ul>';
   }
 }
-function verdictHtml(ek,cpa){
+function verdictHtml(ek,cpa,p){
   var d=ek.marzaEf-cpa, cls, txt;
+  if(p&&!imaEkon(p))
+    return '<div class="verdict mid"><div><b>Izračuni za ta izdelek so izklopljeni.</b> '+
+      'Vidiš budget, prikaze in klike, ne pa marže, CPA-ja in profita. '+
+      'Vklopiš jih v zavihku <i>Ekonomika</i>, ko boš imel ceno in stroške.</div></div>';
   if(!isFinite(ek.marzaEf)||ek.marzaEf===0){cls="mid";txt="<b>Vnesi ceno in stroške</b> v zavihku Ekonomika — brez tega so vsi ostali izračuni prazni.";}
   else if(ek.marzaEf<=0){cls="bad";txt="<b>Marža je negativna.</b> Izdelek izgublja denar že pred prvim oglasom. Popravi ceno ali stroške, preden zapraviš en evro za oglase.";}
   else if(d<=0){cls="bad";txt="<b>Predvideni CPA "+e(cpa)+" je nad break-even "+e(ek.beCPA)+".</b> Vsako naročilo te stane "+e(-d)+" preveč. Več budgeta pomeni večjo izgubo, ne večji profit.";}
@@ -672,10 +806,10 @@ function verdictHtml(ek,cpa){
 function renderEkon(){
   var p=P();
   if(!p){el("v-ekonomika").innerHTML=praznoHtml();return;}
-  el("v-ekonomika").innerHTML=
-  glava("Ekonomika izdelka",
-    "Vse na <b>eno naročilo</b>. Vpiši, kar stranka plača, in vse, kar ti to naročilo vzame — od nabavne cene do provizije in vračil. Številke spodaj se preračunajo med tipkanjem.",
-    "",[{t:PR().ime,v:"projekti"},{t:p.ime}])+
+  var naVklop=imaEkon(p);
+
+  /* Izdelek, material in zapiski — to velja ne glede na izračune */
+  var osnova=
   '<div class="block" id="ekon-form">'+
     '<fieldset class="sect"><div class="lg"><h3>Izdelek</h3><p>Ime in kam sodi</p></div>'+
       '<div class="grid">'+
@@ -686,9 +820,51 @@ function renderEkon(){
         txtFld("opis","Kratek opis / ponudba","Pokaže se na Pregledu in v briefu.")+
         txtFld("znamka","Ime strani / znamke","Uporabi se kot ime oglaševalca v predogledu oglasa.","npr. Moja trgovina")+
         txtFld("domena","Domena","Prikaže se v predogledu FB in Google oglasa.","npr. mojatrgovina.si")+
+        txtFld("url","Povezava na izdelek","Privzeti ciljni URL za nove kreative tega izdelka.","https://…")+
       '</div>'+
     '</fieldset>'+
-    '<fieldset class="sect"><div class="lg"><h3>Prihodek</h3><p>Kar stranka plača</p></div>'+
+
+    /* material in zapiski izdelka */
+    '<fieldset class="sect"><div class="lg"><h3>Material in zapiski</h3>'+
+      '<p>Slike, videi in vse, kar si ugotovil o tem izdelku. Material je skupen vsem kreativam tega izdelka — če kreativa nima svojega, se v predogledu uporabi prva slika od tu.</p></div>'+
+      '<div class="f"><label for="f-zapiski">Zapiski o izdelku</label>'+
+        '<textarea id="f-zapiski" data-p="zapiski" rows="5" placeholder="Specifikacije, kaj vprašajo stranke, kaj je na zalogi, dobavni rok, konkurenca, kaj deluje v oglasih …">'+esc(p.zapiski||"")+'</textarea>'+
+        '<span class="hint">Gre v brief kreativ tega izdelka.</span></div>'+
+      (Datoteke.naVoljo
+        ? '<div class="drop no-print" id="drop-izd" style="margin-top:16px">'+
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>'+
+            '<b>Naloži slike in videe izdelka</b>'+
+            '<span>Klikni ali povleci sem. Shrani se v to napravo.</span>'+
+          '</div>'+
+          '<input type="file" id="dfile-izd" multiple accept="image/*,video/*,.pdf" hidden>'+
+          '<div class="files" id="datoteke-izd"></div>'
+        : '<p class="note">Ta brskalnik ne dovoli shranjevanja datotek (IndexedDB ni na voljo).</p>')+
+    '</fieldset>'+
+
+    /* stikalo za izračune */
+    '<fieldset class="sect"><div class="lg"><h3>Izračuni</h3>'+
+      '<p>Marža, break-even CPA, ROAS in napoved profita. Dodatek — če ga ne rabiš, ga pusti izklopljenega in izdelek uporabljaj samo za kreative.</p></div>'+
+      '<label class="chk"><input type="checkbox" data-p="izracuni"'+(naVklop?" checked":"")+'> Vklopi izračune za ta izdelek</label>'+
+      (naVklop?'':'<p class="note" style="margin-top:12px">Izklopljeno: pregled in kreative prikazujejo budget, prikaze in klike, ne pa marže, CPA-ja in profita. Vklopi, ko boš imel ceno in stroške.</p>')+
+    '</fieldset>'+
+  (naVklop?
+    '<fieldset class="sect"><div class="lg"><h3>Prihodek</h3><p>Kar stranka plača</p></div>':'');
+
+  if(!naVklop){
+    el("v-ekonomika").innerHTML=
+      glava(p.ime,"Ime, material in zapiski izdelka. Izračuni so izklopljeni.",
+        '<button class="btn" data-goto="kreative">Kreative izdelka</button>',
+        [{t:PR().ime,v:"projekti"},{t:p.ime}])+
+      osnova+'</div>';
+    narisiDatoteke();
+    return;
+  }
+
+  el("v-ekonomika").innerHTML=
+  glava("Ekonomika izdelka",
+    "Vse na <b>eno naročilo</b>. Vpiši, kar stranka plača, in vse, kar ti to naročilo vzame — od nabavne cene do provizije in vračil. Številke spodaj se preračunajo med tipkanjem.",
+    "",[{t:PR().ime,v:"projekti"},{t:p.ime}])+
+  osnova+
       '<div class="grid">'+
         fld("cena","Prodajna cena","€","Cena izdelka, kot jo vidi stranka")+
         fld("posiljanjePlaca","Poštnina, ki jo plača stranka","€","0, če je dostava brezplačna")+
@@ -727,6 +903,7 @@ function renderEkon(){
     '<div class="scroll"><table><thead><tr><th>Prodaj / dan</th><th>Budget / dan</th><th>Prihodek / dan</th><th>Profit / dan</th><th>Profit / mesec</th><th>Po fiksnih</th><th>ROAS</th></tr></thead><tbody id="scen"></tbody></table></div>'+
     '<div class="pad" id="scen-info"></div>'+
   '</div>';
+  narisiDatoteke();
   paintEkon();
 }
 function paintEkon(){
@@ -768,12 +945,6 @@ function paintEkon(){
 }
 
 /* ============ POGLED: kreative ============ */
-var CTA=["Kupi zdaj","Nakupuj zdaj","Izvedi več","Naroči zdaj","Prijavi se","Pošlji sporočilo","Rezerviraj","Prenesi"];
-var PLATFORME=[["facebook","Facebook"],["instagram","Instagram"],["google","Google"],["tiktok","TikTok"],["youtube","YouTube"],["drugo","Drugo"]];
-var FORMATI=["slika","UGC video","video 9:16","karusel","kolekcija","RSA","Performance Max","zgodba","besedilo"];
-var LIM={facebook:{primarni:125,naslov:40,opis:30},instagram:{primarni:125,naslov:40,opis:30},
-  tiktok:{primarni:100,naslov:40,opis:30},youtube:{primarni:100,naslov:40,opis:30},
-  google:{primarni:90,naslov:30,opis:90},drugo:{primarni:200,naslov:60,opis:90}};
 var HOOKI=[
  "Tri leta sem plačeval X. Potem sem …",
  "Če te [problem] budi ponoči, preberi to.",
@@ -836,7 +1007,8 @@ function renderKreative(){
       : "Kreativa je en oglas: kot, tekst, slika ali video, budget in rezultati. Izberi platformo — vsaka ima svoja polja in svoj predogled.",
     '<button class="btn btn-p" data-add="facebook">+ Facebook</button>'+
     '<button class="btn btn-soft" data-add="google">+ Google</button>'+
-    '<button class="btn btn-soft" data-add="tiktok">+ TikTok</button>',
+    '<button class="btn btn-soft" data-add="tiktok">+ TikTok</button>'+
+    (p.kreative.length?'<button class="btn" id="xlsx">Izvozi v Excel</button>':''),
     [{t:PR().ime,v:"projekti"},{t:p.ime,v:"pregled"},{t:"Kreative"}])+
   '<div class="cards">'+kartice+
     '<button class="card card-add" data-add="facebook"><b>+ Nova kreativa</b><span>privzeto Facebook, platformo lahko zamenjaš</span></button>'+
@@ -958,6 +1130,11 @@ function renderEditor(){
   var jeGoogle=k.platforma==="google";
   var c=cfg(k);
   var jeVideoPlat=k.platforma==="tiktok"||k.platforma==="youtube";
+  var u=um(k), spec=u[2];
+  /* opozorilo pod poljem, če se v izbrani umestitvi ne prikaže */
+  function neVidi(polje,kje){
+    return seVidi(spec,polje)?"":" V umestitvi "+u[1]+" se "+kje+" ne prikaže — ostane pa zapisano za ostale umestitve.";
+  }
   pocistiUrlje();
   function nf(path,label,unit,hint){
     return '<div class="f"><label for="c-'+path+'">'+esc(label)+'</label>'+
@@ -965,23 +1142,32 @@ function renderEditor(){
       (unit?'<span class="unit">'+unit+'</span>':'')+'</div>'+(hint?'<span class="hint">'+esc(hint)+'</span>':'')+'</div>';
   }
 
-  var platIme=(PLATFORME.filter(function(x){return x[0]===k.platforma;})[0]||["","?"])[1];
+  var platNaziv=platIme(k.platforma);
 
   el("v-kreative").innerHTML=
   glava(k.naslov||"Kreativa", c.lede,
     '<button class="btn" id="copy">Kopiraj brief</button>'+
     '<button class="btn" id="dup">Podvoji</button>'+
     '<button class="btn btn-d" id="delk">Izbriši</button>',
-    [{t:PR().ime,v:"projekti"},{t:p.ime,v:"pregled"},{t:"Kreative",v:"kreative"},{t:platIme}])+
+    [{t:PR().ime,v:"projekti"},{t:p.ime,v:"pregled"},{t:"Kreative",v:"kreative"},{t:platNaziv+" · "+u[1]}])+
 
   /* 1 — osnova */
   '<div class="block" id="cre-form">'+
-    '<fieldset class="sect"><div class="lg"><h3>Osnova</h3><p>Platforma določi polja, omejitve znakov in predogled</p></div>'+
+    '<fieldset class="sect"><div class="lg"><h3>Osnova</h3><p>Platforma in umestitev določita polja, omejitve znakov in predogled</p></div>'+
       '<div class="grid">'+
         '<div class="f full"><label for="c-naslov">Ime kreative (za tvojo evidenco)</label>'+
           '<input class="txt" id="c-naslov" type="text" data-c="naslov" value="'+esc(k.naslov)+'" placeholder="npr. FB · UGC — bolečina v hrbtu"></div>'+
         '<div class="f"><label for="c-platforma">Platforma</label><select class="txt" id="c-platforma" data-c="platforma">'+PLATFORME.map(function(x){return '<option value="'+x[0]+'"'+(k.platforma===x[0]?" selected":"")+'>'+x[1]+'</option>';}).join("")+'</select></div>'+
-        '<div class="f"><label for="c-format">Format</label><select class="txt" id="c-format" data-c="format">'+FORMATI.map(function(x){return '<option'+(k.format===x?" selected":"")+'>'+x+'</option>';}).join("")+'</select></div>'+
+        '<div class="f"><label for="c-format">Format</label><select class="txt" id="c-format" data-c="format">'+
+          formatiZa(k.platforma).concat(formatiZa(k.platforma).indexOf(k.format)<0?[k.format]:[]).map(function(x){
+            return '<option'+(k.format===x?" selected":"")+'>'+esc(x)+'</option>';}).join("")+'</select>'+
+          '<span class="hint">Ponujeni so samo formati, ki jih '+esc(platNaziv)+' pozna.</span></div>'+
+        '<div class="f"><label for="c-umestitev">Umestitev</label><select class="txt" id="c-umestitev" data-c="umestitev">'+
+          umSeznam(k.platforma).map(function(x){
+            var ok=umOK(k.format,x[0]);
+            return '<option value="'+x[0]+'"'+(x[0]===u[0]?" selected":"")+(ok?"":" disabled")+'>'+esc(x[1])+(ok?"":" — ni za ta format")+'</option>';
+          }).join("")+'</select>'+
+          '<span class="hint">To je „placement“ iz oglasnega računa. Določi obliko oglasa in katera polja se sploh prikažejo.</span></div>'+
         '<div class="f"><label for="c-status">Kje je v procesu</label><select class="txt" id="c-status" data-c="status">'+
           STATUSI.map(function(x){return '<option value="'+x[0]+'"'+(k.status===x[0]?" selected":"")+'>'+x[1]+'</option>';}).join("")+'</select>'+
           '<span class="hint">Samo <i>aktivna</i> in <i>zmagovalka</i> se štejeta v dnevni budget izdelka.</span></div>'+
@@ -1020,25 +1206,39 @@ function renderEditor(){
 
     /* 4 — tekst in predogled */
     '<fieldset class="sect"><div class="lg"><h3>Tekst in predogled</h3>'+
-      '<p>Desno je videti tako, kot bo oglas izgledal '+(jeGoogle?"v Google iskanju":"v aplikaciji")+'. Osvežuje se med tipkanjem.</p></div>'+
+      '<p>Polja so ista in enako omejena kot v '+(jeGoogle?"Google Ads":"Meta Ads Manager")+'. Predogled desno se ravna po izbrani umestitvi.</p></div>'+
       '<div class="two">'+
         '<div style="display:flex;flex-direction:column;gap:20px">'+
         (jeGoogle
-          ? varList(k,"naslovi","Naslovi",30,"Google jih sam kombinira po tri, zato mora vsak zveneti smiselno tudi sam. Priporočeno 5–10 različic.")+
-            varList(k,"opisi","Opisi",90,"Prikažeta se do dva. Napiši 3–4 različice.",3)+
+          ? varList(k,"naslovi","Naslovi",lim.naslov,"Google jih sam kombinira po tri, zato mora vsak zveneti smiselno tudi sam. Vpiši 8–15 različic, nobena se ne sme brati kot nadaljevanje prejšnje.")+
+            varList(k,"opisi","Opisi",lim.opis,"Prikažeta se do dva. Vpiši 4 različice.",3)+
+            '<div class="grid">'+
+              '<div class="f"><label for="c-pot1">Prikazna pot 1</label>'+
+                '<div class="wrap"><input class="txt" id="c-pot1" type="text" data-c="pot1" data-limit="'+lim.pot+'" value="'+esc(k.pot1)+'" placeholder="vinil"></div>'+
+                '<span class="hint">Zeleni del za domeno v oglasu. Ni pravi URL, do '+lim.pot+' znakov.</span></div>'+
+              '<div class="f"><label for="c-pot2">Prikazna pot 2</label>'+
+                '<div class="wrap"><input class="txt" id="c-pot2" type="text" data-c="pot2" data-limit="'+lim.pot+'" value="'+esc(k.pot2)+'" placeholder="na-klik"></div></div>'+
+            '</div>'+
+            '<div class="f"><label for="c-sitelinki">Sitelinki (razširitve povezav)</label>'+
+              '<input class="txt" id="c-sitelinki" type="text" data-c="sitelinki" value="'+esc(k.sitelinki)+'" placeholder="Cenik · Vzorci · Montaža · Kontakt">'+
+              '<span class="hint">Ločeno z vejico. Google jih pripiše pod oglas — v predogledu se pokažejo.</span></div>'+
             '<div class="f"><label for="c-kljucneBesede">Ključne besede</label>'+
-              '<textarea id="c-kljucneBesede" data-c="kljucneBesede" rows="3" placeholder="masazna pistola, masažna pištola cena, …">'+esc(k.kljucneBesede)+'</textarea>'+
-              '<span class="hint">Ločeno z vejico. Negativne ključne besede zapiši v Opombe spodaj.</span></div>'+
-            '<div class="f"><label for="c-url">Ciljni URL</label>'+
+              '<textarea id="c-kljucneBesede" data-c="kljucneBesede" rows="3" placeholder="vinil na klik, vinil pod cena, …">'+esc(k.kljucneBesede)+'</textarea>'+
+              '<span class="hint">Ločeno z vejico. Prva se uporabi kot iskalna poizvedba v predogledu. Negativne zapiši v Opombe.</span></div>'+
+            '<div class="f"><label for="c-url">Končni URL</label>'+
               '<input class="txt" id="c-url" type="text" data-c="url" value="'+esc(k.url)+'" placeholder="https://'+esc(p.domena||"tvoja-domena.si")+'/izdelek"></div>'
           : varList(k,"hooki","Hooki — prva vrstica"+(jeVideoPlat?" / prve 3 sekunde":""),80,
               "Napiši 3–5 različic in testiraj. Hook je edina stvar, ki se je vredno lotiti prvič.",2)+
             varList(k,"primarna","Primarno besedilo",lim.primarni,
-              "Nad "+lim.primarni+" znakov se skrajša v „Več …“, zato najpomembnejše daj naprej.",7)+
-            (jeVideoPlat?'':varList(k,"naslovi","Naslovi (pod sliko, ob gumbu)",lim.naslov,"2–3 različice."))+
-            (k.platforma==="facebook"||k.platforma==="drugo"?varList(k,"opisi","Opisi (drobno pod naslovom)",lim.opis,""):'')+
+              "Zloži se po "+(spec.zlozi||3)+" vrsticah v „Več“, zato najpomembnejše daj naprej."+neVidi("primarna","primarno besedilo"),7)+
+            varList(k,"naslovi","Naslovi"+(seVidi(spec,"naslovi")?" (pod sliko, ob gumbu)":""),lim.naslov,
+              "Varno do "+lim.naslovVarno+" znakov, potem se odreže s tremi pikami."+neVidi("naslovi","naslov"))+
+            varList(k,"opisi","Opisi (drobno pod naslovom)",lim.opis,
+              "Varno do "+lim.opisVarno+" znakov."+neVidi("opisi","opis"))+
             '<div class="grid">'+
-              '<div class="f"><label for="c-cta">Gumb (CTA)</label><select class="txt" id="c-cta" data-c="cta">'+CTA.map(function(x){return '<option'+(k.cta===x?" selected":"")+'>'+x+'</option>';}).join("")+'</select></div>'+
+              '<div class="f"><label for="c-cta">Gumb (CTA)</label><select class="txt" id="c-cta" data-c="cta">'+
+                ctaSeznam(k.platforma).map(function(x){return '<option'+(k.cta===x?" selected":"")+'>'+esc(x)+'</option>';}).join("")+'</select>'+
+                '<span class="hint">Seznam je tak, kot ga ponudi '+(k.platforma==="tiktok"?"TikTok Ads":"Meta")+'.</span></div>'+
               '<div class="f"><label for="c-url">Ciljni URL</label><input class="txt" id="c-url" type="text" data-c="url" value="'+esc(k.url)+'" placeholder="https://'+esc(p.domena||"tvoja-domena.si")+'"></div>'+
             '</div>')+
           '<div class="f no-print"><span class="lbl">Banka hookov — klikni, da dodaš novo različico</span><div class="bank">'+
@@ -1046,10 +1246,17 @@ function renderEditor(){
           '</div></div>'+
         '</div>'+
         '<div><div class="prev-wrap">'+
-          '<div class="prev-lab"><span class="eyebrow">Živi predogled</span><span class="sp"></span><span class="pill plat np">'+esc(platIme)+'</span></div>'+
+          '<div class="prev-lab"><span class="eyebrow">Predogled</span><span class="sp"></span><span class="pill plat np">'+esc(platNaziv)+'</span></div>'+
+          '<div class="um-pills no-print" role="tablist" aria-label="Umestitev">'+
+            umSeznam(k.platforma).map(function(x){
+              var ok=umOK(k.format,x[0]), izbran=x[0]===u[0];
+              return '<button class="um-p'+(izbran?" on":"")+(ok?"":" off")+'" data-um="'+x[0]+'"'+
+                (ok?'':' disabled title="Format '+esc(k.format)+' se v tej umestitvi ne vrti"')+'>'+esc(x[1])+'</button>';
+            }).join("")+
+          '</div>'+
           '<div id="predogled" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:10px"></div>'+
-          '<p class="prev-note">Približek, ne posnetek zaslona. Platforme besedilo krajšajo različno na različnih napravah. '+
-          'Številka v krogu ob vsaki različici pove, katera je zdaj v predogledu — klikni drugo, da jo zamenjaš.</p>'+
+          '<p class="prev-note">Približek, ne posnetek zaslona — vsaka naprava reže besedilo malo drugače. '+
+          'Številka v krogu ob različici pove, katera je zdaj v predogledu.</p>'+
         '</div></div>'+
       '</div>'+
     '</fieldset>'+
@@ -1066,7 +1273,7 @@ function renderEditor(){
         '<div class="f"><label for="c-rok">Rok</label>'+
           '<input class="txt" id="c-rok" type="text" data-c="rok" value="'+esc(k.rok)+'" placeholder="do petka / 12. 8."></div>'+
       '</div>'+
-      (c.seznam.length?'<div style="margin-top:18px"><span class="lbl" style="font-size:12.5px;color:var(--ink2);font-weight:500">Kontrolni seznam za '+esc(platIme)+'</span>'+
+      (c.seznam.length?'<div style="margin-top:18px"><span class="lbl" style="font-size:12.5px;color:var(--ink2);font-weight:500">Kontrolni seznam za '+esc(platNaziv)+'</span>'+
         '<ul class="check" style="margin-top:9px">'+c.seznam.map(function(x){return '<li>'+x+'</li>';}).join("")+'</ul></div>':'')+
     '</fieldset>'+
 
@@ -1089,7 +1296,7 @@ function renderEditor(){
         '<div class="cell"><span class="k">Profit / mesec</span><span class="v" data-o="profitM">—</span></div>'+
       '</div>'+
       '<div id="cre-verdict" style="margin-top:16px"></div>'+
-      (c.merila?'<p class="note" style="margin-top:12px"><b>Za '+esc(platIme)+':</b> '+c.merila+'</p>':'')+
+      (c.merila?'<p class="note" style="margin-top:12px"><b>Za '+esc(platNaziv)+':</b> '+c.merila+'</p>':'')+
     '</fieldset>'+
 
     /* 7 — rezultati */
@@ -1123,188 +1330,377 @@ function renderEditor(){
   risiPredogled();
   if(Datoteke.naVoljo){
     narisiDatoteke();
-    Datoteke.prviVizual(k.id).then(function(d){
-      if(!d)return;
-      try{
-        var u=URL.createObjectURL(d.blob);odprtiUrlji.push(u);
-        predVizual={url:u,tip:d.tip};
-        risiPredogled();
-      }catch(err){}
-    },function(){});
+    osveziPredVizual();
   }
 }
 
-/* ============ predogled oglasa ============ */
+/* ============ predogled oglasa ============
+   Obliko določi umestitev, ne platforma. Besedilo se zloži po vrsticah,
+   tako kot ga zloži platforma, ne po številu znakov.                      */
 var predVizual=null;
-function medij(razred){
+
+/* medij v razmerju umestitve; 9:16 material se v feedu obreže, kot v resnici */
+function medij(razmerje,polni){
+  var stil=razmerje?' style="aspect-ratio:'+razmerje+'"':'';
   if(!predVizual)return null;
   return /^video\//.test(predVizual.tip)
-    ? '<video src="'+predVizual.url+'" controls preload="metadata"'+(razred?' class="'+razred+'"':'')+'></video>'
-    : '<img src="'+predVizual.url+'" alt=""'+(razred?' class="'+razred+'"':'')+'>';
+    ? '<video src="'+predVizual.url+'" muted loop autoplay playsinline preload="metadata"'+(polni?' class="polni"':'')+stil+'></video>'
+    : '<img src="'+predVizual.url+'" alt=""'+(polni?' class="polni"':'')+stil+'>';
 }
-function skrajsaj(s,limit){
-  s=String(s||"");
-  if(s.length<=limit)return esc(s);
-  return esc(s.slice(0,limit))+'… <span class="more">Več</span>';
+function prazno(razmerje,besedilo,video){
+  var stil=razmerje?' style="aspect-ratio:'+razmerje+'"':'';
+  return '<div class="ph"'+stil+'>'+(video?IKONA_VIDEO:IKONA_SLIKA)+
+    '<span>'+esc(besedilo||"Naloži material zgoraj in pokazal se bo tu")+'</span></div>';
 }
-/* Oblika predogleda: format pove, kakšen je oglas, platforma pa, kje se prikaže. */
-var OBLIKE={
-  "slika":          {v:"feed",r:"4 / 5"},
-  "UGC video":      {v:"feed",r:"4 / 5"},
-  "video 9:16":     {v:"vert"},
-  "zgodba":         {v:"vert"},
-  "karusel":        {v:"karusel"},
-  "kolekcija":      {v:"kolekcija"},
-  "RSA":            {v:"search"},
-  "Performance Max":{v:"search"},
-  "besedilo":       {v:"besedilo"}
-};
-function oblika(k){
-  var o=OBLIKE[k.format]||{v:"feed",r:"1.91 / 1"};
-  if(k.platforma==="google")return {v:"search",pmax:k.format==="Performance Max"};
-  if(k.platforma==="tiktok")return {v:"vert"};
-  if(k.platforma==="youtube")return o.v==="vert"?{v:"vert"}:{v:"splosno"};
-  if(k.platforma==="instagram"&&o.v==="feed")return {v:"feed",r:"1 / 1"};
-  return o;
+function vizual(spec,k,razmerje){
+  var r=razmerje||spec.r||"1 / 1";
+  var jeVideo=/video|UGC|zgodba/i.test(k.format);
+  return medij(r)||prazno(r,jeVideo?"Ni naloženega videa":"Ni naložene slike",jeVideo);
+}
+/* besedilo, ki se zloži po n vrsticah in dobi „Več“ */
+function zloz(txt,vrstic,oznaka,razred,pred){
+  txt=String(txt||"");
+  if(!txt.trim()&&!pred)return "";
+  return '<div class="ft'+(razred?" "+razred:"")+'">'+
+    '<span class="ft-t" style="-webkit-line-clamp:'+(vrstic||3)+'">'+(pred||"")+esc(txt)+'</span>'+
+    '<span class="ft-m">…&nbsp;<b>'+esc(oznaka||"Več")+'</b></span></div>';
+}
+/* po vstavljanju v DOM: kje je besedilo res predolgo */
+function zloziBesedila(){
+  qa("#predogled .ft").forEach(function(d){
+    var t=q(".ft-t",d);
+    if(!t)return;
+    d.classList.toggle("fold",t.scrollHeight-t.clientHeight>1);
+  });
+}
+function telesno(k){
+  return [prvi(k.hooki,predIzbor.hooki).trim(),prvi(k.primarna,predIzbor.primarna).trim()]
+    .filter(Boolean).join("\n\n");
 }
 function risiPredogled(){
   var cilj=el("predogled");if(!cilj)return;
   var p=P(),k=K();if(!p||!k)return;
-  var o=oblika(k);
-  var html =
-    o.v==="search"    ? predSearch(p,k,o) :
-    o.v==="vert"      ? predVert(p,k) :
-    o.v==="karusel"   ? predKarusel(p,k) :
-    o.v==="kolekcija" ? predKolekcija(p,k) :
-    o.v==="besedilo"  ? predFeed(p,k,null,true) :
-    o.v==="splosno"   ? predSplosno(p,k) : predFeed(p,k,o.r);
-  cilj.innerHTML=html+'<p class="prev-note" style="text-align:center">'+esc(opisOblike(k,o))+'</p>';
+  var u=um(k), spec=u[2], risi=spec.risi;
+  /* karusel in kolekcija sta formata, ki v feedu spremenita obliko */
+  if(risi==="fbfeed"||risi==="igfeed"){
+    if(k.format==="karusel")risi="karusel";
+    else if(k.format==="kolekcija")risi="kolekcija";
+    else if(k.format==="besedilo")risi="besedilo";
+  }
+  var risalke={
+    fbfeed:predFbFeed, igfeed:predIgFeed, market:predMarket, zgodba:predZgodba,
+    reels:predReels, tiktok:predTikTok, ytinstream:predYt, search:predSearch,
+    display:predDisplay, pmax:predPmax, karusel:predKarusel, kolekcija:predKolekcija,
+    besedilo:predBesedilo, splosno:predSplosno
+  };
+  var f=risalke[risi]||predSplosno;
+  cilj.innerHTML=f(p,k,spec)+specHtml(k,u);
+  zloziBesedila();
 }
-function opisOblike(k,o){
-  var plat=(PLATFORME.filter(function(x){return x[0]===k.platforma;})[0]||["","?"])[1];
-  if(o.v==="search")return o.pmax
-    ? "Performance Max: tu je videti iskalni del, isti oglas pa Google predvaja tudi na Display, YouTube in v Gmailu."
-    : plat+" iskanje — brez slike, vse nosi besedilo.";
-  if(o.v==="vert")return "Vertikalno 9:16 na celem zaslonu ("+esc(k.format)+"). Besedilo v spodnji tretjini, nad gumbom.";
-  if(o.v==="karusel")return "Karusel: vsaka kartica ima svoj naslov — uporabijo se tvoje različice naslovov po vrsti.";
-  if(o.v==="kolekcija")return "Kolekcija: glavni vizual in pod njim mreža izdelkov iz kataloga.";
-  if(o.v==="besedilo")return "Samo besedilo, brez vizuala.";
-  if(o.v==="splosno")return plat+" — vodoravni format 16:9.";
-  return plat+" feed, razmerje "+String(o.r||"1.91 / 1").replace(" / "," : ")+".";
+/* pod predogledom: mere in kaj se v tej umestitvi sploh vidi */
+var IMENA_POLJ={primarna:"primarno besedilo",naslovi:"naslov",opisi:"opis",cta:"gumb",
+  url:"prikazna domena",pot:"prikazna pot",sitelinki:"sitelinki"};
+function specHtml(k,u){
+  var spec=u[2], d=[];
+  if(spec.r)d.push(String(spec.r).replace(" / "," : "));
+  if(spec.px)d.push(spec.px+" px");
+  if(spec.zlozi)d.push("besedilo se zloži po "+spec.zlozi+(spec.zlozi===1?" vrstici":" vrsticah"));
+  var vidi=(spec.rabi||[]).map(function(x){return IMENA_POLJ[x]||x;}).join(", ");
+  var opozorilo="";
+  if(k.umestitev!==u[0])
+    opozorilo='<span class="prev-warn">Format „'+esc(k.format)+'“ se v izbrani umestitvi ne vrti — prikazana je '+esc(u[1])+'.</span>';
+  if(spec.r==="4 / 5"&&k.format==="video 9:16")
+    opozorilo+='<span class="prev-warn">Video 9:16 se v feedu obreže na 4:5. Pomembno naj bo v sredini.</span>';
+  if(predVizual&&predVizual.izdelkov)
+    opozorilo+='<span>V predogledu je slika izdelka — ta kreativa še nima svojega materiala.</span>';
+  return '<div class="prev-spec">'+opozorilo+
+    '<b>'+esc(platIme(k.platforma)+" · "+u[1])+'</b>'+
+    (d.length?'<span>'+esc(d.join(" · "))+'</span>':'')+
+    (vidi?'<span>Vidi se: '+esc(vidi)+'</span>':'')+
+  '</div>';
 }
 var IKONA_SLIKA='<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M3 17l4.5-4 3 2.5L15 11l6 5"/></svg>';
 var IKONA_VIDEO='<svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="14" height="14" rx="3"/><path d="M16.5 10l5-3v10l-5-3z"/></svg>';
 
+/* ---- okvir telefona in vrhovi aplikacij ---- */
+function statusVrstica(nad){
+  return '<div class="fon-s'+(nad?" nad":"")+'">'+
+    '<span class="ura">9:41</span><span class="sp"></span>'+
+    '<span class="sig"><i></i><i></i><i></i><i class="d"></i></span>'+
+    '<svg class="wifi" viewBox="0 0 16 12"><path d="M2.2 4.6a8.5 8.5 0 0 1 11.6 0M4.6 7.1a5 5 0 0 1 6.8 0"/><circle cx="8" cy="9.6" r="1"/></svg>'+
+    '<span class="bat"><i></i></span>'+
+  '</div>';
+}
+/* telefon z vrhom aplikacije in vsebino, ki se lista */
+function fon(vrh,vsebina,razred){
+  return '<div class="fon'+(razred?" "+razred:"")+'">'+statusVrstica()+(vrh||"")+
+    '<div class="fon-b">'+vsebina+'</div></div>';
+}
+/* telefon, kjer medij zapolni cel zaslon (zgodba, reels, TikTok) */
+function fonPolni(vsebina,razred){
+  return '<div class="fon fon-polni'+(razred?" "+razred:"")+'">'+vsebina+statusVrstica(true)+'</div>';
+}
+var I_LUPA='<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>';
+var I_SRCE='<svg viewBox="0 0 24 24"><path d="M20.8 8.6c0 5.4-8.8 10.9-8.8 10.9S3.2 14 3.2 8.6A4.7 4.7 0 0 1 12 6.7a4.7 4.7 0 0 1 8.8 1.9z"/></svg>';
+var I_KOMENT='<svg viewBox="0 0 24 24"><path d="M20.5 11.8a8.5 8.5 0 0 1-12.3 7.6L3.5 20.5l1.2-4.6A8.5 8.5 0 1 1 20.5 11.8z"/></svg>';
+var I_LETALO='<svg viewBox="0 0 24 24"><path d="M21.5 3.5 2.5 10.2l6.4 2.3 2.3 6.4z"/><path d="M8.9 12.5 21.5 3.5"/></svg>';
+var I_ZAZNAMEK='<svg viewBox="0 0 24 24"><path d="M6 3.5h12v17l-6-4.3-6 4.3z"/></svg>';
+var I_MSG='<svg viewBox="0 0 24 24"><path d="M12 3.2c-5 0-9 3.6-9 8.1 0 2.5 1.3 4.8 3.3 6.3v3.2l3-1.6c.9.2 1.8.4 2.7.4 5 0 9-3.6 9-8.2S17 3.2 12 3.2z"/><path d="M7.2 13.6 10 9.4l2.6 2 2.3-3.4"/></svg>';
+var I_VEC='<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>';
+var I_PUSCICA='<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';
+var I_GOR='<svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg>';
+
+function vrhFB(){
+  return '<div class="app app-fb"><span class="wm">facebook</span><span class="sp"></span>'+
+    '<span class="ib">'+I_LUPA+'</span><span class="ib">'+I_MSG+'</span></div>';
+}
+function vrhIG(){
+  return '<div class="app app-ig"><span class="wm">Instagram</span><span class="sp"></span>'+
+    '<span class="ib">'+I_SRCE+'</span><span class="ib">'+I_LETALO+'</span></div>';
+}
 /* glava objave: avatar, ime oglaševalca, oznaka Sponzorirano */
 function feedGlava(ime,jeIG){
   var globus='<svg viewBox="0 0 24 24" style="width:11px;height:11px"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>';
   return '<div class="fb-h">'+
-    '<span class="fb-av">'+esc(zacetnice(ime))+'</span>'+
+    '<span class="fb-av'+(jeIG?" ig-av":"")+'">'+esc(zacetnice(ime))+'</span>'+
     '<span class="fb-hn"><b>'+esc(ime)+'</b><span>'+(jeIG?"Sponzorirano":"Sponzorirano · "+globus)+'</span></span>'+
-    '<span class="fb-x">···</span>'+
+    '<span class="fb-x">'+I_VEC+'</span>'+
   '</div>';
 }
 function feedNoge(){
-  return '<div class="fb-r"><span class="ic">👍</span><span class="ic" style="background:#F33E58">❤</span>'+
-    '<span style="margin-left:4px">142</span><span class="sp"></span><span>18 komentarjev · 6 delitev</span></div>'+
+  return '<div class="fb-r"><span class="rx"><i class="r1">👍</i><i class="r2">❤</i></span>'+
+    '<span>142</span><span class="sp"></span><span>18 komentarjev · 6 delitev</span></div>'+
     '<div class="fb-a">'+
       '<span><svg viewBox="0 0 24 24"><path d="M7 10v10H4V10zM7 10l4-7a2 2 0 0 1 3 2l-1 5h5a2 2 0 0 1 2 2.3l-1 6A2 2 0 0 1 17 20H7"/></svg>Všeč mi je</span>'+
-      '<span><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4A8 8 0 1 1 20 12z"/></svg>Komentiraj</span>'+
+      '<span>'+I_KOMENT+'Komentiraj</span>'+
       '<span><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 3v12M8 7l4-4 4 4"/></svg>Deli</span>'+
     '</div>';
 }
-function predFeed(p,k,razmerje,brezMedija){
-  var lim=LIM[k.platforma]||LIM.drugo;
-  var jeIG=k.platforma==="instagram";
-  var ime=znamkaIme(p);
-  var telo=[prvi(k.hooki,predIzbor.hooki).trim(),prvi(k.primarna,predIzbor.primarna).trim()].filter(Boolean).join("\n\n");
+/* kartica povezave pod sliko: domena, naslov v eni vrstici, opis, gumb */
+function kartaFB(p,k,spec){
   var dom=domenaIz(p,k);
-  var m=medij();
   var naslov=prvi(k.naslovi,predIzbor.naslovi);
-  var opis=(k.platforma==="facebook"||k.platforma==="drugo")?prvi(k.opisi,predIzbor.opisi):"";
-  var stil=razmerje?' style="aspect-ratio:'+razmerje+'"':'';
-  return '<div class="fb'+(jeIG?" ig":"")+'">'+
-    feedGlava(ime,jeIG)+
-    (telo?'<div class="fb-t">'+skrajsaj(telo,lim.primarni)+'</div>':'')+
-    (brezMedija?''
-      : '<div class="fb-m"'+stil+'>'+
-        (m||'<div class="ph"'+stil+'>'+IKONA_SLIKA+'Ni naložene slike ali videa<br>Naloži material v razdelku zgoraj in pokazal se bo tu</div>')+
-        '</div>')+
-    (naslov||opis||dom
-      ? '<div class="fb-f">'+
-          '<span class="fb-fn">'+
-            (dom?'<span class="u">'+esc(dom)+'</span>':'')+
-            '<b>'+esc(naslov||"Naslov oglasa")+'</b>'+
-            (opis?'<span class="d">'+esc(opis)+'</span>':'')+
-          '</span>'+
-          '<span class="fb-cta">'+esc(k.cta||"Izvedi več")+'</span>'+
-        '</div>'
-      : '')+
-    (jeIG?'':feedNoge())+
+  var opis=seVidi(spec,"opisi")?prvi(k.opisi,predIzbor.opisi):"";
+  if(!naslov&&!opis&&!dom)return "";
+  return '<div class="fb-f">'+
+    '<span class="fb-fn">'+
+      (dom?'<span class="u">'+esc(dom)+'</span>':'')+
+      '<b class="c1">'+esc(naslov||"Naslov oglasa")+'</b>'+
+      (opis?'<span class="d c1">'+esc(opis)+'</span>':'')+
+    '</span>'+
+    '<span class="fb-cta">'+esc(k.cta||privzetiCTA(k.platforma))+'</span>'+
   '</div>';
+}
+/* Facebook feed */
+function predFbFeed(p,k,spec){
+  return fon(vrhFB(),
+    '<div class="fb">'+
+      feedGlava(znamkaIme(p),false)+
+      zloz(telesno(k),spec.zlozi||3)+
+      '<div class="fb-m">'+vizual(spec,k)+'</div>'+
+      kartaFB(p,k,spec)+
+      feedNoge()+
+    '</div>');
+}
+/* samo besedilo, brez vizuala */
+function predBesedilo(p,k,spec){
+  return fon(vrhFB(),
+    '<div class="fb">'+
+      feedGlava(znamkaIme(p),false)+
+      zloz(telesno(k),6)+
+      kartaFB(p,k,spec)+
+      feedNoge()+
+    '</div>');
+}
+/* Instagram feed: brez naslova in opisa — vidi se samo napis pod sliko in gumb */
+function predIgFeed(p,k,spec){
+  var ime=String(znamkaIme(p)).toLowerCase().replace(/\s+/g,"_");
+  var telo=telesno(k);
+  return fon(vrhIG(),
+    '<div class="ig">'+
+      '<div class="fb-h">'+
+        '<span class="fb-av ig-av">'+esc(zacetnice(znamkaIme(p)))+'</span>'+
+        '<span class="fb-hn"><b>'+esc(ime)+'</b><span>Sponzorirano</span></span>'+
+        '<span class="fb-x">'+I_VEC+'</span>'+
+      '</div>'+
+      '<div class="fb-m">'+vizual(spec,k)+'</div>'+
+      '<div class="ig-cta"><b>'+esc(k.cta||privzetiCTA(k.platforma))+'</b>'+I_PUSCICA+'</div>'+
+      '<div class="ig-a"><span>'+I_SRCE+'</span><span>'+I_KOMENT+'</span><span>'+I_LETALO+'</span>'+
+        '<span class="sp"></span><span>'+I_ZAZNAMEK+'</span></div>'+
+      '<div class="ig-l">142 všečkov</div>'+
+      (telo?'<div class="ig-c">'+zloz(telo,spec.zlozi||1,"več","ig",'<b>'+esc(ime)+'</b> ')+'</div>':'')+
+    '</div>');
 }
 /* karusel: vsaka kartica dobi svoj naslov iz seznama različic */
-function predKarusel(p,k){
-  var lim=LIM[k.platforma]||LIM.drugo;
-  var ime=znamkaIme(p), jeIG=k.platforma==="instagram";
-  var telo=[prvi(k.hooki,predIzbor.hooki).trim(),prvi(k.primarna,predIzbor.primarna).trim()].filter(Boolean).join("\n\n");
-  var m=medij();
+function predKarusel(p,k,spec){
+  var jeIG=k.platforma==="instagram";
+  var m=medij("1 / 1");
   var nas=k.naslovi.filter(function(x){return String(x||"").trim();});
   if(!nas.length)nas=["Naslov kartice"];
-  var kartice=nas.slice(0,4).map(function(t,i){
+  var kartice=nas.slice(0,5).map(function(t,i){
     return '<div class="kar-c">'+
       '<div class="kar-m">'+(m||'<span class="ph">'+IKONA_SLIKA+'</span>')+'<span class="kar-n">'+(i+1)+'</span></div>'+
-      '<div class="kar-b"><b>'+esc(t)+'</b>'+
+      '<div class="kar-b"><b class="c2">'+esc(t)+'</b>'+
         (domenaIz(p,k)?'<span>'+esc(domenaIz(p,k))+'</span>':'')+
-        '<span class="kar-cta">'+esc(k.cta||"Izvedi več")+'</span></div>'+
+        '<span class="kar-cta">'+esc(k.cta||privzetiCTA(k.platforma))+'</span></div>'+
     '</div>';
   }).join("");
-  return '<div class="fb'+(jeIG?" ig":"")+'">'+
-    feedGlava(ime,jeIG)+
-    (telo?'<div class="fb-t">'+skrajsaj(telo,lim.primarni)+'</div>':'')+
-    '<div class="kar"><div class="kar-t">'+kartice+'</div></div>'+
-    '<div class="kar-d">'+nas.slice(0,4).map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>';}).join("")+'</div>'+
-    (jeIG?'':feedNoge())+
-  '</div>';
+  return fon(jeIG?vrhIG():vrhFB(),
+    '<div class="fb'+(jeIG?" ig":"")+'">'+
+      feedGlava(znamkaIme(p),jeIG)+
+      zloz(telesno(k),spec.zlozi||3,jeIG?"več":"Več")+
+      '<div class="kar"><div class="kar-t">'+kartice+'</div></div>'+
+      '<div class="kar-d">'+nas.slice(0,5).map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>';}).join("")+'</div>'+
+      (jeIG?'':feedNoge())+
+    '</div>');
 }
 /* kolekcija: glavni vizual in mreža izdelkov pod njim */
-function predKolekcija(p,k){
-  var lim=LIM[k.platforma]||LIM.drugo;
-  var ime=znamkaIme(p), jeIG=k.platforma==="instagram";
-  var telo=[prvi(k.hooki,predIzbor.hooki).trim(),prvi(k.primarna,predIzbor.primarna).trim()].filter(Boolean).join("\n\n");
-  var m=medij();
-  return '<div class="fb'+(jeIG?" ig":"")+'">'+
-    feedGlava(ime,jeIG)+
-    (telo?'<div class="fb-t">'+skrajsaj(telo,lim.primarni)+'</div>':'')+
-    '<div class="fb-m" style="aspect-ratio:1.91 / 1">'+
-      (m||'<div class="ph" style="aspect-ratio:1.91 / 1">'+IKONA_SLIKA+'Glavni vizual</div>')+'</div>'+
-    '<div class="kol">'+[0,1,2].map(function(i){
-      return '<div class="kol-c">'+(m||'<span class="ph">'+IKONA_SLIKA+'</span>')+
-        '<span>'+(i===0?e(n(p.cena)):"izdelek "+(i+1))+'</span></div>';
-    }).join("")+'</div>'+
-    (jeIG?'':feedNoge())+
+function predKolekcija(p,k,spec){
+  var jeIG=k.platforma==="instagram";
+  var m=medij("1 / 1");
+  return fon(jeIG?vrhIG():vrhFB(),
+    '<div class="fb'+(jeIG?" ig":"")+'">'+
+      feedGlava(znamkaIme(p),jeIG)+
+      zloz(telesno(k),spec.zlozi||3,jeIG?"več":"Več")+
+      '<div class="fb-m">'+vizual(spec,k,"1.91 / 1")+'</div>'+
+      '<div class="kol">'+[0,1,2].map(function(i){
+        return '<div class="kol-c">'+(m||'<span class="ph">'+IKONA_SLIKA+'</span>')+
+          '<span>'+(i===0?e(n(p.cena)):"izdelek "+(i+1))+'</span></div>';
+      }).join("")+'</div>'+
+      (jeIG?'':feedNoge())+
+    '</div>');
+}
+/* Marketplace: mreža ponudb, oglas je ena od kartic */
+function predMarket(p,k,spec){
+  var naslov=prvi(k.naslovi,predIzbor.naslovi)||"Naslov ponudbe";
+  var cena=n(p.cena)>0?e(n(p.cena)):"—";
+  var m=medij("1 / 1");
+  var tuji=["Podoben izdelek","Iz oglasov v bližini","Rabljeno · Ljubljana"];
+  return fon('<div class="app app-mk"><b>Marketplace</b><span class="sp"></span><span class="ib">'+I_LUPA+'</span></div>',
+    '<div class="mk">'+
+      '<div class="mk-g">'+
+        '<div class="mk-c mk-ad">'+
+          '<div class="mk-m">'+(m||'<span class="ph">'+IKONA_SLIKA+'</span>')+'<span class="mk-o">Sponzorirano</span></div>'+
+          '<b>'+esc(cena)+'</b><span class="c2">'+esc(naslov)+'</span>'+
+          '<span class="mk-l">Mengeš</span>'+
+          '<span class="mk-cta">'+esc(k.cta||privzetiCTA(k.platforma))+'</span>'+
+        '</div>'+
+        tuji.map(function(t){
+          return '<div class="mk-c"><div class="mk-m mk-siv"></div><b>—</b><span class="c2">'+esc(t)+'</span></div>';
+        }).join("")+
+      '</div>'+
+    '</div>');
+}
+/* zgodba: cel zaslon, oznaka zgoraj, gumb spodaj */
+function predZgodba(p,k,spec){
+  var jeIG=k.platforma==="instagram";
+  var telo=telesno(k);
+  return fonPolni(
+    '<div class="zg-m">'+(medij("9 / 16",true)||prazno(null,"Ni naloženega 9:16 videa ali slike",true))+'</div>'+
+    '<div class="zg-vrh">'+
+      '<div class="zg-bar"><i></i><i class="d"></i><i class="d"></i></div>'+
+      '<div class="zg-id"><span class="fb-av'+(jeIG?" ig-av":"")+'">'+esc(zacetnice(znamkaIme(p)))+'</span>'+
+        '<b>'+esc(jeIG?String(znamkaIme(p)).toLowerCase().replace(/\s+/g,"_"):znamkaIme(p))+'</b>'+
+        '<span class="zg-ozn">Sponzorirano</span><span class="sp"></span><span class="zg-x">✕</span></div>'+
+    '</div>'+
+    '<div class="zg-spo">'+
+      (telo?zloz(telo,spec.zlozi||2,"Več","na-temnem"):"")+
+      '<div class="zg-cta">'+I_GOR+'<b>'+esc(k.cta||privzetiCTA(k.platforma))+'</b></div>'+
+    '</div>');
+}
+/* Reels in Shorts: cel zaslon, stranska vrsta ikon, gumb pod napisom */
+function predReels(p,k,spec){
+  var jeYT=k.platforma==="youtube";
+  var jeIG=k.platforma==="instagram";
+  var ime=String(znamkaIme(p)).toLowerCase().replace(/\s+/g,"_");
+  var telo=telesno(k);
+  return fonPolni(
+    '<div class="zg-m">'+(medij("9 / 16",true)||prazno(null,"Ni naloženega 9:16 videa",true))+'</div>'+
+    '<div class="rl-grad"></div>'+
+    '<div class="rl-side">'+
+      '<span>'+I_SRCE+'<i>1,2 t.</i></span>'+
+      '<span>'+I_KOMENT+'<i>318</i></span>'+
+      '<span>'+I_LETALO+'<i>Pošlji</i></span>'+
+      '<span>'+I_VEC+'</span>'+
+      '<span class="rl-disk"></span>'+
+    '</div>'+
+    '<div class="rl-b">'+
+      '<div class="rl-id"><span class="fb-av'+(jeIG?" ig-av":"")+'">'+esc(zacetnice(znamkaIme(p)))+'</span>'+
+        '<b>'+esc(jeIG?ime:znamkaIme(p))+'</b><span class="rl-sledi">Sledi</span></div>'+
+      '<span class="rl-ozn">Sponzorirano</span>'+
+      (telo?zloz(telo,spec.zlozi||2,"več","na-temnem"):"")+
+      '<span class="rl-zvok">♪ '+esc(jeYT?"originalni zvok":znamkaIme(p)+" · originalni zvok")+'</span>'+
+      '<div class="rl-cta'+(jeYT?" yt":"")+'"><b>'+esc(k.cta||privzetiCTA(k.platforma))+'</b>'+I_PUSCICA+'</div>'+
+    '</div>');
+}
+/* TikTok Za vas */
+function predTikTok(p,k,spec){
+  var ime="@"+String(znamkaIme(p)).toLowerCase().replace(/[^\wčšžćđ]+/gi,"");
+  var telo=telesno(k);
+  return fonPolni(
+    '<div class="zg-m">'+(medij("9 / 16",true)||prazno(null,"Ni naloženega 9:16 videa",true))+'</div>'+
+    '<div class="tt-vrh"><span>Sledim</span><b>Za vas</b></div>'+
+    '<div class="rl-grad"></div>'+
+    '<div class="rl-side tt-s">'+
+      '<span class="tt-av"><i class="fb-av">'+esc(zacetnice(znamkaIme(p)))+'</i><em>+</em></span>'+
+      '<span>'+I_SRCE+'<i>2143</i></span>'+
+      '<span>'+I_KOMENT+'<i>86</i></span>'+
+      '<span>'+I_ZAZNAMEK+'<i>41</i></span>'+
+      '<span class="rl-disk tt-d"></span>'+
+    '</div>'+
+    '<div class="rl-b">'+
+      '<b class="tt-ime">'+esc(ime)+'</b>'+
+      '<span class="tt-ozn">Sponzorirano</span>'+
+      (telo?zloz(telo,spec.zlozi||2,"več","na-temnem"):"")+
+      '<span class="rl-zvok">♪ promovirana glasba</span>'+
+      '<div class="rl-cta tt-cta2"><b>'+esc(k.cta||privzetiCTA("tiktok"))+'</b>'+I_PUSCICA+'</div>'+
+    '</div>','tt');
+}
+/* YouTube in-stream: predvajalnik z gumbom za preskok */
+function predYt(p,k,spec){
+  var naslov=prvi(k.naslovi,predIzbor.naslovi)||"Naslov oglasa";
+  return '<div class="yt">'+
+    '<div class="yt-p">'+(medij("16 / 9")||prazno("16 / 9","Ni naloženega 16:9 videa",true))+
+      '<span class="yt-ozn">Oglas</span>'+
+      '<span class="yt-skip">Preskoči oglas '+I_PUSCICA+'</span>'+
+      '<div class="yt-prog"><i></i></div>'+
+    '</div>'+
+    '<div class="yt-f">'+
+      '<span class="fb-av">'+esc(zacetnice(znamkaIme(p)))+'</span>'+
+      '<span class="yt-fn"><b class="c1">'+esc(naslov)+'</b>'+
+        '<span>'+esc(domenaIz(p,k)||"tvoja-domena.si")+'</span></span>'+
+      '<span class="yt-cta">'+esc(k.cta||privzetiCTA("youtube"))+'</span>'+
+    '</div>'+
   '</div>';
 }
-function predSearch(p,k){
+/* Google iskanje: dve kombinaciji, kot jih sestavi Google sam */
+function predSearch(p,k,spec){
   var nas=k.naslovi.filter(function(x){return String(x||"").trim();});
   var opi=k.opisi.filter(function(x){return String(x||"").trim();});
   var dom=domenaIz(p,k)||"tvoja-domena.si";
-  var pot=potIz(k);
-  var lupa='<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>';
+  var pot=[k.pot1,k.pot2].map(function(x){return String(x||"").trim();}).filter(Boolean);
+  if(!pot.length)pot=potIz(k);
+  var znamka=znamkaIme(p);
+  var sl=String(k.sitelinki||"").split(",").map(function(x){return x.trim();}).filter(Boolean);
   var poizvedba=String(k.kljucneBesede||"").split(",")[0].trim()||prvi(k.naslovi).toLowerCase()||"tvoja ključna beseda";
+  var vrh='<div class="gg-q">'+I_LUPA+'<span>'+esc(poizvedba)+'</span></div>'+
+    '<div class="gg-tabs"><b>Vse</b><span>Slike</span><span>Nakupovanje</span><span>Videoposnetki</span><span>Novice</span></div>';
   if(!nas.length&&!opi.length){
-    return '<div class="gg">'+
-      '<div class="gg-q">'+lupa+esc(poizvedba)+'</div>'+
+    return '<div class="gg">'+vrh+
       '<p class="gg-empty">Vpiši vsaj en naslov, da se predogled izriše.<br><br>'+
       'Google iz tvojih naslovov sam sestavlja kombinacije po tri — zato mora vsak zveneti smiselno tudi sam in ne sme biti nadaljevanje prejšnjega.</p></div>';
   }
   function vrstica(nabor,opisi){
     return '<div class="gg-r">'+
-      '<div class="gg-top"><span class="gg-ad">Sponzorirano</span></div>'+
-      '<div class="gg-u">'+esc(dom)+(pot.length?' <i>› '+pot.map(esc).join(" › ")+'</i>':'')+'</div>'+
+      '<div class="gg-id">'+
+        '<span class="gg-fav">'+esc(zacetnice(znamka))+'</span>'+
+        '<span class="gg-idn"><b>'+esc(znamka)+'</b>'+
+          '<span>'+esc(dom)+(pot.length?' › '+pot.map(esc).join(" › "):'')+'</span></span>'+
+      '</div>'+
+      '<div class="gg-ad">Sponzorirano</div>'+
       '<span class="gg-t">'+esc(nabor.join(" | "))+'</span>'+
       '<p class="gg-d">'+esc(opisi.join(" "))+'</p>'+
-      (nabor.length>2?'<div class="gg-x"><span>'+esc(nabor.slice(1,3).join("</span><span>"))+'</span></div>':'')+
+      (sl.length?'<div class="gg-sl">'+sl.slice(0,4).map(function(s){return '<span>'+esc(s)+'</span>';}).join("")+'</div>':'')+
     '</div>';
   }
   var a=vrstica(nas.slice(0,3),opi.slice(0,2));
@@ -1314,56 +1710,68 @@ function predSearch(p,k){
     var ob=opi.slice(2).concat(opi.slice(0,1)).slice(0,2);
     b=vrstica(nb.length?nb:nas.slice(0,3),ob.length?ob:opi.slice(0,2));
   }
-  return '<div class="gg">'+
-    '<div class="gg-q">'+lupa+esc(poizvedba)+'</div>'+
-    a+b+'</div>'+
-    (b?'<p class="prev-note" style="text-align:center">Dve od možnih kombinacij — Google jih rotira sam in izbira, katera dela najbolje.</p>':'');
+  return '<div class="gg">'+vrh+a+b+
+    (b?'<p class="gg-note">Dve od možnih kombinacij — Google jih rotira sam.</p>':'')+
+  '</div>';
 }
-function predVert(p,k){
-  var ime=znamkaIme(p);
-  var telo=[prvi(k.hooki,predIzbor.hooki).trim(),prvi(k.primarna,predIzbor.primarna).trim()].filter(Boolean).join(" ");
-  var m=medij();
-  var jeTT=k.platforma==="tiktok";
-  var jeMeta=k.platforma==="facebook"||k.platforma==="instagram";
-  var oznaka=jeTT?"Sponzorirano":(k.platforma==="instagram"?"Sponzorirano · Reels":"Sponzorirano");
-  return '<div class="tt'+(jeMeta?" meta":"")+'">'+
-    (m||'<div class="ph">'+IKONA_VIDEO+'Ni naloženega videa<br>Naloži vertikalni 9:16 material zgoraj</div>')+
-    '<span class="tt-ov">'+esc(oznaka)+'</span>'+
-    '<div class="tt-grad"></div>'+
-    (jeTT
-      ? '<div class="tt-side">'+
-          '<span><svg viewBox="0 0 24 24"><path d="M20.8 8.6c0 5.2-8.8 10.4-8.8 10.4S3.2 13.8 3.2 8.6A4.6 4.6 0 0 1 12 6.8a4.6 4.6 0 0 1 8.8 1.8z"/></svg>2143</span>'+
-          '<span><svg viewBox="0 0 24 24"><path d="M20 11.5a7.5 7.5 0 0 1-10.9 6.7L4 19.5l1.4-4.4A7.5 7.5 0 1 1 20 11.5z"/></svg>86</span>'+
-          '<span><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 3v12M8 7l4-4 4 4"/></svg>Deli</span>'+
-        '</div>'
-      : '')+
-    '<div class="tt-b">'+
-      '<b>'+(jeTT?"@"+esc(String(ime).toLowerCase().replace(/[^\wčšžćđ]+/gi,"")):esc(ime))+'</b>'+
-      (telo?'<span class="txt">'+esc(telo)+'</span>':'')+
-      '<span class="tt-cta">'+esc(k.cta||"Kupi zdaj")+
-        '<svg viewBox="0 0 24 24" style="width:14px;height:14px;margin-left:6px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>'+
+/* Google Display: odzivni oglas v dveh velikostih */
+function predDisplay(p,k,spec){
+  var naslov=prvi(k.naslovi,predIzbor.naslovi)||"Naslov oglasa";
+  var opis=prvi(k.opisi,predIzbor.opisi);
+  var dom=domenaIz(p,k)||"tvoja-domena.si";
+  var m1=medij("1.91 / 1"), m2=medij("1 / 1");
+  return '<div class="gd-w">'+
+    '<div class="gd">'+
+      '<div class="gd-m">'+(m1||prazno("1.91 / 1","1200 × 628"))+'</div>'+
+      '<div class="gd-b"><span class="gd-o">Oglas · '+esc(dom)+'</span>'+
+        '<b class="c2">'+esc(naslov)+'</b>'+
+        (opis?'<span class="c2">'+esc(opis)+'</span>':'')+
+        '<span class="gd-cta">'+esc(k.cta||"Izvedi več")+'</span></div>'+
+    '</div>'+
+    '<div class="gd gd-kv">'+
+      '<div class="gd-m">'+(m2||prazno("1 / 1","300 × 250"))+'</div>'+
+      '<div class="gd-b"><span class="gd-o">Oglas</span><b class="c2">'+esc(naslov)+'</b>'+
+        '<span class="gd-cta">'+esc(k.cta||"Izvedi več")+'</span></div>'+
     '</div>'+
   '</div>';
 }
-function predSplosno(p,k){
-  var m=medij();
-  var telo=[prvi(k.hooki,predIzbor.hooki).trim(),prvi(k.primarna,predIzbor.primarna).trim()].filter(Boolean).join("\n\n");
+/* Performance Max: isti material, več površin */
+function predPmax(p,k,spec){
+  return '<div class="pmax">'+predSearch(p,k,spec)+predDisplay(p,k,spec)+
+    '<p class="gg-note">Performance Max iz istih naslovov, opisov in slik sestavlja oglase za iskanje, Display, YouTube, Gmail in Discover. Nadzora nad razdelitvijo ni — zato mora vsak kos gradiva zdržati sam.</p></div>';
+}
+function predSplosno(p,k,spec){
+  var m=medij(spec&&spec.r?spec.r:null);
+  var telo=telesno(k);
   var nas=prvi(k.naslovi,predIzbor.naslovi);
   return '<div class="gen">'+
     (m||'')+
-    (nas?'<b style="font-family:var(--serif);font-size:17px">'+esc(nas)+'</b>':'')+
+    (nas?'<b style="font-size:17px">'+esc(nas)+'</b>':'')+
     (telo?'<p style="font-size:13.5px;color:var(--ink2);white-space:pre-wrap">'+esc(telo)+'</p>':'')+
     '<div class="row"><span class="pill np" style="background:var(--brand);color:var(--brand-on)">'+esc(k.cta||"Izvedi več")+'</span>'+
       (domenaIz(p,k)?'<span class="note">'+esc(domenaIz(p,k))+'</span>':'')+'</div>'+
   '</div>';
 }
 
+/* Datoteke visijo na lastniku: kreativa (njen id) ali izdelek ("izd:"+id).
+   Material izdelka je skupen vsem njegovim kreativam.                      */
+function datLastnikIzdelka(p){return "izd:"+(p&&p.id);}
+function datCilji(){
+  var out=[], k=K(), p=P();
+  if(el("datoteke")&&k)out.push({cilj:"datoteke",lastnik:k.id,zapis:k});
+  if(el("datoteke-izd")&&p)out.push({cilj:"datoteke-izd",lastnik:datLastnikIzdelka(p),zapis:p});
+  return out;
+}
 function narisiDatoteke(){
-  var k=K(),cilj=el("datoteke");
-  if(!k||!cilj)return;
-  Datoteke.zaKreativo(k.id).then(function(sez){
-    sez=(sez||[]).sort(function(a,b){return String(a.dodano).localeCompare(String(b.dodano));});
-    if(k.stDatotek!==sez.length){k.stDatotek=sez.length;shrani();}
+  if(!Datoteke.naVoljo)return;
+  datCilji().forEach(narisiDatotekeV);
+}
+function narisiDatotekeV(c){
+  var cilj=el(c.cilj);
+  if(!cilj)return;
+  Datoteke.zaKreativo(c.lastnik).then(function(sez){
+    sez=(sez||[]).slice().sort(Datoteke.poVrsti);
+    if(c.zapis&&c.zapis.stDatotek!==sez.length){c.zapis.stDatotek=sez.length;shrani();}
     if(!sez.length){cilj.innerHTML='';return;}
     cilj.innerHTML=sez.map(function(d){
       var u="";
@@ -1382,14 +1790,17 @@ function narisiDatoteke(){
     cilj.innerHTML='<p class="note">Datotek ni bilo mogoče prebrati: '+esc(err&&err.message||"neznana napaka")+'</p>';
   });
 }
-function dodajDatoteke(files){
-  var k=K();
-  if(!k){toast("Najprej odpri kreativo.");return;}
+function dodajDatoteke(files,lastnik){
+  if(!lastnik){
+    var k=K();
+    if(!k){toast("Najprej odpri kreativo.");return;}
+    lastnik=k.id;
+  }
   var arr=Array.prototype.slice.call(files||[]).filter(function(f){return f&&f.size>=0;});
   if(!arr.length)return;
   var veliki=arr.filter(function(f){return f.size>60*1024*1024;});
   if(veliki.length&&!confirm(veliki.length+" datotek je večjih od 60 MB. Shramba brskalnika je omejena — nadaljujem?"))return;
-  var kid=k.id, uspelo=0, prva=Promise.resolve();
+  var kid=lastnik, uspelo=0, prva=Promise.resolve();
   arr.forEach(function(f){
     prva=prva.then(function(){return Datoteke.dodaj(kid,f).then(function(){uspelo++;});});
   });
@@ -1401,17 +1812,23 @@ function dodajDatoteke(files){
     toast("Shranjevanje ni uspelo"+(uspelo?" po "+uspelo+" datotekah":"")+": "+(err&&err.message||"shramba je zavrnila zapis"));
   });
 }
-/* po dodajanju ali brisanju osveži sliko v predogledu oglasa */
+/* Po dodajanju ali brisanju osveži sliko v predogledu oglasa. Če kreativa
+   nima svojega materiala, vzame prvo sliko izdelka.                        */
 function osveziPredVizual(){
-  var k=K();if(!k||!Datoteke.naVoljo)return;
-  Datoteke.prviVizual(k.id).then(function(d){
+  var k=K(),p=P();
+  if(!k||!Datoteke.naVoljo)return;
+  function uporabi(d,izIzdelka){
     if(!d){predVizual=null;risiPredogled();return;}
     try{
       var u=URL.createObjectURL(d.blob);odprtiUrlji.push(u);
-      predVizual={url:u,tip:d.tip};
+      predVizual={url:u,tip:d.tip,izdelkov:!!izIzdelka};
     }catch(err){predVizual=null;}
     risiPredogled();
-  },function(){});
+  }
+  Datoteke.prviVizual(k.id).then(function(d){
+    if(d||!p)return uporabi(d,false);
+    Datoteke.prviVizual(datLastnikIzdelka(p)).then(function(d2){uporabi(d2,true);},function(){uporabi(null);});
+  },function(){uporabi(null);});
 }
 function prenesiDatoteko(id){
   Datoteke.ena(id).then(function(d){
@@ -2079,16 +2496,19 @@ function briefText(k){
   }
   L.push("═══ "+k.naslov+" ═══");
   L.push(PR().ime+" · "+p.ime);
-  L.push(plat+" · "+k.format+" · "+statusIme(k.status));
+  L.push(plat+" · "+umIme(k)+" · "+k.format+" · "+statusIme(k.status));
   if(k.tagi)L.push("Oznake: "+k.tagi);
   if(k.izvajalec||k.rok)L.push("Dela: "+(k.izvajalec||"—")+(k.rok?" · rok: "+k.rok:""));
   if(k.kot){L.push("");L.push("KOT: "+k.kot);}
   if(k.publika)L.push("PUBLIKA: "+k.publika);
+  if(String(p.zapiski||"").trim()){L.push("");L.push("── O IZDELKU ──");L.push(p.zapiski);}
 
   var lim=LIM[k.platforma]||LIM.drugo;
   if(k.platforma==="google"){
-    seznam("NASLOVI",k.naslovi,"do 30 znakov");
-    seznam("OPISI",k.opisi,"do 90 znakov");
+    seznam("NASLOVI",k.naslovi,"do "+lim.naslov+" znakov");
+    seznam("OPISI",k.opisi,"do "+lim.opis+" znakov");
+    if(k.pot1||k.pot2)L.push("PRIKAZNA POT: /"+[k.pot1,k.pot2].filter(Boolean).join("/"));
+    if(k.sitelinki)L.push("SITELINKI: "+k.sitelinki);
     if(k.kljucneBesede){L.push("");L.push("KLJUČNE BESEDE: "+k.kljucneBesede);}
   }else{
     seznam("HOOKI",k.hooki,"prva vrstica");
@@ -2122,6 +2542,368 @@ function rocnoKopiraj(txt){
   var ok=false;try{ok=document.execCommand("copy");}catch(err){}
   if(ok){document.body.removeChild(ta);toast("Brief kopiran.");}
   else{toast("Kopiraj ročno iz polja spodaj.");setTimeout(function(){if(ta.parentNode)ta.parentNode.removeChild(ta);},15000);}
+}
+
+/* ============ izvoz v Excel ============
+   Pravi .xlsx brez knjižnic: ZIP brez stiskanja + minimalni OOXML.
+   Glave so odebeljene in zamrznjene, stolpci imajo širine, besedilo se ovija. */
+var Xlsx=(function(){
+  var kodirnik=window.TextEncoder?new TextEncoder():null;
+  function bajti(s){
+    if(kodirnik)return kodirnik.encode(s);
+    var a=[],i,c;
+    for(i=0;i<s.length;i++){
+      c=s.charCodeAt(i);
+      if(c<128)a.push(c);
+      else if(c<2048){a.push(192|c>>6,128|c&63);}
+      else{a.push(224|c>>12,128|(c>>6)&63,128|c&63);}
+    }
+    return new Uint8Array(a);
+  }
+  var CRC=(function(){
+    var t=new Uint32Array(256),i,j,c;
+    for(i=0;i<256;i++){c=i;for(j=0;j<8;j++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[i]=c>>>0;}
+    return t;
+  })();
+  function crc32(b){
+    var c=0xFFFFFFFF,i;
+    for(i=0;i<b.length;i++)c=CRC[(c^b[i])&0xFF]^(c>>>8);
+    return (c^0xFFFFFFFF)>>>0;
+  }
+  function zip(vnosi){
+    var d=new Date(),kosi=[],sredina=[],odmik=0,i,skupno=0;
+    var cas=((d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1))&0xFFFF;
+    var dat=(((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate())&0xFFFF;
+    for(i=0;i<vnosi.length;i++){
+      var ime=bajti(vnosi[i].ime), vs=bajti(vnosi[i].xml), c=crc32(vs);
+      var lh=new Uint8Array(30+ime.length), dl=new DataView(lh.buffer);
+      dl.setUint32(0,0x04034b50,true);dl.setUint16(4,20,true);dl.setUint16(6,0x0800,true);
+      dl.setUint16(8,0,true);dl.setUint16(10,cas,true);dl.setUint16(12,dat,true);
+      dl.setUint32(14,c,true);dl.setUint32(18,vs.length,true);dl.setUint32(22,vs.length,true);
+      dl.setUint16(26,ime.length,true);dl.setUint16(28,0,true);
+      lh.set(ime,30);
+      kosi.push(lh,vs);
+      var ch=new Uint8Array(46+ime.length), dc=new DataView(ch.buffer);
+      dc.setUint32(0,0x02014b50,true);dc.setUint16(4,20,true);dc.setUint16(6,20,true);
+      dc.setUint16(8,0x0800,true);dc.setUint16(10,0,true);
+      dc.setUint16(12,cas,true);dc.setUint16(14,dat,true);
+      dc.setUint32(16,c,true);dc.setUint32(20,vs.length,true);dc.setUint32(24,vs.length,true);
+      dc.setUint16(28,ime.length,true);dc.setUint16(30,0,true);dc.setUint16(32,0,true);
+      dc.setUint16(34,0,true);dc.setUint16(36,0,true);dc.setUint32(38,0,true);
+      dc.setUint32(42,odmik,true);
+      ch.set(ime,46);
+      sredina.push(ch);
+      odmik+=lh.length+vs.length;
+    }
+    sredina.forEach(function(x){skupno+=x.length;});
+    var kon=new Uint8Array(22), dk=new DataView(kon.buffer);
+    dk.setUint32(0,0x06054b50,true);dk.setUint16(4,0,true);dk.setUint16(6,0,true);
+    dk.setUint16(8,vnosi.length,true);dk.setUint16(10,vnosi.length,true);
+    dk.setUint32(12,skupno,true);dk.setUint32(16,odmik,true);dk.setUint16(20,0,true);
+    return new Blob(kosi.concat(sredina,[kon]),{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  }
+  /* XML ne prenese krmilnih znakov */
+  function xesc(v){
+    return String(v==null?"":v)
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,"")
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+  function stolpec(i){
+    var s="";
+    i=i+1;
+    while(i>0){var o=(i-1)%26;s=String.fromCharCode(65+o)+s;i=(i-o-1)/26;}
+    return s;
+  }
+  var STIL={besedilo:2,evri:3,sredina:5,stevilo:5};
+  function listXml(list){
+    var st=list.stolpci, h="";
+    h+='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+      '<sheetViews><sheetView workbookViewId="0">'+
+        '<pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>'+
+      '</sheetView></sheetViews>'+
+      '<sheetFormatPr defaultRowHeight="15"/>'+
+      '<cols>'+st.map(function(c,i){
+        return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+(c.w||20)+'" customWidth="1"/>';
+      }).join("")+'</cols><sheetData>';
+    h+='<row r="1" ht="34" customHeight="1">'+st.map(function(c,i){
+      return '<c r="'+stolpec(i)+'1" s="1" t="inlineStr"><is><t xml:space="preserve">'+xesc(c.g)+'</t></is></c>';
+    }).join("")+'</row>';
+    list.vrstice.forEach(function(v,ri){
+      var r=ri+2;
+      h+='<row r="'+r+'">'+v.map(function(val,ci){
+        var ref=stolpec(ci)+r, tip=(st[ci]&&st[ci].tip)||"besedilo";
+        if(val==null||val==="")return '<c r="'+ref+'" s="'+(STIL[tip]||2)+'"/>';
+        if(typeof val==="number"&&isFinite(val))
+          return '<c r="'+ref+'" s="'+(STIL[tip]||5)+'"><v>'+val+'</v></c>';
+        return '<c r="'+ref+'" s="'+(STIL[tip]||2)+'" t="inlineStr"><is><t xml:space="preserve">'+xesc(val)+'</t></is></c>';
+      }).join("")+'</row>';
+    });
+    h+='</sheetData>';
+    if(list.vrstice.length)
+      h+='<autoFilter ref="A1:'+stolpec(st.length-1)+(list.vrstice.length+1)+'"/>';
+    h+='</worksheet>';
+    return h;
+  }
+  var STILI='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+    '<numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0.00\\ &quot;€&quot;"/></numFmts>'+
+    '<fonts count="3">'+
+      '<font><sz val="10"/><name val="Calibri"/></font>'+
+      '<font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'+
+      '<font><b/><sz val="11"/><name val="Calibri"/></font>'+
+    '</fonts>'+
+    '<fills count="4">'+
+      '<fill><patternFill patternType="none"/></fill>'+
+      '<fill><patternFill patternType="gray125"/></fill>'+
+      '<fill><patternFill patternType="solid"><fgColor rgb="FF1F2937"/><bgColor indexed="64"/></patternFill></fill>'+
+      '<fill><patternFill patternType="solid"><fgColor rgb="FFF3F4F6"/><bgColor indexed="64"/></patternFill></fill>'+
+    '</fills>'+
+    '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>'+
+      '<border><left style="thin"><color rgb="FFD9DDE3"/></left><right style="thin"><color rgb="FFD9DDE3"/></right>'+
+      '<top style="thin"><color rgb="FFD9DDE3"/></top><bottom style="thin"><color rgb="FFD9DDE3"/></bottom><diagonal/></border></borders>'+
+    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'+
+    '<cellXfs count="6">'+
+      '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'+
+      '<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center" wrapText="1"/></xf>'+
+      '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'+
+      '<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" horizontal="right"/></xf>'+
+      '<xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>'+
+      '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="top" horizontal="center" wrapText="1"/></xf>'+
+    '</cellXfs>'+
+    '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'+
+    '</styleSheet>';
+  function imeLista(s,i){
+    s=String(s||("List"+(i+1))).replace(/[\[\]\*\?\/\\:]/g,"-");
+    return s.length>31?s.slice(0,31):s;
+  }
+  function ustvari(listi){
+    var vnosi=[],i;
+    vnosi.push({ime:"[Content_Types].xml",xml:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+      '<Default Extension="xml" ContentType="application/xml"/>'+
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+
+      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+
+      listi.map(function(_,j){
+        return '<Override PartName="/xl/worksheets/sheet'+(j+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+      }).join("")+'</Types>'});
+    vnosi.push({ime:"_rels/.rels",xml:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'+
+      '</Relationships>'});
+    vnosi.push({ime:"xl/workbook.xml",xml:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '+
+      'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+
+      listi.map(function(l,j){
+        return '<sheet name="'+xesc(imeLista(l.ime,j))+'" sheetId="'+(j+1)+'" r:id="rId'+(j+1)+'"/>';
+      }).join("")+'</sheets></workbook>'});
+    vnosi.push({ime:"xl/_rels/workbook.xml.rels",xml:
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+      listi.map(function(_,j){
+        return '<Relationship Id="rId'+(j+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(j+1)+'.xml"/>';
+      }).join("")+
+      '<Relationship Id="rId'+(listi.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'+
+      '</Relationships>'});
+    vnosi.push({ime:"xl/styles.xml",xml:STILI});
+    for(i=0;i<listi.length;i++)
+      vnosi.push({ime:"xl/worksheets/sheet"+(i+1)+".xml",xml:listXml(listi[i])});
+    return zip(vnosi);
+  }
+  return {ustvari:ustvari};
+})();
+
+function prenesiBlob(blob,ime){
+  try{
+    var u=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=u;a.download=ime;a.style.display="none";
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){if(a.parentNode)a.parentNode.removeChild(a);URL.revokeObjectURL(u);},4000);
+    return true;
+  }catch(err){toast("Prenos ni uspel: "+err.message);return false;}
+}
+
+/* ---- kaj gre v preglednico ---- */
+var XLS_STOLPCI=[
+  {g:"#",w:5,tip:"sredina",v:function(o,i){return i+1;}},
+  {g:"Izdelek",w:24,v:function(o){return o.izd.ime;}},
+  {g:"Ime kreative",w:30,v:function(o){return o.k.naslov;}},
+  {g:"Platforma",w:13,v:function(o){return platIme(o.k.platforma);}},
+  {g:"Umestitev",w:16,v:function(o){return umIme(o.k);}},
+  {g:"Format",w:15,v:function(o){return o.k.format;}},
+  {g:"Material (datoteke)",w:14,tip:"sredina",v:function(o){return o.k.stDatotek||0;}},
+  {g:"Kaj se vidi in sliši na kreativi",w:52,v:function(o){return o.k.design;}},
+  {g:"Hook — prva vrstica",w:40,v:function(o){return prvi(o.k.hooki);}},
+  {g:"Primarno besedilo (ob kreativi)",w:60,v:function(o){return prvi(o.k.primarna);}},
+  {g:"Naslov",w:32,v:function(o){return prvi(o.k.naslovi);}},
+  {g:"Opis",w:28,v:function(o){return prvi(o.k.opisi);}},
+  {g:"Gumb (CTA)",w:16,v:function(o){return o.k.platforma==="google"&&o.k.format==="RSA"?"—":o.k.cta;}},
+  {g:"Ciljni URL",w:38,v:function(o){return o.k.url;}},
+  {g:"Prikazna pot",w:18,v:function(o){return [o.k.pot1,o.k.pot2].filter(Boolean).join(" / ");}},
+  {g:"Sitelinki",w:30,v:function(o){return o.k.sitelinki;}},
+  {g:"Ključne besede",w:38,v:function(o){return o.k.kljucneBesede;}},
+  {g:"Kot / obljuba",w:34,v:function(o){return o.k.kot;}},
+  {g:"Publika",w:30,v:function(o){return o.k.publika;}},
+  {g:"Status",w:16,v:function(o){return statusIme(o.k.status);}},
+  {g:"Budget / dan",w:13,tip:"evri",v:function(o){return n(o.k.budget)||"";}},
+  {g:"Napoved CPA",w:13,tip:"evri",v:function(o){
+    var l=lijak(o.k.budget,o.k.cpm,o.k.ctr,o.k.cvr,ekon(o.izd));
+    return isFinite(l.cpa)?Math.round(l.cpa*100)/100:"";}},
+  {g:"Opombe",w:34,v:function(o){return o.k.opombe;}}
+];
+var XLS_POLJA=[["hooki","Hook",80],["primarna","Primarno besedilo",0],["naslovi","Naslov",0],["opisi","Opis",0]];
+
+function izvozniSeznam(obseg){
+  var izd=S.izdelki.filter(function(x){
+    if(obseg==="izdelek")return x.id===S.aktiven;
+    if(obseg==="mapa")return x.projekt===S.aktivenProjekt;
+    return true;
+  });
+  var out=[];
+  izd.forEach(function(x){
+    (x.kreative||[]).forEach(function(k){out.push({izd:x,k:k});});
+  });
+  return out;
+}
+function xlsxIzvozi(izbrani){
+  if(!izbrani.length){toast("Nič ni izbrano.");return;}
+  var vrstice=izbrani.map(function(o,i){
+    return XLS_STOLPCI.map(function(c){
+      var v=c.v(o,i);
+      return v==null?"":v;
+    });
+  });
+  var razl=[];
+  izbrani.forEach(function(o){
+    XLS_POLJA.forEach(function(pf){
+      var lim=(LIM[o.k.platforma]||LIM.drugo);
+      var meja=pf[2]||({hooki:80,primarna:lim.primarni,naslovi:lim.naslov,opisi:lim.opis}[pf[0]]);
+      (o.k[pf[0]]||[]).forEach(function(t,i){
+        t=String(t||"").trim();
+        if(!t)return;
+        razl.push([o.izd.ime,o.k.naslov,pf[1],i+1,t,t.length,meja,t.length>meja?"DA":""]);
+      });
+    });
+  });
+  var poPlat={};
+  izbrani.forEach(function(o){
+    var kljuc=platIme(o.k.platforma);
+    if(!poPlat[kljuc])poPlat[kljuc]={st:0,bud:0};
+    poPlat[kljuc].st++;
+    if(jeVZraku(o.k))poPlat[kljuc].bud+=n(o.k.budget);
+  });
+  var povz=Object.keys(poPlat).map(function(kljuc){
+    return [kljuc,poPlat[kljuc].st,poPlat[kljuc].bud||"",poPlat[kljuc].bud?poPlat[kljuc].bud*30:""];
+  });
+  var skupaj=povz.reduce(function(a,r){return a+(typeof r[2]==="number"?r[2]:0);},0);
+  povz.push(["Skupaj",izbrani.length,skupaj||"",skupaj?skupaj*30:""]);
+
+  var listi=[
+    {ime:"Oglasi",stolpci:XLS_STOLPCI.map(function(c){return {g:c.g,w:c.w,tip:c.tip};}),vrstice:vrstice},
+    {ime:"Različice besedil",stolpci:[
+      {g:"Izdelek",w:24},{g:"Kreativa",w:30},{g:"Polje",w:20},{g:"Št.",w:6,tip:"sredina"},
+      {g:"Besedilo",w:70},{g:"Znakov",w:9,tip:"sredina"},{g:"Meja",w:9,tip:"sredina"},{g:"Nad mejo",w:10,tip:"sredina"}
+    ],vrstice:razl},
+    {ime:"Povzetek",stolpci:[
+      {g:"Platforma",w:20},{g:"Št. oglasov",w:13,tip:"sredina"},
+      {g:"Budget / dan (aktivni)",w:20,tip:"evri"},{g:"Budget / mesec",w:18,tip:"evri"}
+    ],vrstice:povz}
+  ];
+  var d=new Date();
+  var datum=d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);
+  var ime="Oglasi — "+PR().ime+" — "+datum+".xlsx";
+  if(prenesiBlob(Xlsx.ustvari(listi),ime))
+    toast(izbrani.length+" oglasov izvoženih v Excel.");
+}
+
+/* ---- okno za izbiro oglasov ---- */
+var izvOznake={}, izvObseg="mapa";
+function izvozOkno(){
+  var w=el("mdl");
+  if(!w){
+    w=document.createElement("div");
+    w.id="mdl";w.className="mdl";w.hidden=true;
+    document.body.appendChild(w);
+  }
+  return w;
+}
+function odpriIzvoz(){
+  var w=izvozOkno();
+  izvOznake={};
+  izvozniSeznam(izvObseg).forEach(function(o){
+    izvOznake[o.k.id]=o.k.status!=="ubita";
+  });
+  w.hidden=false;
+  document.body.classList.add("mdl-on");
+  risiIzvoz();
+}
+function zapriIzvoz(){
+  var w=el("mdl");if(w)w.hidden=true;
+  document.body.classList.remove("mdl-on");
+}
+function risiIzvoz(){
+  var w=el("mdl");if(!w||w.hidden)return;
+  var seznam=izvozniSeznam(izvObseg);
+  var poIzdelku={};
+  seznam.forEach(function(o){
+    if(!poIzdelku[o.izd.id])poIzdelku[o.izd.id]={ime:o.izd.ime,vrste:[]};
+    poIzdelku[o.izd.id].vrste.push(o);
+  });
+  var stIzbranih=seznam.filter(function(o){return izvOznake[o.k.id];}).length;
+  var telo=Object.keys(poIzdelku).map(function(id){
+    var g=poIzdelku[id];
+    return '<div class="mdl-g"><span class="mdl-gt">'+esc(g.ime)+'</span>'+
+      g.vrste.map(function(o){
+        return '<label class="mdl-i">'+
+          '<input type="checkbox" data-izv="'+o.k.id+'"'+(izvOznake[o.k.id]?" checked":"")+'>'+
+          '<span class="mdl-in"><b>'+esc(o.k.naslov)+'</b>'+
+            '<em>'+esc(platIme(o.k.platforma)+" · "+umIme(o.k)+" · "+o.k.format+" · "+statusIme(o.k.status))+'</em></span>'+
+        '</label>';
+      }).join("")+'</div>';
+  }).join("")||'<p class="note">V tem obsegu ni nobene kreative.</p>';
+
+  el("mdl").innerHTML=
+    '<div class="mdl-veil" data-mdlx="1"></div>'+
+    '<div class="mdl-w" role="dialog" aria-modal="true" aria-label="Izvoz v Excel">'+
+      '<div class="mdl-h"><b>Izvoz v Excel</b>'+
+        '<span class="sp"></span>'+
+        '<button class="mdl-x" data-mdlx="1" aria-label="Zapri">✕</button></div>'+
+      '<div class="mdl-b">'+
+        '<p class="note">Nastane datoteka .xlsx s tremi listi: <b>Oglasi</b> (en oglas na vrstico — kreativa, besedilo na kreativi, besedilo ob njej, gumb, URL), '+
+        '<b>Različice besedil</b> (vse napisane različice s številom znakov) in <b>Povzetek</b> (koliko oglasov in budgeta na platformo). '+
+        'Primerno za pošiljanje stranki v potrditev.</p>'+
+        '<div class="mdl-r">'+
+          '<label class="sw"><span>Obseg</span><select id="izv-obseg">'+
+            '<option value="izdelek"'+(izvObseg==="izdelek"?" selected":"")+'>Samo trenutni izdelek</option>'+
+            '<option value="mapa"'+(izvObseg==="mapa"?" selected":"")+'>Cela mapa („'+esc(PR().ime)+'“)</option>'+
+            '<option value="vse"'+(izvObseg==="vse"?" selected":"")+'>Vse mape</option>'+
+          '</select></label>'+
+          '<span class="sp"></span>'+
+          '<button class="btn btn-s btn-soft" id="izv-vse">Izberi vse</button>'+
+          '<button class="btn btn-s btn-soft" id="izv-nic">Počisti</button>'+
+        '</div>'+
+        '<div class="mdl-l">'+telo+'</div>'+
+      '</div>'+
+      '<div class="mdl-f">'+
+        '<span class="note">Izbranih: <b>'+stIzbranih+'</b> od '+seznam.length+'</span>'+
+        '<span class="sp"></span>'+
+        '<button class="btn" data-mdlx="1">Prekliči</button>'+
+        '<button class="btn btn-p" id="izv-go"'+(stIzbranih?"":" disabled")+'>Izvozi v Excel</button>'+
+      '</div>'+
+    '</div>';
+}
+
+function osveziIzvozStevec(){
+  var seznam=izvozniSeznam(izvObseg);
+  var st=seznam.filter(function(o){return izvOznake[o.k.id];}).length;
+  var f=q("#mdl .mdl-f b");
+  if(f)f.textContent=st;
+  var g=el("izv-go");
+  if(g)g.disabled=!st;
 }
 
 /* ============ render / navigacija ============ */
@@ -2224,6 +3006,18 @@ document.addEventListener("input",function(ev){
 });
 document.addEventListener("change",function(ev){
   var t=ev.target;
+  /* izbira oglasov za izvoz */
+  if(t.dataset.izv!=null){
+    izvOznake[t.dataset.izv]=t.checked;
+    osveziIzvozStevec();return;
+  }
+  if(t.id==="izv-obseg"){
+    izvObseg=t.value;
+    izvozniSeznam(izvObseg).forEach(function(o){
+      if(izvOznake[o.k.id]==null)izvOznake[o.k.id]=o.k.status!=="ubita";
+    });
+    risiIzvoz();return;
+  }
   /* radio pri različici → katera gre v predogled */
   if(t.dataset.pv!=null){
     predIzbor[t.dataset.pv]=parseInt(t.dataset.i,10)||0;
@@ -2237,6 +3031,11 @@ document.addEventListener("change",function(ev){
     r.readAsText(f);t.value="";return;
   }
   if(t.id==="dfile"){dodajDatoteke(t.files);t.value="";return;}
+  if(t.id==="dfile-izd"){
+    var pi=P();
+    if(pi)dodajDatoteke(t.files,datLastnikIzdelka(pi));
+    t.value="";return;
+  }
   if(t.dataset.move!=null){
     var cilj=t.value;if(!cilj)return;
     var izd=S.izdelki.filter(function(x){return x.id===t.dataset.move;})[0];
@@ -2254,12 +3053,27 @@ document.addEventListener("change",function(ev){
       S.aktivenProjekt=p2.projekt;S.aktiven=p2.id;
       shrani();polniIzbirnik();render();toast("Izdelek premaknjen v drugo mapo.");return;
     }
+    /* vklop izračunov spremeni celoten pogled, ne samo številk */
+    if(t.dataset.p==="izracuni"){
+      shrani();render();
+      toast(p2.izracuni?"Izračuni vklopljeni.":"Izračuni izklopljeni.");
+      return;
+    }
     shrani();paint();
   }else if(t.dataset.c!=null&&t.tagName==="SELECT"){
     var k2=K();if(!k2)return;
-    set(k2,t.dataset.c,t.value);shrani();
-    /* platforma zamenja tudi polja, format in CTA pa samo predogled */
-    if(t.dataset.c==="platforma")renderEditor();
+    set(k2,t.dataset.c,t.value);
+    /* platforma potegne za sabo format, umestitev in seznam gumbov */
+    if(t.dataset.c==="platforma"){
+      if(formatiZa(k2.platforma).indexOf(k2.format)<0)k2.format=formatiZa(k2.platforma)[0];
+      k2.umestitev=privzetaUmestitev(k2.platforma,k2.format);
+      if(ctaSeznam(k2.platforma).indexOf(k2.cta)<0)k2.cta=privzetiCTA(k2.platforma);
+    }
+    if(t.dataset.c==="format"&&!umOK(k2.format,k2.umestitev))
+      k2.umestitev=privzetaUmestitev(k2.platforma,k2.format);
+    shrani();
+    /* platforma, format in umestitev spremenijo polja, ne samo predogled */
+    if(/^(platforma|format|umestitev)$/.test(t.dataset.c))renderEditor();
     else{paintKreativa();risiPredogled();}
   }
 });
@@ -2280,7 +3094,9 @@ document.addEventListener("click",function(ev){
   var add=t.closest("[data-add]");
   if(add){
     var p3=P();if(!p3)return;
-    var nk=novaKreativa(add.dataset.add);p3.kreative.push(nk);odprtaKreativa=nk.id;
+    var nk=novaKreativa(add.dataset.add);
+    if(p3.url)nk.url=p3.url;
+    p3.kreative.push(nk);odprtaKreativa=nk.id;
     shrani();view="kreative";render();window.scrollTo(0,0);return;
   }
   var addk=t.closest("[data-addk]");
@@ -2293,6 +3109,27 @@ document.addEventListener("click",function(ev){
   }
   var addi=t.closest("[data-addi]");
   if(addi){dodajIzdelek(addi.dataset.addi);return;}
+
+  /* okno za izvoz v Excel */
+  if(t.closest("[data-mdlx]")){zapriIzvoz();return;}
+  if(t.id==="izv-vse"||t.id==="izv-nic"){
+    var vklop=t.id==="izv-vse";
+    izvozniSeznam(izvObseg).forEach(function(o){izvOznake[o.k.id]=vklop;});
+    risiIzvoz();return;
+  }
+  if(t.id==="izv-go"){
+    var izb=izvozniSeznam(izvObseg).filter(function(o){return izvOznake[o.k.id];});
+    xlsxIzvozi(izb);zapriIzvoz();return;
+  }
+  if(t.id==="xlsx"||t.closest("#xlsx")){odpriIzvoz();return;}
+
+  /* preklop umestitve nad predogledom */
+  var upick=t.closest("[data-um]");
+  if(upick){
+    if(upick.disabled)return;
+    var ku=K();if(!ku)return;
+    ku.umestitev=upick.dataset.um;shrani();renderEditor();return;
+  }
 
   /* banka hookov → nova različica */
   var hook=t.closest("[data-hook]");
@@ -2364,7 +3201,7 @@ document.addEventListener("click",function(ev){
     var id=pdel.dataset.pdel, izd5=S.izdelki.filter(function(x){return x.id===id;})[0];
     if(!izd5)return;
     if(!confirm('Izbrišem izdelek "'+izd5.ime+'" z vsemi kreativami in naloženimi datotekami?'))return;
-    brisiDatotekeKreativ(izd5.kreative);
+    brisiDatotekeIzdelka(izd5);
     S.izdelki=S.izdelki.filter(function(x){return x.id!==id;});
     if(S.aktiven===id)S.aktiven=null;
     odprtaKreativa=null;shrani();polniIzbirnik();render();toast("Izdelek izbrisan.");return;
@@ -2397,6 +3234,7 @@ document.addEventListener("click",function(ev){
   var goto_=t.closest("[data-goto]");
   if(goto_){nastaviView(goto_.dataset.goto);return;}
   if(t.closest("#drop")){el("dfile").click();return;}
+  if(t.closest("#drop-izd")){el("dfile-izd").click();return;}
 
   switch(t.id){
     case "back": odprtaKreativa=null;pocistiUrlje();render();window.scrollTo(0,0);break;
@@ -2453,7 +3291,7 @@ document.addEventListener("click",function(ev){
   }
 });
 document.addEventListener("keydown",function(ev){
-  if(ev.key==="Escape"){zapriPovecano();return;}
+  if(ev.key==="Escape"){zapriIzvoz();zapriPovecano();return;}
   if(ev.key!=="Enter")return;
   var id=ev.target&&ev.target.id;
   if(id==="ob-mail"||id==="ob-geslo"){ev.preventDefault();Oblak.prijava(el("ob-mail").value.trim(),el("ob-geslo").value,false);}
@@ -2464,20 +3302,29 @@ function vlecemoDatoteke(ev){
   var ty=ev.dataTransfer&&ev.dataTransfer.types;
   return !!ty&&Array.prototype.indexOf.call(ty,"Files")>=0;
 }
+/* katero polje za spuščanje je pod kazalcem in čigav je material */
+function dropPolje(cilj){
+  var d=cilj&&cilj.closest?cilj.closest("#drop,#drop-izd"):null;
+  if(!d)return null;
+  var p=P();
+  return {polje:d,lastnik:d.id==="drop-izd"?(p?datLastnikIzdelka(p):null):(K()?K().id:null)};
+}
 document.addEventListener("dragover",function(ev){
-  var d=el("drop");
-  if(!d||!vlecemoDatoteke(ev))return;
-  ev.preventDefault();
-  if(ev.target.closest("#drop"))d.classList.add("nad");
+  if(!vlecemoDatoteke(ev))return;
+  var c=dropPolje(ev.target);
+  if(!c)return;
+  ev.preventDefault();c.polje.classList.add("nad");
 });
 document.addEventListener("dragleave",function(ev){
-  var d=el("drop");if(d&&!ev.relatedTarget)d.classList.remove("nad");
+  if(ev.relatedTarget)return;
+  ["drop","drop-izd"].forEach(function(id){var d=el(id);if(d)d.classList.remove("nad");});
 });
 document.addEventListener("drop",function(ev){
-  var d=el("drop");
-  if(!d||!vlecemoDatoteke(ev))return;
-  ev.preventDefault();d.classList.remove("nad");
-  if(ev.dataTransfer.files&&ev.dataTransfer.files.length)dodajDatoteke(ev.dataTransfer.files);
+  if(!vlecemoDatoteke(ev))return;
+  var c=dropPolje(ev.target);
+  if(!c||!c.lastnik)return;
+  ev.preventDefault();c.polje.classList.remove("nad");
+  if(ev.dataTransfer.files&&ev.dataTransfer.files.length)dodajDatoteke(ev.dataTransfer.files,c.lastnik);
 });
 document.addEventListener("paste",function(ev){
   if(!el("drop")||!K())return;

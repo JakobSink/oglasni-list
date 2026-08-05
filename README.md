@@ -6,11 +6,17 @@ Odpre se v brskalniku na telefonu ali računalniku, brez namestitve. Deluje tudi
 
 ## Kaj zna
 
-**Mape → izdelki → kreative.** Mapa je stranka, znamka ali sezona. Izdelek nosi ceno in stroške. Kreativa je en oglas.
+**Mape → izdelki → kreative.** Mapa je stranka, znamka ali sezona. Izdelek nosi material, zapiske in — če ga vklopiš — ceno in stroške. Kreativa je en oglas.
 
-**Ekonomika izdelka.** Cena, DDV, nabavna, dostava, embalaža, provizija plačila, vračila → marža na naročilo, **break-even CPA** (največ, kar smeš plačati za naročilo) in **break-even ROAS**. Zraven razrez enega naročila vrstico po vrstico in tabela scenarijev od 1 do 50 prodaj na dan.
+**Material in zapiski na izdelku.** Slike, videi in vse, kar si ugotovil o izdelku, so na izdelku, ne na posamezni kreativi. Material je skupen vsem kreativam tega izdelka: če kreativa nima svoje slike, predogled vzame prvo sliko izdelka. Zapiski gredo v brief vsake kreative tega izdelka.
 
-**Kreative.** Kot oglasa, publika, hook, besedilo s števci znakov (Facebook 125/40/30, Google RSA 30 × 5 in 90 × 3 z ločenimi polji in ključnimi besedami), design brief s checklistom, banka hookov, nalaganje slik in videov, budget.
+**Ekonomika izdelka — neobvezna.** Privzeto izklopljena; izdelek lahko uporabljaš samo za kreative. Ko jo vklopiš: cena, DDV, nabavna, dostava, embalaža, provizija plačila, vračila → marža na naročilo, **break-even CPA** (največ, kar smeš plačati za naročilo) in **break-even ROAS**. Zraven razrez enega naročila vrstico po vrstico in tabela scenarijev od 1 do 50 prodaj na dan.
+
+**Umestitve, ne samo platforme.** Predogled in polja določi *umestitev* — tisto, kar v oglasnem računu izbereš pod „placements“. 15 umestitev: FB Feed / Reels / Zgodba / Marketplace, IG Feed / Reels / Zgodba / Razišči, Google Iskanje / Display / Performance Max, TikTok Za vas, YouTube In-stream / Shorts. Ista kreativa v feedu izgleda drugače kot v zgodbi in ne prikaže istih polj — v Marketplace se primarno besedilo ne vidi, v IG Feed se naslov ne vidi, in aplikacija ti to napiše pod poljem.
+
+**Kreative.** Kot oglasa, publika, hook, besedilo s števci znakov (Facebook 125/40/30, Google RSA 30 × 5 in 90 × 3 z ločenimi polji, ključnimi besedami, prikazno potjo in sitelinki), design brief s checklistom, banka hookov, nalaganje slik in videov, budget.
+
+**Izvoz v Excel.** Pravi `.xlsx`, brez knjižnic in brez interneta. Izbereš obseg (izdelek / mapa / vse) in oglase, dobiš tri liste: *Oglasi* (kaj se vidi in sliši, besedila, gumb, URL, pot, sitelinki, budget, CPA), *Različice besedil* (vse variante s številom znakov in oznako „nad mejo“) in *Povzetek*.
 
 **Dva bloka številk na kreativo.** *Načrt*: vpišeš CPM, CTR, CVR → dobiš prikaze, klike, naročila, CPC, CPA, ROAS in profit. *Rezultati*: vpišeš dejansko porabo, prikaze, klike in naročila → dobiš izmerjene metrike. Aplikacija primerja dejanski CPA z break-even in ti pove, ali skalirati ali ustaviti.
 
@@ -62,3 +68,14 @@ python -m http.server 8000
 ```
 
 Nato odpri `http://localhost:8000`. (Odpiranje `index.html` neposredno prek `file://` deloma dela, a service worker in nekateri brskalniki tam nagajajo.)
+
+## Test
+
+Dimni test naloži aplikacijo v jsdom in preveri vse kombinacije platforme × umestitve × formata, zlaganje besedila, polja po umestitvi, Google polja, izvoz v Excel ter material in zapiske na izdelku:
+
+```
+npm install
+npm test
+```
+
+Aplikacija sama nima odvisnosti — `jsdom` in `fake-indexeddb` rabi samo test.
