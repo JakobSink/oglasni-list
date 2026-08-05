@@ -380,6 +380,33 @@ Promise.resolve()
       .then((sez) => {
         ok(sez.filter((x) => x.id === "dat-oblak")[0].blob != null,
           "prenesena datoteka je zdaj shranjena v napravi");
+        /* Datoteka, ki je v kazalu, a je v oblaku ni: izris jo sme poskusiti
+           natanko enkrat. Prej je vrtel v neskoncnost in slike se niso
+           pokazale nikoli.                                                  */
+        const nikjer = { id: "dat-ni", kreativa: w.datLastnikIzdelka(pi), ime: "manjka.png",
+          tip: "image/png", velikost: 4, dodano: new Date(0).toISOString(), zap: 2 };
+        w.Datoteke.kazalo().push(nikjer);
+        let poskusov = 0;
+        w.Oblak.prenesiDat = () => { poskusov++; return Promise.resolve(null); };
+        w.view = "pregled";
+        w.render();
+        return new Promise((r) => setTimeout(r, 260)).then(() => {
+          ok(poskusov === 1, "prenos, ki ne uspe, se poskusi enkrat in ne v zanki",
+            poskusov + " poskusov");
+          const html = w.document.getElementById("datoteke-izd").innerHTML;
+          ok(html.indexOf("ni v tej napravi") >= 0, "in datoteka je označena, da je ni tu");
+          ok(html.indexOf("data-retry") >= 0, "z gumbom za ponovni poskus");
+          w.Datoteke.kazalo().splice(w.Datoteke.kazalo().indexOf(nikjer), 1);
+        });
+      })
+      .then(() => {
+        /* kar se ni naložilo, mora čakati v vrsti za oblak */
+        const kaz2 = w.Datoteke.kazalo();
+        ok(kaz2.length > 0 && w.Datoteke.zaOblak().length === kaz2.filter((x) => !x.oblak).length,
+          "datoteke brez potrditve čakajo na oblak", w.Datoteke.zaOblak().length + " v vrsti");
+        w.Datoteke.oznaciVOblaku(kaz2[0].id);
+        ok(kaz2[0].oblak === true, "po uspešnem nalaganju je datoteka označena kot v oblaku");
+
         /* brisanje mora pobrisati tudi iz kazala in iz oblaka */
         let brisano = null;
         w.Oblak.brisiDat = (z) => { brisano = z.id; return Promise.resolve(); };

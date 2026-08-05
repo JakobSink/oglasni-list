@@ -495,6 +495,9 @@ table.mtx th:first-child{text-align:left}
 .file.cakam{opacity:.62}
 .file.cakam .prev{display:flex;align-items:center;justify-content:center}
 .file.cakam .ikona{font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.file.cakam.ni{opacity:1}
+.file.cakam.ni .prev{border:1px dashed var(--line2)}
+.file.cakam.ni .ikona{color:var(--warn)}
 
 /* urejanje stikal: eno stikalo je ena kartica, moznosti so cipi */
 .sg-l{display:flex;flex-direction:column;gap:12px}
