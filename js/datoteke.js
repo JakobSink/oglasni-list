@@ -61,9 +61,15 @@ var Datoteke=(function(){
       shrani();
     }
   }
+  /* Umik iz kazala mora pustiti sled brisanja. Kazalo je skupno in se zliva kot
+     unija: brez sledi bi datoteka, ki jo izbrišeš tu, ob naslednji uskladitvi
+     prišla nazaj iz kolegove kopije — in ker njenih bajtov ne bi bilo nikjer,
+     bi za vedno visela kot „ni v tej napravi“.                              */
   function izKazala(id){
     var k=kazalo(), i=k.map(function(x){return x.id;}).indexOf(id);
-    if(i>=0){k.splice(i,1);shrani();}
+    if(i>=0)k.splice(i,1);
+    sledBrisanja(id);
+    shrani();
   }
   /* lokalni zapisi in kazalo v en seznam; kar je samo v kazalu, čaka na prenos */
   function zlij(lastnik,lokalni){
@@ -121,12 +127,17 @@ var Datoteke=(function(){
     prviVizual:function(kid){
       return op("readonly",function(s){return s.index("kreativa").getAll(kid);}).then(function(sez){
         sez=zlij(kid,sez);
-        var slika=sez.filter(function(d){return /^image\//.test(d.tip);})[0];
-        var video=sez.filter(function(d){return /^video\//.test(d.tip);})[0];
-        var izbran=slika||video||null;
-        if(!izbran)return null;
-        if(izbran.blob)return izbran;
-        if(prenosSpodletel[izbran.id])return null;   /* že poskusili, ne visimo */
+        /* slike imajo prednost pred videi, znotraj tega pa velja vrstni red */
+        var kandidati=sez.filter(function(d){return /^image\//.test(d.tip);})
+          .concat(sez.filter(function(d){return /^video\//.test(d.tip);}));
+        if(!kandidati.length)return null;
+        /* Najprej tisti, ki ima bajte tukaj. Prej je obveljal preprosto prvi po
+           vrsti — če ta ni bil v tej napravi, predogled ni pokazal ničesar,
+           čeprav je bila zraven čisto uporabna novejša slika.                */
+        var zBajti=kandidati.filter(function(d){return d.blob;})[0];
+        if(zBajti)return zBajti;
+        var izbran=kandidati.filter(function(d){return !prenosSpodletel[d.id];})[0];
+        if(!izbran)return null;   /* vse smo že poskusili, ne visimo */
         return Datoteke.zagotovi(izbran.id).then(function(z){
           if(!z||!z.blob)prenosSpodletel[izbran.id]=true;
           return z&&z.blob?z:null;

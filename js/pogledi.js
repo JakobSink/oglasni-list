@@ -454,7 +454,8 @@ function paintPregled(){
             '<td>'+esc(k.naslov)+
               (stikRabljena().length?'<i style="display:block;font-size:11.5px;color:var(--ink3);font-style:normal">'+esc(stikOpis(k))+'</i>':'')+
             '</td>'+
-            '<td style="text-align:left"><span class="pill st-'+k.status+'">'+esc(statusIme(k.status))+'</span></td>'+
+            '<td style="text-align:left"><span class="pill st-'+k.status+'">'+esc(statusIme(k.status))+'</span>'+
+              (k.statusOpomba?'<i style="display:block;font-size:11.5px;color:var(--ink3);font-style:normal;margin-top:3px">'+esc(k.statusOpomba)+'</i>':'')+'</td>'+
             '<td style="text-align:left">'+vFaziHtml(k)+'</td>'+
             '<td style="text-align:left">'+esc(k.izvajalec||"—")+'</td>'+
             '<td style="text-align:left">'+rokHtml(k)+'</td>'+

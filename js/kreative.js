@@ -174,6 +174,7 @@ function renderKreative(){
           '<span class="pill plat np">'+esc(plat)+'</span>'+
           (k.izvajalec&&VDELU.indexOf(k.status)>=0
             ? '<span class="pill np">'+esc(k.izvajalec)+(k.rok?" · "+esc(datumSlo(k.rok)):"")+'</span>':'')+
+          (k.statusOpomba?'<span class="pill np" title="'+esc(k.statusOpomba)+'">'+esc(k.statusOpomba.slice(0,42))+(k.statusOpomba.length>42?"…":"")+'</span>':'')+
           (jeBlokirana(k)?'<span class="pill fzp-blok" title="'+esc(k.blokada)+'">blokirana</span>':'')+
           (jeZamuda(k)?'<span class="pill fzp-zamuda">rok je mimo</span>':'')+
           (jeZastoj(k)?'<span class="pill fzp-zastoj">'+steviloIn(dniOd(k.statusOd),"dan","dneva","dni","dni")+' brez premika</span>':'')+
@@ -551,6 +552,10 @@ function renderEditor(){
         '<div class="f"><label for="c-status">Kje je v procesu</label><select class="txt" id="c-status" data-c="status">'+
           STATUSI.map(function(x){return '<option value="'+x[0]+'"'+(k.status===x[0]?" selected":"")+'>'+x[1]+'</option>';}).join("")+'</select>'+
           '<span class="hint">Samo <i>aktivna</i> in <i>zmagovalka</i> se štejeta v dnevni budget izdelka.</span></div>'+
+        '<div class="f"><label for="c-statusop">Opomba k stanju</label>'+
+          '<input class="txt" id="c-statusop" type="text" data-c="statusOpomba" value="'+esc(k.statusOpomba||"")+'" '+
+            'placeholder="npr. skrajšaj hook, zamenjaj glasbo, logo je premajhen">'+
+          '<span class="hint">Kratko: kaj je treba narediti, da gre naprej. Vidi se v seznamu in v Pregledu.</span></div>'+
         '<div class="f full"><label for="c-tagi">Oznake</label>'+
           '<input class="txt" id="c-tagi" type="text" data-c="tagi" value="'+esc(k.tagi)+'" placeholder="UGC, boleča točka, zima — ločeno z vejico">'+
           '<span class="hint">Za tvoje razvrščanje: tip kreative, kot, sezona, kdo jo je naredil.</span>'+

@@ -366,6 +366,7 @@ main{
 .st-snemanje{background:var(--warn-soft);color:var(--warn)}
 .st-montaza{background:var(--warn-soft);color:var(--warn)}
 .st-pregled{background:var(--brand-soft);color:var(--brand-ink)}
+.st-popravki{background:var(--neg-soft);color:var(--neg)}
 .st-pripravljeno{background:var(--pos-soft);color:var(--pos)}
 .st-aktivna{background:var(--brand);color:var(--brand-on)}
 .st-zmagovalka{background:var(--pos);color:#fff}

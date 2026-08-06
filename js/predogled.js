@@ -506,7 +506,13 @@ function narisiDatotekeV(c){
           '<div class="prev"><span class="ikona">'+(spodletelo?"ni tu":"oblak")+'</span></div>'+
           '<div class="meta"><span class="fn">'+esc(d.ime)+'</span>'+
             '<span class="fs">'+mb(d.velikost)+(spodletelo?" · ni v tej napravi":" · prenašam …")+'</span></div>'+
-          (spodletelo?'<div class="fa no-print"><button data-retry="'+d.id+'">poskusi znova</button></div>':'')+
+          /* Izbrisati se mora dati tudi tisto, česar tu ni — brisanje ne rabi
+             bajtov. Prej je bil edini gumb „poskusi znova“ in zapisa ni bilo
+             mogoče spraviti ven z naprave, na kateri si stal.                */
+          '<div class="fa no-print">'+
+            (spodletelo?'<button data-retry="'+d.id+'">poskusi znova</button>':'')+
+            '<button class="d" data-ddel="'+d.id+'">izbriši</button>'+
+          '</div>'+
         '</div>';
       }
       var u="";

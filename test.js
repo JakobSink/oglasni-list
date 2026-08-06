@@ -59,6 +59,8 @@ SKRIPTE.forEach((ime) => {
 });
 
 const qaT = (koren, sel) => Array.prototype.slice.call(koren.querySelectorAll(sel));
+/* preverbe, ki tecejo asinhrono in jih pockamo pred koncnim izpisom */
+const cakajoci = [];
 const ok = (pogoj, ime, dodatno) => {
   if (pogoj) console.log("  OK   " + ime);
   else {
@@ -722,6 +724,11 @@ console.log("\n== faze in trak napredka ==");
   ok(w.fazaStatusa("pavza") === "ustavljeno" && w.fazaStatusa("ubita") === "ustavljeno",
     "pavza in ubita sta ustavljeni");
   ok(w.fazaStatusa("nekaj-cisto-drugega") === "ideja", "neznan status ne razbije razvrstitve");
+  /* korak, ki je manjkal: pregled je bil narejen in kreativa se vrne v delo */
+  ok(w.STATUSI.some((s) => s[0] === "popravki"), "obstaja status „za popravke“");
+  ok(w.statusIme("popravki") === "za popravke", "s pravim imenom", w.statusIme("popravki"));
+  ok(w.fazaStatusa("popravki") === "vdelu", "in šteje kot delo v teku, ne kot končano");
+  ok(w.VDELU.indexOf("popravki") >= 0, "zato se šteje med tisto, kar čaka na delo");
   /* vsak status mora pasti v natanko eno fazo, sicer bi trak lagal */
   w.STATUSI.forEach(([kljuc]) => {
     const zadetki = w.FAZE.filter((f) => f[3].indexOf(kljuc) >= 0).length;
@@ -887,6 +894,57 @@ console.log("\n== koš in razveljavi ==");
   w.S.aktivenProjekt = staraMapa; w.view = "projekti"; w.render();
 }
 
+console.log("\n== slike se ne pokvarijo ==");
+{
+  /* Zahteva je preprosta: kar daš noter, mora priti ven enako. Aplikacija zato
+     nikjer ne prekodira — datoteka gre v IndexedDB kot je, v Storage kot je in
+     iz njega nazaj kot je. Tu to preverimo po bajtih, ne na besedo.          */
+  const koda = fs.readFileSync(path.join(REPO, "js/datoteke.js"), "utf8")
+    + fs.readFileSync(path.join(REPO, "js/predogled.js"), "utf8")
+    + fs.readFileSync(path.join(REPO, "js/oblak.js"), "utf8");
+  ["canvas", "toBlob", "toDataURL", "drawImage", "createImageBitmap"].forEach((z) => {
+    ok(koda.indexOf(z) < 0, "nikjer ni „" + z + "“ — slika se ne prekodira");
+  });
+
+  /* Najmočnejši dokaz, ki ga to okolje premore: v oblak mora iti ISTI predmet,
+     ki je prišel z diska, ne kopija in ne predelava. (Bajtov skozi IndexedDB v
+     jsdom ni mogoče primerjati — fake-indexeddb Bloba ne prenese celega. V
+     brskalniku se shrani in vrne pravi Blob.)                               */
+  const bajti = Buffer.alloc(64 * 1024);
+  for (let i = 0; i < bajti.length; i++) bajti[i] = (i * 2654435761) & 0xff;
+  const izvirnik = new w.Blob([bajti], { type: "image/png" });
+  izvirnik.name = "izvirnik.png";
+
+  const pravi = w.Oblak.naloziDat;
+  let vOblak = null;
+  w.Oblak.naloziDat = function (z, blob) { vOblak = { z: z, blob: blob }; return Promise.resolve(null); };
+
+  const preveri = w.Datoteke.dodaj("kakovost-test", izvirnik)
+    .then(() => {
+      ok(!!vOblak, "datoteka je bila ponujena oblaku");
+      ok(vOblak && vOblak.blob === izvirnik,
+        "v oblak gre natanko tista datoteka, ki je prišla z diska — ne kopija");
+      ok(vOblak && vOblak.blob.size === bajti.length,
+        "z vsemi bajti", vOblak ? vOblak.blob.size + " od " + bajti.length : "-");
+      ok(vOblak && vOblak.blob.type === "image/png", "in izvirno vrsto zapisa");
+      /* kazalo hrani samo opis; bajti nikoli ne gredo v JSON */
+      const v = w.S.datoteke[w.S.datoteke.length - 1];
+      ok(v.velikost === bajti.length, "kazalo si zapomni pravo velikost",
+        v.velikost + " namesto " + bajti.length);
+      ok(v.tip === "image/png" && v.ime === "izvirnik.png",
+        "ter vrsto in ime", v.tip + " / " + v.ime);
+      ok(v.blob === undefined, "v kazalu ni bajtov");
+      w.Oblak.naloziDat = pravi;
+      return w.Datoteke.brisiZaKreativo("kakovost-test");
+    })
+    .then(() => {
+      /* štejemo svoj zapis, ne celega kazala — vmes vanj pišejo druge preverbe */
+      ok(!w.S.datoteke.some((x) => x.ime === "izvirnik.png"),
+        "test za sabo pospravi svoj zapis");
+    }, (err) => { w.Oblak.naloziDat = pravi; ok(false, "kakovost datotek", err && err.message); });
+  cakajoci.push(preveri);
+}
+
 console.log("\n== pošiljanje datotek pove resnico ==");
 {
   /* Napaka, ki jo je javil uporabnik: kazalo je kazalo „1 čaka na oblak · 1 jih
@@ -919,6 +977,101 @@ console.log("\n== pošiljanje datotek pove resnico ==");
 
   /* kazalo mora ločiti, kaj je v tej napravi in kaj ne */
   ok(typeof w.Datoteke.kljuciTu === "function", "kazalo zna povedati, kaj ima ta naprava");
+
+  /* Kartica datoteke, katere bajtov ta naprava nima, se mora dati izbrisati.
+     Prej je bil na njej edini gumb „poskusi znova“ in zapisa nikakor ni bilo
+     mogoče spraviti ven z naprave, na kateri si stal.                       */
+  const d = w.document;
+  const lastnik = "brez-bajtov-test";
+  let staroKazalo = null, skatla = null;
+
+  /* Zapis dodamo šele v odloženem delu: poznejši odseki testa nadomestijo cel
+     w.S in bi nam ga vmes pobrisali.                                        */
+  const izrisano = Promise.resolve().then(() => new Promise((r) => {
+    staroKazalo = JSON.parse(JSON.stringify(w.S.datoteke));
+    w.S.datoteke.push({ id: "dat-tuja", kreativa: lastnik, ime: "Izdelek brez naslova (1).png",
+      tip: "image/png", velikost: 1300000, dodano: new Date().toISOString(), zap: 1 });
+    skatla = d.createElement("div");
+    skatla.id = "test-datoteke";
+    d.body.appendChild(skatla);
+    w.narisiDatotekeV({ cilj: "test-datoteke", lastnik: lastnik });
+    setTimeout(r, 300);
+  })).then(() => {
+    ok(skatla.textContent.indexOf("ni v tej napravi") >= 0 || skatla.textContent.indexOf("prenašam") >= 0,
+      "kartica pove, da datoteke ni tu", skatla.textContent.replace(/\s+/g, " ").trim());
+    ok(skatla.querySelector('[data-ddel="dat-tuja"]') !== null,
+      "in vseeno ponudi brisanje");
+    /* brisanje mora delovati brez bajtov */
+    return w.Datoteke.brisi("dat-tuja");
+  }).then(() => {
+    ok(!w.S.datoteke.some((x) => x.id === "dat-tuja"),
+      "brisanje odstrani zapis iz kazala tudi brez bajtov");
+    /* Brez sledi bi se datoteka ob naslednji uskladitvi vrnila iz kolegove
+       kopije kazala in za vedno visela kot „ni v tej napravi“.             */
+    ok(w.S.brisano.some((x) => x.id === "dat-tuja"),
+      "in pusti sled brisanja, da se ne vrne iz oblaka");
+    const zOblakom = {
+      v: 6, spremenjeno: new Date(Date.now() - 60000).toISOString(),
+      projekti: w.S.projekti, izdelki: w.S.izdelki, stikala: [], banka: [],
+      datoteke: [{ id: "dat-tuja", kreativa: lastnik, ime: "Izdelek brez naslova (1).png",
+        tip: "image/png", velikost: 1300000, zap: 1 }],
+    };
+    const zlito = w.zlijStanje(w.S, zOblakom);
+    ok(!zlito.stanje.datoteke.some((x) => x.id === "dat-tuja"),
+      "uskladitev je ne prinese nazaj",
+      zlito.stanje.datoteke.map((x) => x.id).join(","));
+    skatla.remove();
+    w.S.datoteke = staroKazalo;
+  }, (err) => { skatla.remove(); w.S.datoteke = staroKazalo; ok(false, "kartica brez bajtov", err && err.message); });
+  cakajoci.push(izrisano);
+
+  /* Predogled mora vzeti sliko, ki JE tu, ne prve po vrsti. Prej je manjkajoča
+     prva slika pomenila prazen predogled, čeprav si pravkar dodal novo.     */
+  const lastnik2 = "predogled-test";
+  const nova = new w.Blob([Buffer.from([137, 80, 78, 71])], { type: "image/png" });
+  nova.name = "nova.png";
+  let prejKazalo2 = null;
+  const predTest = Promise.resolve().then(() => {
+    prejKazalo2 = JSON.parse(JSON.stringify(w.S.datoteke));
+    /* starejša slika, ki je ni v tej napravi — samo v skupnem kazalu */
+    w.S.datoteke.push({ id: "dat-manjka", kreativa: lastnik2, ime: "stara.png",
+      tip: "image/png", velikost: 999, dodano: "2026-08-01T00:00:00.000Z", zap: 1 });
+    return w.Datoteke.dodaj(lastnik2, nova);
+  })
+    .then(() => w.Datoteke.prviVizual(lastnik2))
+    .then((izbran) => {
+      ok(!!izbran, "predogled najde sliko, čeprav prva ni v tej napravi");
+      ok(izbran && izbran.id !== "dat-manjka",
+        "in ne obtiči na manjkajoči", izbran ? izbran.id : "nič");
+      ok(izbran && izbran.ime === "nova.png",
+        "ampak vzame tisto, ki jo je naprava res dobila", izbran && izbran.ime);
+      return w.Datoteke.brisiZaKreativo(lastnik2);
+    })
+    .then(() => { w.S.datoteke = prejKazalo2; },
+      (err) => { w.S.datoteke = prejKazalo2; ok(false, "izbira slike za predogled", err && err.message); });
+  cakajoci.push(predTest);
+}
+
+console.log("\n== opomba k stanju ==");
+{
+  const d = w.document;
+  const staro = JSON.parse(JSON.stringify(w.S));
+  const k = w.P().kreative[0];
+  k.status = "popravki";
+  k.statusOpomba = "skrajšaj hook, logo je premajhen";
+  /* v urejevalniku je polje takoj pod statusom, v Osnovi */
+  w.odprtaKreativa = k.id; w.view = "kreative"; w.render();
+  const polje = d.getElementById("c-statusop");
+  ok(!!polje, "Osnova ima polje za opombo k stanju");
+  ok(polje && polje.value === k.statusOpomba, "in pokaže vpisano", polje && polje.value);
+  ok(d.getElementById("c-status").value === "popravki", "status je za popravke");
+  /* opomba mora biti vidna tudi tam, kjer pregleduješ delo */
+  w.odprtaKreativa = null; w.render();
+  ok(d.body.textContent.indexOf("skrajšaj hook") >= 0, "opomba se vidi v seznamu kreativ");
+  w.view = "pregled"; w.render();
+  ok(d.getElementById("pr-kre").textContent.indexOf("skrajšaj hook") >= 0,
+    "in v Pregledu ob statusu");
+  w.S = staro; w.migriraj(); w.odprtaKreativa = null; w.view = "projekti"; w.render();
 
   /* Točno stanje iz prijave: 5 datotek, ena čaka, njenih bajtov tu ni. */
   const vrstica = w.datotekeStanjeHtml(5, [{ id: "d9" }], { d1: 1, d2: 1 }, 1, null);
@@ -1274,7 +1427,8 @@ console.log("\n== razdelilnik dogodkov (pravi kliki) ==");
    svojega materiala prevzame v predogled */
 const slika = new w.Blob([Buffer.from("89504e470d0a1a0a", "hex")], { type: "image/png" });
 slika.name = "vinil.png";
-Promise.resolve()
+Promise.all(cakajoci)
+  .catch((err) => ok(false, "asinhrone preverbe", err && err.message))
   .then(() => w.Datoteke.dodaj(w.datLastnikIzdelka(pi), slika))
   .then(() => w.Datoteke.zaKreativo(w.datLastnikIzdelka(pi)))
   .then((sez) => {

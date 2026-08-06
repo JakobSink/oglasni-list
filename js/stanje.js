@@ -262,7 +262,7 @@ function novaKreativa(pl){
     umestitev:privzetaUmestitev(pl,fmt),status:"ideja",statusOd:new Date().toISOString(),
     kot:"",publika:"",tagi:"",
     hooki:[""],primarna:[""],naslovi:[""],opisi:[""],cta:privzetiCTA(pl),
-    kljucneBesede:"",url:"",pot1:"",pot2:"",sitelinki:"",design:"",izvajalec:"",rok:"",rokOpomba:"",blokada:"",opombe:"",stDatotek:0,
+    kljucneBesede:"",url:"",pot1:"",pot2:"",sitelinki:"",design:"",izvajalec:"",rok:"",rokOpomba:"",blokada:"",statusOpomba:"",opombe:"",stDatotek:0,
     material:"",oddaja:"",refLinki:"",refOpis:"",ugotovitve:"",
     stikala:{},vodi:"",variante:{},
     budget:"",cpm:"",ctr:"",cvr:"",
@@ -275,6 +275,7 @@ var STATUSI=[
   ["snemanje","daj snemat"],
   ["montaza","sestavi kreativo"],
   ["pregled","za pregled"],
+  ["popravki","za popravke"],
   ["pripravljeno","pripravljeno za objavo"],
   ["aktivna","aktivna"],
   ["zmagovalka","zmagovalka"],
@@ -288,7 +289,7 @@ function statusIme(s){
 }
 function jeVZraku(k){return k.status==="aktivna"||k.status==="zmagovalka";}
 /* koraki, ki čakajo na delo — za opozorilo na pregledu */
-var VDELU=["brief","snemanje","montaza","pregled"];
+var VDELU=["brief","snemanje","montaza","pregled","popravki"];
 
 /* ---- faze ----
    Statusov je deset. Na kartici mape ali izdelka jih ni mogoče pokazati tako,
@@ -498,6 +499,7 @@ function migriraj(){
       if(typeof k.rok!=="string")k.rok="";
       if(typeof k.rokOpomba!=="string")k.rokOpomba="";
       if(typeof k.blokada!=="string")k.blokada="";
+      if(typeof k.statusOpomba!=="string")k.statusOpomba="";
       /* rok je zdaj datum; kar je bilo vpisano z besedami („do petka“), se
          preseli v opombo — nič se ne izgubi, primerjati pa se da datum      */
       if(k.rok&&!jeDatum(k.rok)){
