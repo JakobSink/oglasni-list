@@ -314,6 +314,30 @@ console.log("\n== trk v isti kreativi ==");
   ok(r.novih > 0, "trk je novost");
 
   /* drugič zapored se ne sme več nič spremeniti — sicer bi seznam rasel v nedogled */
+  /* Isto besedilo v dveh trenutkih pisanja ni druga različica. Telefon zaostane
+     na sredini stavka, prenosnik ima dokončanega — prej je iz tega nastala
+     odvečna različica in opozorilo ob skoraj vsaki uskladitvi.              */
+  const dolgo = "Bolečina v hrbtu? 10 minut na dan";
+  const vmesno = w.zlijStanje(stanje("2026-08-05T10:00:00.000Z", kreativa([dolgo], ["n"])),
+    stanje("2026-08-05T11:00:00.000Z", kreativa(["Bolečina v hrbtu?"], ["n"])));
+  const kv = vmesno.stanje.izdelki[0].kreative[0];
+  ok(kv.hooki.length === 1 && kv.hooki[0] === dolgo,
+    "krajše besedilo, ki je začetek daljšega, ne naredi nove različice",
+    JSON.stringify(kv.hooki));
+  ok(!kv.zlitoOb, "in ne prižge opozorila");
+  /* obratna smer: naše je krajše, njihovo nadaljuje — obvelja daljše */
+  const obratno = w.zlijStanje(stanje("2026-08-05T10:00:00.000Z", kreativa(["Bolečina v hrbtu?"], ["n"])),
+    stanje("2026-08-05T11:00:00.000Z", kreativa([dolgo], ["n"])));
+  const ko = obratno.stanje.izdelki[0].kreative[0];
+  ok(ko.hooki.length === 1 && ko.hooki[0] === dolgo, "obvelja daljše", JSON.stringify(ko.hooki));
+  ok(!ko.zlitoOb, "tudi v to smer brez opozorila");
+  /* res drugo besedilo pa še vedno obdrži obe in opozori */
+  const drugo = w.zlijStanje(stanje("2026-08-05T10:00:00.000Z", kreativa(["Hrbet te ubija?"], ["n"])),
+    stanje("2026-08-05T11:00:00.000Z", kreativa([dolgo], ["n"])));
+  const kd = drugo.stanje.izdelki[0].kreative[0];
+  ok(kd.hooki.length === 2, "drugačno besedilo se še vedno obdrži", JSON.stringify(kd.hooki));
+  ok(!!kd.zlitoOb, "in takrat opozorilo pride");
+
   const spet = w.zlijStanje(r.stanje, JSON.parse(JSON.stringify(
     Object.assign({}, r.stanje, { spremenjeno: "2026-08-05T12:00:00.000Z" }))));
   ok(spet.stanje.izdelki[0].kreative[0].hooki.length === 2, "ponovno zlivanje ne podvaja",
@@ -713,11 +737,19 @@ console.log("\n== faze in trak napredka ==");
     "faze se preštejejo", JSON.stringify(st));
   ok(st.odprto === 4, "odprto je vse razen tega, kar teče ali je ustavljeno", String(st.odprto));
 
-  const trak = w.napredekHtml(kreative, true);
+  const trak = w.napredekHtml(kreative);
   ok(trak.indexOf("fz-delo") >= 0 && trak.indexOf("fz-zrak") >= 0, "trak nariše faze, ki obstajajo");
-  ok(trak.indexOf("fz-prip") >= 0 && trak.indexOf("v delu <b>2</b>") >= 0,
-    "in podrobna različica pripiše številke");
-  ok(w.napredekHtml([], true) === "", "brez kreativ ni traku");
+  ok(trak.indexOf("fz-prip") >= 0, "vsako fazo, ki je v igri");
+  ok(w.napredekHtml([]) === "", "brez kreativ ni traku");
+
+  /* imena pod pasom so statusi, ne faze — „sestavi brief“ pove, kje delo stoji */
+  const cipi = w.statusiPills(kreative, 8);
+  ok(cipi.indexOf("sestavi brief") >= 0 && cipi.indexOf("aktivna") >= 0,
+    "statusi so našteti po imenih", cipi.replace(/<[^>]*>/g, " ").trim());
+  ok(cipi.indexOf("v delu") < 0, "in ne po ohlapnih fazah");
+  ok(w.statusiPills([]) === "", "brez kreativ ni značk");
+  const veliko = w.statusiPills(kreative, 2);
+  ok(veliko.indexOf("+") >= 0, "nad mejo se ostanek zloži v +N", veliko.replace(/<[^>]*>/g, " ").trim());
   ok(trak.indexOf('aria-label="') >= 0 && trak.indexOf("v delu: 2") >= 0,
     "trak se da prebrati tudi z bralnikom zaslona");
 
@@ -739,16 +771,25 @@ console.log("\n== faze in trak napredka ==");
   ok(mapa.textContent.indexOf("2 odprti") >= 0, "in pove, koliko je odprtega",
     mapa.querySelector("header").textContent.replace(/\s+/g, " ").trim());
   ok(mapa.textContent.indexOf("1 v zraku") >= 0, "in koliko že teče");
+  /* Na kartici izdelka ni traku, ampak poimenski statusi — „sestavi brief · 2“
+     pove več kot „2 odprti“, in prav to je bilo želeno.                     */
   const kartica = mapa.querySelector('[data-pick="' + izd.id + '"]');
-  ok(!!kartica && kartica.querySelector(".nap-b") !== null, "trak je tudi na kartici izdelka");
-  ok(kartica.textContent.indexOf("2 odprti") >= 0, "s svojim številom odprtih");
+  ok(!!kartica && kartica.querySelector(".kar-st") !== null,
+    "kartica izdelka našteje statuse kreativ");
+  ok(kartica.textContent.indexOf("sestavi brief · 2") >= 0,
+    "z imenom statusa in številom", kartica.querySelector(".kar-st").textContent);
+  ok(kartica.textContent.indexOf("aktivna") >= 0 && kartica.textContent.indexOf("ubita") >= 0,
+    "in našteje vse, ki so v igri");
+  ok(kartica.textContent.indexOf("2 odprti") < 0,
+    "brez ohlapnega „2 odprti“, ki ne pove, kje delo stoji");
 
   /* Pregled: trak, podrobne številke in barvni rob po fazi */
   w.view = "pregled"; w.render();
   const kre = d.getElementById("pr-kre");
   ok(kre.querySelector(".nap-b") !== null, "Pregled ima trak napredka");
-  ok(kre.querySelector(".nap-l").textContent.indexOf("v delu") >= 0,
-    "z izpisanimi fazami", kre.querySelector(".nap-l").textContent.replace(/\s+/g, " ").trim());
+  ok(kre.querySelector(".pill.st-brief") !== null,
+    "in pod njim prave statuse, ne faz",
+    kre.querySelector(".row").textContent.replace(/\s+/g, " ").trim());
   ok(kre.querySelectorAll("tbody tr[data-faza]").length === 4,
     "vsaka vrstica nosi svojo fazo", String(kre.querySelectorAll("tbody tr[data-faza]").length));
   ok(kre.querySelectorAll('tbody tr[data-faza="vdelu"]').length === 2,
@@ -844,6 +885,62 @@ console.log("\n== koš in razveljavi ==");
   ok(!w.P().kreative.some((x) => x.id === kre2.id), "in nazaj je ne dobiš");
 
   w.S.aktivenProjekt = staraMapa; w.view = "projekti"; w.render();
+}
+
+console.log("\n== pošiljanje datotek pove resnico ==");
+{
+  /* Napaka, ki jo je javil uporabnik: kazalo je kazalo „1 čaka na oblak · 1 jih
+     ta naprava še ni prenesla“, gumb Pošlji slike v oblak pa je javil, da je vse
+     v oblaku. Datoteka je bila v skupnem kazalu, njeni bajti pa na kolegovi
+     napravi — poslati je od tod ni bilo mogoče, sporočilo pa je trdilo nasprotno. */
+  ok(typeof w.izidPosiljanja === "function", "izid pošiljanja ima svojo funkcijo");
+  ok(w.izidPosiljanja({ poslano: 0, usklajenih: 0, spodletelo: 0, brezBajtov: 0 })
+      === "Vse datoteke so že v oblaku.",
+    "ko res ni ničesar, to tudi pove");
+
+  const brez = w.izidPosiljanja({ poslano: 0, usklajenih: 0, spodletelo: 0, brezBajtov: 1 });
+  ok(brez.indexOf("Vse datoteke so že v oblaku") < 0,
+    "datoteka na tuji napravi NI „vse je v oblaku“", brez);
+  ok(brez.indexOf("drugi napravi") >= 0, "ampak pove, kje je", brez);
+
+  ok(w.izidPosiljanja({ poslano: 2, usklajenih: 0, spodletelo: 0, brezBajtov: 0 })
+      .indexOf("2 datoteki sta šli") >= 0, "poslane datoteke prešteje s pravo obliko",
+    w.izidPosiljanja({ poslano: 2, usklajenih: 0, spodletelo: 0, brezBajtov: 0 }));
+  ok(w.izidPosiljanja({ poslano: 0, usklajenih: 1, spodletelo: 0, brezBajtov: 0 })
+      .indexOf("kazalo je zdaj usklajeno") >= 0,
+    "kar je bilo v vedru že prej, se ne prikaže kot novo pošiljanje");
+  ok(w.izidPosiljanja({ poslano: 0, usklajenih: 0, spodletelo: 1, brezBajtov: 0 })
+      .indexOf("poskusim znova") >= 0, "neuspeh pove, da bo poskusil sam");
+  const vse = w.izidPosiljanja({ poslano: 1, usklajenih: 1, spodletelo: 1, brezBajtov: 1 });
+  ["šla", "usklajeno", "znova", "drugi napravi"].forEach((del) => {
+    ok(vse.indexOf(del) >= 0, "sestavljen izid omeni „" + del + "“", vse);
+  });
+  ok(w.izidPosiljanja(null).indexOf("ni uspelo") >= 0, "brez izida ne trdi uspeha");
+
+  /* kazalo mora ločiti, kaj je v tej napravi in kaj ne */
+  ok(typeof w.Datoteke.kljuciTu === "function", "kazalo zna povedati, kaj ima ta naprava");
+
+  /* Točno stanje iz prijave: 5 datotek, ena čaka, njenih bajtov tu ni. */
+  const vrstica = w.datotekeStanjeHtml(5, [{ id: "d9" }], { d1: 1, d2: 1 }, 1, null);
+  ok(vrstica.indexOf("Datotek v ekipi:</b> 5") >= 0, "prešteje datoteke ekipe", vrstica);
+  ok(vrstica.indexOf("čaka na pošiljanje") < 0,
+    "ne trdi, da čaka na pošiljanje, če je od tod ni mogoče poslati", vrstica);
+  ok(vrstica.indexOf("ni v oblaku in tudi ne v tej napravi") >= 0,
+    "ampak pove, da je treba poslati z druge naprave", vrstica);
+  ok(vrstica.indexOf("vse so v oblaku") < 0, "in ne trdi, da so vse v oblaku");
+
+  /* ista datoteka, a bajti so tu → to pa se da poslati */
+  const daSePoslati = w.datotekeStanjeHtml(5, [{ id: "d9" }], { d9: 1 }, 0, null);
+  ok(daSePoslati.indexOf("1 čaka na pošiljanje") >= 0,
+    "ko so bajti tu, čaka na pošiljanje", daSePoslati);
+  ok(daSePoslati.indexOf("ne v tej napravi") < 0, "in ni pripisa o drugi napravi");
+
+  ok(w.datotekeStanjeHtml(3, [], {}, 0, null).indexOf("vse so v oblaku") >= 0,
+    "brez čakajočih pove, da so vse v oblaku");
+  ok(w.datotekeStanjeHtml(0, [], {}, 0, null).indexOf("Nobene slike") >= 0,
+    "brez datotek ne izpisuje števcev");
+  ok(w.datotekeStanjeHtml(2, [{ id: "d1" }], { d1: 1 }, 0, "vedra „material“ še ni")
+      .indexOf("Nalaganje ne uspe") >= 0, "napaka vedra se še vedno pokaže");
 }
 
 console.log("\n== zamenjava ob uvozu gre skozi koš ==");
@@ -1402,8 +1499,10 @@ Promise.resolve()
         kreative: [{ id: "kr-uvoz", naslov: "Uvožena kreativa", platforma: "facebook" }],
       }],
     };
-    ok(w.document.getElementById("verzija").textContent.length > 5,
-      "oznaka različice je izpisana", w.document.getElementById("verzija").textContent);
+    const vz = w.document.getElementById("verzija");
+    ok(vz.textContent.indexOf(String(w.RAZLICICA_ST)) >= 0,
+      "oznaka različice pokaže številko iz verzija.js", vz.textContent);
+    ok(vz.title === w.RAZLICICA, "celoten opis ostane v namigu ob miški", vz.title);
 
     /* stanje oblaka v stranski vrstici */
     w.osveziSideOblak();

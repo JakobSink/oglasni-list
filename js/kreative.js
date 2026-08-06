@@ -522,10 +522,10 @@ function renderEditor(){
   /* Uskladitev je tej kreativi pridala besedila kolega. Povemo naravnost tu,
      ker je edino, kar mora uporabnik narediti, pogledati različice.         */
   (k.zlitoOb
-    ? '<div class="opoz no-print"><div><b>Uskladitev je dodala besedila od ekipe.</b> '+
-        'Ob '+esc(cas(k.zlitoOb))+' sta v to kreativo hkrati pisala dva — nič ni bilo prepisano, '+
-        'tuje različice so pripete k tvojim. Preveri sezname spodaj in odveč zavrzi.</div>'+
-        '<button class="btn btn-s" id="zlito-ok">Sem pogledal</button></div>'
+    ? '<div class="opoz no-print" title="Ob '+esc(cas(k.zlitoOb))+' sta v to kreativo pisala dva. '+
+        'Nič ni bilo prepisano — tuje besedilo je pripeto k tvojemu.">'+
+        '<span>Ekipa je dodala besedilo</span>'+
+        '<button class="opoz-x" id="zlito-ok" aria-label="V redu, umakni opozorilo">✕</button></div>'
     : '')+
 
   /* stikala takoj pod naslovom — s tem preklapljaš trg oziroma različico */

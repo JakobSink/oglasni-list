@@ -131,10 +131,14 @@ svg{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}
 
 /* ---------- ogrodje ---------- */
 .shell{display:flex;min-height:100vh}
+/* Stranska vrstica se mora brez drsenja spraviti na zaslon prenosnika. Fiksni
+   deli (glava, izbirnika, noga) so zato odmerjeni skopo, razmiki med skupinami
+   pa ostanejo — drseti sme le seznam zavihkov in še to šele, ko res zmanjka.
+   Spodaj sta dve stopnji stiskanja po višini okna.                          */
 .side{
   width:254px;flex:none;background:var(--side);color:var(--side-ink);
   display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
-  padding:20px 14px 16px;gap:20px;z-index:40;
+  padding:18px 14px 14px;gap:16px;z-index:40;
 }
 .side-head{display:flex;gap:11px;align-items:center;padding:0 6px}
 .mark{width:38px;height:38px;flex:none}
@@ -161,11 +165,16 @@ svg{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}
 .sw select:hover{border-color:#333846}
 .sw select:focus{outline:none;border-color:var(--brand)}
 
-.rail{display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1;margin:0 -4px;padding:0 4px}
+.rail{display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1;margin:0 -4px;padding:0 4px;
+  /* ko drsnik vseeno pride, naj bo tanek in tih, ne sistemski klanec */
+  scrollbar-width:thin;scrollbar-color:var(--side2) transparent;overscroll-behavior:contain}
+.rail::-webkit-scrollbar{width:6px}
+.rail::-webkit-scrollbar-track{background:transparent}
+.rail::-webkit-scrollbar-thumb{background:var(--side2);border-radius:3px}
 .tab{
   display:flex;align-items:center;gap:11px;width:100%;
   background:none;border:0;color:var(--side-ink2);
-  padding:9px 11px;border-radius:var(--r-s);cursor:pointer;
+  padding:8px 11px;border-radius:var(--r-s);cursor:pointer;
   font-size:14px;font-weight:500;text-align:left;letter-spacing:-.008em;
   transition:background .13s,color .13s;
 }
@@ -174,8 +183,11 @@ svg{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}
 .tab[aria-selected="true"]{background:var(--brand);color:var(--brand-on);font-weight:600}
 .tab[aria-selected="true"] svg{opacity:1;stroke-width:1.8}
 
-.side-foot{display:flex;flex-direction:column;gap:9px;padding:0 4px}
-.saved{font-size:11px;color:var(--side-ink2);text-align:center}
+.side-foot{display:flex;flex-direction:column;gap:8px;padding:0 4px}
+/* „shranjeno“ in različica sta bila dve ločeni sredinski vrstici drobnega
+   besedila — skupaj povesta isto v eni in prihranita vrstico.              */
+.side-stanje{display:flex;align-items:baseline;justify-content:center;gap:7px;min-width:0}
+.saved{font-size:11px;color:var(--side-ink2);flex:none}
 /* stanje skupnega racuna: vedno vidno spodaj levo, klik pelje na Podatke */
 .side-oblak{
   display:flex;align-items:center;gap:9px;width:100%;text-align:left;
@@ -191,7 +203,36 @@ svg{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}
 .side-oblak-t em{font-style:normal;font-size:10.5px;color:var(--side-ink2);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* razlicica: da se na prvi pogled vidi, ali brskalnik strezi staro kopijo */
-.verzija{font-size:10.5px;color:var(--side-ink2);text-align:center;opacity:.65;letter-spacing:.02em}
+.verzija{font-size:10.5px;color:var(--side-ink2);opacity:.65;letter-spacing:.02em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+
+/* ---- stiskanje po višini okna ----
+   Prva stopnja: pade opis pod imenom in nekaj razmika. Druga: še logotip in
+   razlaga ob različici. Zavihkov se ne dotikamo — to je edino, kar mora ostati
+   udobno za klik.                                                           */
+@media (max-height:760px){
+  .side{padding:14px 14px 12px;gap:12px}
+  .side-name em{display:none}
+  .mark{width:32px;height:32px}
+  .side-pick{gap:7px}
+  .sw{gap:3px}
+  .sw select{padding:8px 30px 8px 11px}
+  .side-foot{gap:7px}
+  .side-oblak{padding:8px 11px}
+}
+@media (max-height:620px){
+  .side{gap:10px}
+  .side-head{padding:0 4px}
+  .mark{display:none}                /* logotip je okras, oznaka različice ni */
+  .side-name b{font-size:15px}
+  .side-oblak-t em{display:none}
+  .tab{padding:7px 11px}
+}
+/* Telefon v ležečem položaju. Napisa nad izbirnikoma odpadeta — v njiju piše
+   ime mape in izdelka, kar pove isto, aria-label pa ostane za bralnik zaslona. */
+@media (max-height:560px){
+  .sw>span{display:none}
+}
 
 .side-veil{position:fixed;inset:0;background:rgba(8,10,16,.55);z-index:35;backdrop-filter:blur(2px)}
 .side-veil[hidden]{display:none}
@@ -374,24 +415,32 @@ input.txt.blok{border-color:var(--neg-line);background:var(--neg-soft)}
   font-size:12px;color:var(--ink3);margin-top:3px}
 .najd-o{display:block;font-size:12.5px;color:var(--ink2);margin-top:5px;line-height:1.5}
 
-/* opozorilo nad vsebino: nekaj se je zgodilo in to je treba pogledati */
+/* Opozorilo nad vsebino. Namenoma majhno: pove, da se je nekaj zgodilo, ne
+   zavzame pa pol zaslona nad delom — podrobnosti so v namigu ob miški.     */
 .opoz{
-  display:flex;align-items:flex-start;gap:14px;margin:0 0 18px;
-  padding:14px 16px;border-radius:var(--r-m);
+  display:inline-flex;align-items:center;gap:8px;margin:0 0 14px;
+  padding:5px 6px 5px 12px;border-radius:999px;
   background:var(--brand-soft);color:var(--brand-ink);
-  border:1px solid var(--brand-line,var(--line2));font-size:13.5px;line-height:1.55;
+  font-size:12px;font-weight:600;letter-spacing:-.005em;
 }
-.opoz .btn{flex:none;margin-top:-2px}
+.opoz-x{
+  display:flex;align-items:center;justify-content:center;
+  width:20px;height:20px;flex:none;border:0;border-radius:50%;
+  background:transparent;color:inherit;font-size:12px;line-height:1;cursor:pointer;opacity:.65;
+}
+.opoz-x:hover{opacity:1;background:rgba(127,127,127,.18)}
+.opoz-x:focus-visible{outline:2px solid var(--brand);outline-offset:1px;opacity:1}
 
 .nap{display:flex;flex-direction:column;gap:8px;width:100%}
 .nap-b{display:flex;gap:1px;height:6px;border-radius:999px;overflow:hidden;background:var(--surf3)}
 .nap-b i{display:block;min-width:3px}
-.nap-l{display:flex;flex-wrap:wrap;gap:5px 16px;font-size:12px;color:var(--ink2)}
-.nap-o{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.nap-o i{width:8px;height:8px;border-radius:2px;flex:none}
-.nap-o b{color:var(--ink);font-weight:650}
 .nap-glava{margin-bottom:18px}
+.nap-glava .kar-st{margin-top:0;padding-top:9px}
 .card .nap{margin-top:auto;padding-top:4px}
+/* statusi kreativ na kartici izdelka — poimensko, ne le kot barva */
+.pill-xs{font-size:10.5px;padding:3px 8px;gap:5px}
+.pill-xs::before{width:5px;height:5px}
+.kar-st{display:flex;flex-wrap:wrap;gap:5px;margin-top:auto;padding-top:6px}
 
 /* barvni rob vrstice v Pregledu — faza je vidna, preden prebereš status */
 tbody tr[data-faza] td:first-child{box-shadow:inset 3px 0 var(--line2)}

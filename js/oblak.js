@@ -32,32 +32,47 @@ function sledBrisanja(id){
    različico dodamo k svojim. Nič se ne izgubi, uporabnik pa vidi obe in izbere.
    Enaka besedila se ne podvojijo, zato se seznam ob naslednjem zlivanju umiri. */
 var BESEDILNA_POLJA=["hooki","primarna","naslovi","opisi"];
+/* Vrne {seznam, novih}. „novih“ šteje samo besedila, ki so res druga različica —
+   po tem se prižge opozorilo v kreativi.
+
+   Ključna izjema je besedilo, kjer je eno začetek drugega. To ni druga
+   različica, ampak isto besedilo, ujeto v dveh trenutkih pisanja: telefon ima
+   „Bolečina v hrbtu?“, prenosnik pa že „Bolečina v hrbtu? 10 minut na dan“.
+   Prej je iz tega nastala odvečna različica in po nepotrebnem opozorilo ob
+   skoraj vsaki uskladitvi. Zdaj obvelja daljše — krajše je v njem v celoti,
+   zato se ne izgubi nobena beseda.                                          */
 function zlijSeznamBesedil(a,b){
   a=Array.isArray(a)?a:[];b=Array.isArray(b)?b:[];
-  var out=a.slice(), vidim={};
-  out.forEach(function(x){vidim[String(x==null?"":x).trim()]=true;});
+  var out=a.slice(), novih=0;
+  function ocisti(x){return String(x==null?"":x).trim();}
   b.forEach(function(x){
-    var t=String(x==null?"":x).trim();
-    if(!t||vidim[t])return;
-    vidim[t]=true;out.push(x);
+    var t=ocisti(x);
+    if(!t)return;
+    for(var i=0;i<out.length;i++){
+      var o=ocisti(out[i]);
+      if(!o)continue;
+      if(o===t)return;                          /* isto besedilo */
+      if(o.indexOf(t)===0)return;               /* njihovo je starejši trenutek našega */
+      if(t.indexOf(o)===0){out[i]=x;return;}    /* njihovo je novejši trenutek — vzemi daljše */
+    }
+    out.push(x);novih++;
   });
   /* prazno mesto je bilo samo čakalno — ko pride vsebina, ga ne rabimo več */
-  if(out.length>1)out=out.filter(function(x){return String(x==null?"":x).trim();});
-  return out.length?out:[""];
+  if(out.length>1)out=out.filter(function(x){return ocisti(x);});
+  return {seznam:out.length?out:[""],novih:novih};
 }
 function zlijKreativo(nasa,tuja,tujaJeNovejsa,stevec){
   /* vse, kar ni seznam besedil (status, budget, izvajalec, rok …), ostane po
      starem pravilu: obvelja novejša stran                                   */
   var out=JSON.parse(JSON.stringify(tujaJeNovejsa?tuja:nasa));
-  var vzeta=tujaJeNovejsa?tuja:nasa;
   var preddoloceno=stevec?stevec.reseno:0;
   BESEDILNA_POLJA.forEach(function(f){
     /* polja, ki ga ni ne pri nas ne pri njih, ne izmišljujemo — sicer bi vsako
        zlivanje starih zapisov videti kot sprememba                          */
     if(!Array.isArray(nasa[f])&&!Array.isArray(tuja[f]))return;
     var z=zlijSeznamBesedil(nasa[f],tuja[f]);
-    if(z.length>(Array.isArray(vzeta[f])?vzeta[f].length:0)&&stevec)stevec.reseno++;
-    out[f]=z;
+    if(z.novih&&stevec)stevec.reseno+=z.novih;
+    out[f]=z.seznam;
   });
   /* isto velja za besedila pod posameznim stikalom (slovensko, hrvaško …) */
   var kljuci={};
@@ -70,12 +85,11 @@ function zlijKreativo(nasa,tuja,tujaJeNovejsa,stevec){
       var vn=(nasa.variante||{})[x], vt=(tuja.variante||{})[x];
       if(!vn||!vt){out.variante[x]=vn||vt;return;}
       var zdruz=JSON.parse(JSON.stringify(tujaJeNovejsa?vt:vn));
-      var vzetaV=tujaJeNovejsa?vt:vn;
       BESEDILNA_POLJA.forEach(function(f){
         if(!Array.isArray(vn[f])&&!Array.isArray(vt[f]))return;
         var z=zlijSeznamBesedil(vn[f],vt[f]);
-        if(z.length>(Array.isArray(vzetaV[f])?vzetaV[f].length:0)&&stevec)stevec.reseno++;
-        zdruz[f]=z;
+        if(z.novih&&stevec)stevec.reseno+=z.novih;
+        zdruz[f]=z.seznam;
       });
       out.variante[x]=zdruz;
     });
@@ -216,10 +230,17 @@ function zlijStanje(lok,obl){
   novo.vrnjeno=vseVrnitve;
   novo.spremenjeno=new Date().toISOString();
 
+  /* Opis našteje samo to, kar se je res zgodilo. Prej je bilo notri tudi
+     „N usklajenih“ — to pa so vsi zapisi, ki obstajajo na obeh straneh, torej
+     tako rekoč vedno vsi. Ob vsakem zagonu je pisalo „Usklajeno: 42 usklajenih“
+     in izgledalo, kot da se je nekaj zgodilo, čeprav se ni nič.             */
   var deli=[];
-  if(dodanih)deli.push(dodanih+" zapisov prevzetih iz oblaka");
-  if(spojenih)deli.push(spojenih+" usklajenih");
-  if(stevec.reseno)deli.push(stevec.reseno+(stevec.reseno===1?" besedilo obdržano":" besedil obdržanih")+" namesto prepisanih");
+  if(dodanih+prevzetih)deli.push(steviloIn(dodanih+prevzetih,
+    "zapis prevzet","zapisa prevzeta","zapisi prevzeti","zapisov prevzetih")+" iz oblaka");
+  if(odstranjenih)deli.push(steviloIn(odstranjenih,
+    "zapis odstranjen","zapisa odstranjena","zapisi odstranjeni","zapisov odstranjenih")+", ker ga je izbrisal kolega");
+  if(stevec.reseno)deli.push(steviloIn(stevec.reseno,
+    "besedilo obdržano","besedili obdržani","besedila obdržana","besedil obdržanih")+" namesto prepisanih");
   return {
     stanje:novo,
     spremenjeno:!!(dodanih||spojenih)||lokCas!==oblCas,
@@ -289,14 +310,15 @@ var Oblak=(function(){
       sb.auth.getSession().then(function(res){
         user=res&&res.data&&res.data.session?res.data.session.user:null;
         osveziPanel();
-        if(user){naroci();sinhroniziraj();}
+        /* ob zagonu tiho: če ni ničesar novega, ni razloga za obvestilo */
+        if(user){naroci();sinhroniziraj({tiho:true});}
       });
       sb.auth.onAuthStateChange(function(_ev,sess){
         var prej=user?user.id:null;
         user=sess?sess.user:null;
         osveziPanel();
         if(!user){odjaviKanal();return;}
-        if(user.id!==prej){naroci();sinhroniziraj();}
+        if(user.id!==prej){naroci();sinhroniziraj({tiho:true});}
       });
     });
   }
@@ -407,7 +429,7 @@ var Oblak=(function(){
           if(r.novih)toast("Prevzeto od ekipe: "+r.opis+".");
           return;
         }
-        toast(r.spremenjeno?"Usklajeno: "+r.opis+".":"Že usklajeno.");
+        toast(r.novih?"Usklajeno: "+r.opis+".":"Že usklajeno.");
       });
     },function(err){
       stanjeNapake=napakaTabele(err);osveziPanel();
@@ -526,7 +548,10 @@ var Oblak=(function(){
           zamik=15000;povedanaNapaka=null;
           toast(r.poslano+(r.poslano===1?" slika je":" slik je")+" prišlo v oblak.");
           osveziPanel();
-        }else if(r&&r.caka){
+        }else if(r&&r.spodletelo){
+          /* Ponovimo samo, kar ima smisel ponoviti. Datoteka, katere vsebine v
+             tej napravi ni, se od tod ne bo poslala nikoli — brez te ločnice
+             smo v ozadju vsaki dve minuti trkali po strežniku do konca seje. */
           zamik=Math.min(zamik*2,120000);
           naceRtujPoskus();
         }
@@ -553,24 +578,48 @@ var Oblak=(function(){
   }
   /* Vse, kar je v tej napravi in še ni v oblaku, potisni gor. Teče sproti: ob
      prijavi, ob vsaki sinhronizaciji stanja in po neuspelem nalaganju.      */
+  /* Ali objekt v vedru že obstaja. Rabimo, kadar bajtov ni v tej napravi: lahko
+     je datoteko naložil kolega, k nam pa je prišlo kazalo, ki tega še ne ve.  */
+  function jeVVedru(z){
+    if(!sb||!user||!z)return Promise.resolve(false);
+    return sb.storage.from(VEDRO).list("",{limit:1,search:pot(z)}).then(function(res){
+      if(res.error)return false;
+      return (res.data||[]).some(function(o){return o.name===pot(z);});
+    },function(){return false;});
+  }
+  /* Izid pošiljanja loči štiri stvari, ker so štiri različne in zahtevajo štiri
+     različne odzive:
+       poslano     — šlo je gor zdaj
+       usklajenih  — v vedru je že bilo, zaostajalo je le kazalo
+       spodletelo  — bajti so tu, a strežnik ni sprejel (to ima smisel ponoviti)
+       brezBajtov  — vsebine v tej napravi ni; od tod je ni mogoče poslati
+     Prej se je zadnje troje tiho preskočilo in gumb je javil „vse je v oblaku“,
+     tudi kadar je bila datoteka še vedno samo na kolegovi napravi.           */
   function sinhronizirajDatoteke(){
-    if(!sb||!user)return Promise.resolve({poslano:0,caka:0});
-    var caka=Datoteke.zaOblak(), poslano=0;
-    if(!caka.length)return Promise.resolve({poslano:0,caka:0});
+    var prazno={poslano:0,usklajenih:0,spodletelo:0,brezBajtov:0,caka:0};
+    if(!sb||!user)return Promise.resolve(prazno);
+    var caka=Datoteke.zaOblak();
+    if(!caka.length)return Promise.resolve(prazno);
+    var poslano=0, usklajenih=0, spodletelo=0, brezBajtov=0;
     var p=Promise.resolve();
     caka.forEach(function(x){
       p=p.then(function(){
         return Datoteke.lokalno(x.id).then(function(z){
-          if(!z||!z.blob)return null;   /* bajtov ni v tej napravi — ni kaj poslati */
-          return naloziDat(z,z.blob).then(function(r){if(r)poslano++;});
-        },function(){});
+          if(z&&z.blob)
+            return naloziDat(z,z.blob).then(function(r){if(r)poslano++;else spodletelo++;});
+          return jeVVedru(x).then(function(je){
+            if(je){Datoteke.oznaciVOblaku(x.id);usklajenih++;}
+            else brezBajtov++;
+          });
+        },function(){brezBajtov++;});
       });
     });
-    return p.then(function(){return {poslano:poslano,caka:Datoteke.zaOblak().length};});
+    return p.then(function(){
+      return {poslano:poslano,usklajenih:usklajenih,spodletelo:spodletelo,
+        brezBajtov:brezBajtov,caka:Datoteke.zaOblak().length};
+    });
   }
-  function poriniDatoteke(){
-    return sinhronizirajDatoteke().then(function(r){return r.poslano;});
-  }
+  function poriniDatoteke(){return sinhronizirajDatoteke();}
   function napakaVedraZdaj(){return stanjeVedra;}
   function osveziPanel(){
     osveziSideOblak();
@@ -582,6 +631,41 @@ var Oblak=(function(){
     sinhronizirajDatoteke:sinhronizirajDatoteke,napakaVedra:napakaVedraZdaj,
     prijavljen:function(){return !!user;},zadnja:function(){return zadnjaSink;}};
 })();
+
+/* Vrstica o datotekah v zavihku Podatki. „Čaka na oblak“ je razdeljeno na to,
+   kar se da poslati od tod, in na to, kar leži samo na kolegovi napravi —
+   drugače gumb obljublja nekaj, česar ne more narediti.                     */
+function datotekeStanjeHtml(skupaj,cakajo,imam,manjkaTu,napaka){
+  if(!skupaj)return "Nobene slike ali videa še ni.";
+  cakajo=cakajo||[];imam=imam||{};
+  var cakaTu=cakajo.filter(function(x){return imam[x.id];}).length;
+  var cakaDrugje=cakajo.length-cakaTu;
+  return '<b>Datotek v ekipi:</b> '+skupaj+
+    (cakajo.length?'':' · vse so v oblaku')+
+    (cakaTu?' · <b style="color:var(--warn)">'+cakaTu+' čaka na pošiljanje</b>':'')+
+    (cakaDrugje?' · <b style="color:var(--warn)">'+cakaDrugje+
+      '</b> ni v oblaku in tudi ne v tej napravi — pošlji jih z naprave, kjer so bile naložene':'')+
+    (manjkaTu?' · '+manjkaTu+' jih ta naprava še ni prenesla':'')+
+    (napaka
+      ? '<br><span style="color:var(--neg)"><b>Nalaganje ne uspe:</b> '+esc(napaka)+'</span>'+
+        '<br>Vedro lahko narediš tudi na roko: Supabase → <b>Storage</b> → <i>New bucket</i>, ime <code>material</code>, brez javnega dostopa. Potem poženi še SQL, da dodaš pravila.'
+      : '');
+}
+
+/* Kaj se je ob pošiljanju datotek res zgodilo, povedano naravnost. Prej je bilo
+   vsako število nič isto sporočilo — „Vse datoteke so že v oblaku“ — tudi kadar
+   datoteka ni bila nikjer razen na kolegovi napravi.                        */
+function izidPosiljanja(r){
+  if(!r)return "Pošiljanje ni uspelo.";
+  var deli=[];
+  if(r.poslano)deli.push(steviloIn(r.poslano,"datoteka je šla","datoteki sta šli","datoteke so šle","datotek je šlo")+" v oblak");
+  if(r.usklajenih)deli.push(steviloIn(r.usklajenih,"je bila","sta bili","so bile","jih je bilo")+" v oblaku že prej, kazalo je zdaj usklajeno");
+  if(r.spodletelo)deli.push(steviloIn(r.spodletelo,"ni šla","nista šli","niso šle","jih ni šlo")+" skozi — poskusim znova sam");
+  if(r.brezBajtov)deli.push(steviloIn(r.brezBajtov,"je","sta","so","jih je")+
+    " samo na drugi napravi; od tod je ni mogoče poslati");
+  if(!deli.length)return "Vse datoteke so že v oblaku.";
+  return deli.join(", ")+".";
+}
 
 /* Stanje oblaka v stranski vrstici. Prijava je stvar, ki jo moraš videti brez
    iskanja — in ki mora povedati, da je račun skupen za vso ekipo.           */
@@ -644,20 +728,13 @@ function renderOblakPanel(){
     '<p class="note" style="margin-top:12px" id="ob-dat">Preverjam datoteke …</p>'+
     '<p class="note">Spremembe se same pošljejo v oblak nekaj sekund po vnosu. <b>Sinhroniziraj zdaj</b> zlije obe strani: kar je samo v oblaku, prevzame, kar je samo tu, pošlje gor. '+
     'Nič se ne prepiše — če kolega doda kreativo, medtem ko ti dodajaš drugo, po sinhronizaciji obstajata obe. Kar kdo izbriše, ostane izbrisano. '+
-    'Nove slike in videi gredo v oblak takoj ob nalaganju; <b>Pošlji slike v oblak</b> potisne gor še tisto, kar si naložil prej, ko oblak še ni bil vklopljen.</p>';
-  /* koliko datotek je v ekipi, koliko čaka na oblak in koliko jih ta naprava nima */
-  Promise.all([Datoteke.stevilo(),Datoteke.manjka()]).then(function(r){
+    'Nove slike in videi gredo v oblak takoj ob nalaganju; <b>Pošlji slike v oblak</b> potisne gor še tisto, kar si naložil prej, ko oblak še ni bil vklopljen. '+
+    'Pošlje lahko samo tisto, česar vsebina je v tej napravi — datoteko, ki jo je naložil kolega in ni prišla v oblak, mora poslati on.</p>';
+  /* Koliko datotek je v ekipi in kaj od tega je kje. „Čaka na oblak“ je treba
+     ločiti na to, kar se da poslati od tod, in na to, kar leži samo na kolegovi
+     napravi — drugače gumb obljublja nekaj, česar ne more narediti.         */
+  Promise.all([Datoteke.stevilo(),Datoteke.manjka(),Datoteke.kljuciTu()]).then(function(r){
     var d=el("ob-dat");if(!d)return;
-    var caka=Datoteke.zaOblak().length;
-    var napaka=Oblak.napakaVedra();
-    d.innerHTML=r[0]
-      ? '<b>Datotek v ekipi:</b> '+r[0]+
-        (caka?' · <b style="color:var(--warn)">'+caka+' čaka na oblak</b>':' · vse so v oblaku')+
-        (r[1]?' · '+r[1]+' jih ta naprava še ni prenesla':'')+
-        (napaka
-          ? '<br><span style="color:var(--neg)"><b>Nalaganje ne uspe:</b> '+esc(napaka)+'</span>'+
-            '<br>Vedro lahko narediš tudi na roko: Supabase → <b>Storage</b> → <i>New bucket</i>, ime <code>material</code>, brez javnega dostopa. Potem poženi še SQL, da dodaš pravila.'
-          : '')
-      : 'Nobene slike ali videa še ni.';
+    d.innerHTML=datotekeStanjeHtml(r[0],Datoteke.zaOblak(),r[2]||{},r[1],Oblak.napakaVedra());
   },function(){});
 }

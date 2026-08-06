@@ -13,7 +13,12 @@ naloziStanje();
 
 var zac=String(location.hash||"").replace("#","");
 if(zac)view=pravView(zac);
-if(el("verzija"))el("verzija").textContent=RAZLICICA;
+/* V vrstici je prostor za številko, ne za ves opis — ta gre v namig ob miški.
+   Številka je tisto, kar pove, ali brskalnik strežé svežo kopijo.           */
+if(el("verzija")){
+  el("verzija").textContent="različica "+RAZLICICA_ST;
+  el("verzija").title=RAZLICICA;
+}
 polniIzbirnik();
 render();
 osveziSideOblak();

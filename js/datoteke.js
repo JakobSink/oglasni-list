@@ -155,12 +155,20 @@ var Datoteke=(function(){
       });
     },
     stevilo:function(){return Promise.resolve(kazalo().length);},
-    /* koliko datotek iz kazala še ni v tej napravi */
-    manjka:function(){
+    /* Katere datoteke iz kazala ima ta naprava tudi po bajtih. Kazalo je skupno
+       vsej ekipi, bajti pa so vsak na svoji napravi — brez te razlike izgleda,
+       da se da poslati v oblak nekaj, česar tu sploh ni.                     */
+    kljuciTu:function(){
       return op("readonly",function(s){return s.getAllKeys();}).then(function(kljuci){
         var imam={};(kljuci||[]).forEach(function(k){imam[k]=1;});
+        return imam;
+      },function(){return {};});
+    },
+    /* koliko datotek iz kazala še ni v tej napravi */
+    manjka:function(){
+      return this.kljuciTu().then(function(imam){
         return kazalo().filter(function(x){return !imam[x.id];}).length;
-      },function(){return kazalo().length;});
+      });
     },
     pocisti:function(){
       S.datoteke=[];shrani();

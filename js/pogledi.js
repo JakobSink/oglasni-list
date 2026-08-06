@@ -83,19 +83,17 @@ function napredekOpis(st){
   return FAZE.filter(function(f){return st[f[0]];})
     .map(function(f){return f[1]+": "+st[f[0]];}).join(", ");
 }
-function napredekHtml(kreative,podrobno){
+/* Samo pas z razmerji. Imena pod njim so statusi, ne faze — „sestavi brief“
+   pove, kje delo stoji, „v delu“ pa ne. Faze ostanejo kot barve pasu.      */
+function napredekHtml(kreative){
   var st=fazeStevila(kreative);
   if(!st.skupaj)return "";
-  var vidne=FAZE.filter(function(f){return st[f[0]];});
   return '<div class="nap">'+
     '<div class="nap-b" role="img" aria-label="'+esc(napredekOpis(st))+'">'+
-      vidne.map(function(f){
+      FAZE.filter(function(f){return st[f[0]];}).map(function(f){
         return '<i class="'+f[2]+'" style="width:'+(st[f[0]]/st.skupaj*100).toFixed(2)+'%"></i>';
       }).join("")+
     '</div>'+
-    (podrobno?'<div class="nap-l">'+vidne.map(function(f){
-      return '<span class="nap-o"><i class="'+f[2]+'"></i>'+f[1]+' <b>'+st[f[0]]+'</b></span>';
-    }).join("")+'</div>':'')+
   '</div>';
 }
 /* Seznam blokad nad vsem drugim. Vsaka vrstica pove, katera kreativa in na kaj
@@ -131,19 +129,41 @@ function rokHtml(k){
   if(k.rokOpomba)deli.push('<span class="hint">'+esc(k.rokOpomba)+'</span>');
   return deli.length?deli.join(" "):"—";
 }
-/* kratek povzetek za glavo kartice: „5 odprtih · 3 v zraku“ */
-function odprtoPills(kreative){
-  var st=fazeStevila(kreative);
-  if(!st.skupaj)return "";
+/* Kar terja pozornost: blokade, zamude, zastoji. Enako na mapi in na izdelku. */
+function opozorilnePills(kreative){
   var zamud=(kreative||[]).filter(jeZamuda).length;
   var zastojev=(kreative||[]).filter(jeZastoj).length;
   var blok=blokade(kreative).length;
+  return (blok?'<span class="pill fzp-blok">'+steviloIn(blok,"blokirana","blokirani","blokirane","blokiranih")+'</span>':'')+
+    (zamud?'<span class="pill fzp-zamuda">'+zamud+' zamuja</span>':'')+
+    (zastojev?'<span class="pill fzp-zastoj">'+zastojev+' obtičala</span>':'');
+}
+/* Povzetek za glavo mape, kjer je kreativ več kot se jih da našteti po imenih. */
+function odprtoPills(kreative){
+  var st=fazeStevila(kreative);
+  if(!st.skupaj)return "";
   return (st.odprto?'<span class="pill fzp-odprto">'+steviloIn(st.odprto,"odprta","odprti","odprte","odprtih")+'</span>':'')+
     (st.vzraku?'<span class="pill fzp-zrak">'+st.vzraku+' v zraku</span>':'')+
-    (blok?'<span class="pill fzp-blok">'+steviloIn(blok,"blokirana","blokirani","blokirane","blokiranih")+'</span>':'')+
-    (zamud?'<span class="pill fzp-zamuda">'+zamud+' zamuja</span>':'')+
-    (zastojev?'<span class="pill fzp-zastoj">'+zastojev+' obtičala</span>':'')+
+    opozorilnePills(kreative)+
     (!st.odprto&&!st.vzraku?'<span class="pill np">vse ustavljeno</span>':'');
+}
+/* Pravi statusi kreativ, po vrsti od ideje do oglasa, ki teče. Na kartici
+   izdelka pove „sestavi brief“ namesto „1 odprta“ — to je tisto, kar rabiš,
+   preden se odločiš, ali ga sploh odpreš. Nad štirimi se ostanek zloži v „+N“,
+   da kartica ne zraste čez rob; cela slika je klik stran v Pregledu.        */
+function statusiPills(kreative,koliko){
+  var sk={};(kreative||[]).forEach(function(k){sk[k.status]=(sk[k.status]||0)+1;});
+  var vidni=STATUSI.filter(function(s){return sk[s[0]];});
+  if(!vidni.length)return "";
+  var prikazi=vidni.slice(0,koliko||4);
+  var skritih=vidni.length-prikazi.length;
+  return '<span class="kar-st">'+
+    prikazi.map(function(s){
+      return '<span class="pill pill-xs st-'+s[0]+'">'+esc(s[1])+(sk[s[0]]>1?' · '+sk[s[0]]:'')+'</span>';
+    }).join("")+
+    (skritih?'<span class="pill pill-xs np" title="'+esc(vidni.slice(prikazi.length)
+      .map(function(s){return s[1]+" · "+sk[s[0]];}).join(", "))+'">+'+skritih+'</span>':'')+
+  '</span>';
 }
 
 /* ============ POGLED: projekti ============ */
@@ -164,13 +184,14 @@ function renderProjekti(){
       var st=fazeStevila(p.kreative);
       return '<button class="card'+(p.id===S.aktiven&&jeZdaj?" zdaj":"")+'" data-pick="'+p.id+'">'+
         '<div class="card-b">'+
+          /* zgoraj samo to, kar terja pozornost — statusi pridejo pod opis */
           '<div class="row" style="gap:7px">'+
             (p.id===S.aktiven&&jeZdaj?'<span class="pill st-aktivna">odprt</span>':'')+
-            odprtoPills(p.kreative)+
+            opozorilnePills(p.kreative)+
           '</div>'+
           '<span class="card-t">'+esc(p.ime)+'</span>'+
           '<span class="card-s">'+esc(p.opis||"Brez opisa")+'</span>'+
-          napredekHtml(p.kreative,false)+
+          statusiPills(p.kreative)+
         '</div>'+
         '<div class="card-f">'+
           '<span>marža <b class="'+znak(ek.marzaEf)+'">'+e(ek.marzaEf)+'</b></span>'+
@@ -198,7 +219,7 @@ function renderProjekti(){
       '</header>'+
       '<div class="pad">'+
         /* stanje cele mape na enem traku, preden se spustiš v posamezen izdelek */
-        (stK?'<div class="nap-glava">'+napredekHtml(vseKre_,true)+'</div>':'')+
+        (stK?'<div class="nap-glava">'+napredekHtml(vseKre_)+statusiPills(vseKre_,8)+'</div>':'')+
         '<div class="cards">'+izdelki+
           '<button class="card card-add" data-addi="'+pr.id+'"><b>+ Izdelek</b><span>cena, stroški, kreative</span></button>'+
         '</div>'+
@@ -411,7 +432,7 @@ function paintPregled(){
            odgovor, ki čaka nekje drugje — in dokler ga ni, oglas ne gre ven. */
         blokadeHtml(p.kreative)+
         /* najprej groba slika po fazah, šele pod njo posamezni statusi */
-        '<div class="nap-glava">'+napredekHtml(p.kreative,true)+'</div>'+
+        '<div class="nap-glava">'+napredekHtml(p.kreative)+'</div>'+
         '<div class="row" style="margin-bottom:14px">'+
         STATUSI.filter(function(s){return sk[s[0]];}).map(function(s){
           return '<span class="pill st-'+s[0]+'">'+s[1]+' · '+sk[s[0]]+'</span>';}).join("")+

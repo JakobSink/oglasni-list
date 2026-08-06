@@ -45,7 +45,12 @@ var cakaIzris=false;
 function izrisPozneje(){
   if(pisePolje()){cakaIzris=true;return;}
   cakaIzris=false;
+  /* Izris zamenja vsebino pogleda in brskalnik pristane na vrhu strani. Kdor
+     dela sredi dolgega urejevalnika, je bil ob vsaki tihi uskladitvi vržen iz
+     konteksta — zato si položaj zapomnimo in ga vrnemo.                     */
+  var y=window.scrollY||document.documentElement.scrollTop||0;
   polniIzbirnik();render();
+  if(y)window.scrollTo(0,y);
 }
 document.addEventListener("focusout",function(){
   if(!cakaIzris)return;
@@ -673,10 +678,10 @@ var GUMBI={
   "ob-files":function(){
     var gumb=el("ob-files");
     if(gumb){gumb.disabled=true;gumb.textContent="Pošiljam …";}
-    Oblak.poriniDatoteke().then(function(st){
+    Oblak.poriniDatoteke().then(function(r){
       if(gumb){gumb.disabled=false;gumb.textContent="Pošlji slike v oblak";}
       renderOblakPanel();
-      toast(st?st+" datotek poslanih v oblak.":"Vse datoteke so že v oblaku.");
+      toast(izidPosiljanja(r));
     },function(){
       if(gumb){gumb.disabled=false;gumb.textContent="Pošlji slike v oblak";}
       toast("Pošiljanje datotek ni uspelo.");
