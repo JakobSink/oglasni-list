@@ -19,11 +19,12 @@ jobs:
     name: npm test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # v4 je tekel na Node 20, ki je na GitHubovih strežnikih opuščen.
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
 
       # config.js s Supabase ključem ni v repozitoriju; test rabi samo, da
