@@ -1370,12 +1370,21 @@ console.log("\n== izdelek se da preimenovati in izbrisati ==");
 
 console.log("\n== testi tečejo tudi v CI ==");
 {
-  const pot = path.join(REPO, ".github/workflows/test.yml");
-  ok(fs.existsSync(pot), "workflow za GitHub Actions obstaja");
-  const y = fs.existsSync(pot) ? fs.readFileSync(pot, "utf8") : "";
+  /* Imena datoteke ne priklepamo — šteje, da nek workflow poganja teste in da
+     je objava pogojena z njimi.                                             */
+  const mapa = path.join(REPO, ".github/workflows");
+  const datoteke = fs.existsSync(mapa) ? fs.readdirSync(mapa).filter((f) => /\.ya?ml$/.test(f)) : [];
+  ok(datoteke.length > 0, "workflow za GitHub Actions obstaja", datoteke.join(", "));
+  const y = datoteke.map((f) => fs.readFileSync(path.join(mapa, f), "utf8")).join("\n");
   ok(/on:[\s\S]*push:/.test(y), "teče ob pushu");
   ok(y.indexOf("npm test") >= 0, "in požene npm test");
   ok(y.indexOf("npm ci") >= 0, "z natančno nameščenimi odvisnostmi");
+
+  /* Objava mora biti pogojena s testi in se ne sme preklicati sama sebe —
+     prav preklicevanje je prej trikrat zapored ubilo objavo v teku.        */
+  ok(/needs:\s*testi/.test(y), "objava se zgodi šele, ko testi uspejo");
+  ok(/cancel-in-progress:\s*false/.test(y), "nova objava ne prekliče tiste, ki še teče");
+  ok(y.indexOf("deploy-pages") >= 0, "objavo opravi naš korak, ne GitHubov samodejni");
 }
 
 console.log("\n== razdelilnik dogodkov (pravi kliki) ==");
