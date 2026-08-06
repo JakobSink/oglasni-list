@@ -73,9 +73,21 @@ jobs:
 
       # Objavimo celoten repozitorij — aplikacija je statična, brez gradnje.
       # node_modules ni v repozitoriju, zato v artefakt ne pride.
+      #
+      # Ime artefakta je enolično za vsak poskus. Privzeto se vsi imenujejo
+      # „github-pages“; ob ponovnem zagonu padlega opravila nastane drugi z
+      # istim imenom in deploy-pages odpove z „Multiple artifacts named
+      # github-pages … Artifact count is 2“. S tem imenom je ponovni zagon varen.
+      #
+      # include-hidden-files ohrani .nojekyll (.git in .github sta izvzeta tako
+      # ali tako).
       - uses: actions/upload-pages-artifact@v5
         with:
           path: .
+          name: pages-${{ github.run_id }}-${{ github.run_attempt }}
+          include-hidden-files: true
 
       - id: objavi
         uses: actions/deploy-pages@v5
+        with:
+          artifact_name: pages-${{ github.run_id }}-${{ github.run_attempt }}

@@ -1385,6 +1385,13 @@ console.log("\n== testi tečejo tudi v CI ==");
   ok(/needs:\s*testi/.test(y), "objava se zgodi šele, ko testi uspejo");
   ok(/cancel-in-progress:\s*false/.test(y), "nova objava ne prekliče tiste, ki še teče");
   ok(y.indexOf("deploy-pages") >= 0, "objavo opravi naš korak, ne GitHubov samodejni");
+  /* Privzeto ime artefakta je pri vseh tekih „github-pages“; ob ponovnem zagonu
+     padlega opravila nastane drugi z istim imenom in objava odpove z
+     „Multiple artifacts named github-pages“. Ime mora biti enolično po poskusu. */
+  ok(/name:\s*pages-\$\{\{\s*github\.run_id/.test(y),
+    "artefakt ima enolično ime, zato je ponovni zagon varen");
+  ok(/artifact_name:\s*pages-\$\{\{\s*github\.run_id/.test(y),
+    "in objava išče točno tega");
 }
 
 console.log("\n== razdelilnik dogodkov (pravi kliki) ==");
