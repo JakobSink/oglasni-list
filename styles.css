@@ -334,6 +334,72 @@ main{
 .st-ubita{background:var(--neg-soft);color:var(--neg)}
 .plat{background:var(--surf3);color:var(--ink2)}
 
+/* ---------- faze: koliko dela je odprtega ---------- */
+/* Statusov je deset in na kartici iz njih ni mogoče ničesar razbrati. Trak jih
+   zloži v pet faz, tako da se v enem pogledu vidi, kaj še čaka in kaj že teče. */
+.fz-ideja{background:var(--line2)}
+.fz-delo{background:var(--warn)}
+.fz-prip{background:var(--pos-line)}
+.fz-zrak{background:var(--brand)}
+.fz-stop{background:var(--ink3);opacity:.4}
+.fzp-odprto{background:var(--warn-soft);color:var(--warn)}
+.fzp-zrak{background:var(--pos-soft);color:var(--pos)}
+.fzp-zamuda{background:var(--neg-soft);color:var(--neg)}
+.fzp-zastoj{background:var(--neg-soft);color:var(--neg)}
+.fzp-zlito{background:var(--brand-soft);color:var(--brand-ink)}
+.fzp-blok{background:var(--neg-soft);color:var(--neg)}
+
+/* blokade: kaj čaka na odgovor od zunaj */
+.blok-s{margin-bottom:18px;border:1px solid var(--neg-line);border-radius:var(--r-m);overflow:hidden}
+.blok-g{padding:10px 14px;background:var(--neg-soft);color:var(--neg);
+  font-size:12.5px;font-weight:650;letter-spacing:.01em}
+.blok-v{display:block;width:100%;text-align:left;background:var(--surf);border:0;
+  border-top:1px solid var(--line);padding:10px 14px;cursor:pointer;font:inherit}
+.blok-v:hover{background:var(--surf2)}
+.blok-v:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+.blok-t{display:block;font-weight:600;font-size:13.5px;color:var(--ink)}
+.blok-o{display:block;font-size:12.5px;color:var(--ink2);margin-top:2px;line-height:1.5}
+input.txt.blok{border-color:var(--neg-line);background:var(--neg-soft)}
+
+/* zadetki iskanja po vseh mapah */
+.najd{display:flex;flex-direction:column;gap:2px;margin-top:14px;
+  border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden}
+.najd-v{display:block;width:100%;text-align:left;background:var(--surf);border:0;
+  border-bottom:1px solid var(--line);padding:11px 14px;cursor:pointer;font:inherit}
+.najd-v:last-child{border-bottom:0}
+.najd-v:hover{background:var(--surf2)}
+.najd-v:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+.najd-t{display:block;font-weight:600;font-size:14px;color:var(--ink)}
+.najd-p{display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  font-size:12px;color:var(--ink3);margin-top:3px}
+.najd-o{display:block;font-size:12.5px;color:var(--ink2);margin-top:5px;line-height:1.5}
+
+/* opozorilo nad vsebino: nekaj se je zgodilo in to je treba pogledati */
+.opoz{
+  display:flex;align-items:flex-start;gap:14px;margin:0 0 18px;
+  padding:14px 16px;border-radius:var(--r-m);
+  background:var(--brand-soft);color:var(--brand-ink);
+  border:1px solid var(--brand-line,var(--line2));font-size:13.5px;line-height:1.55;
+}
+.opoz .btn{flex:none;margin-top:-2px}
+
+.nap{display:flex;flex-direction:column;gap:8px;width:100%}
+.nap-b{display:flex;gap:1px;height:6px;border-radius:999px;overflow:hidden;background:var(--surf3)}
+.nap-b i{display:block;min-width:3px}
+.nap-l{display:flex;flex-wrap:wrap;gap:5px 16px;font-size:12px;color:var(--ink2)}
+.nap-o{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.nap-o i{width:8px;height:8px;border-radius:2px;flex:none}
+.nap-o b{color:var(--ink);font-weight:650}
+.nap-glava{margin-bottom:18px}
+.card .nap{margin-top:auto;padding-top:4px}
+
+/* barvni rob vrstice v Pregledu — faza je vidna, preden prebereš status */
+tbody tr[data-faza] td:first-child{box-shadow:inset 3px 0 var(--line2)}
+tbody tr[data-faza="vdelu"] td:first-child{box-shadow:inset 3px 0 var(--warn)}
+tbody tr[data-faza="pripravljeno"] td:first-child{box-shadow:inset 3px 0 var(--pos)}
+tbody tr[data-faza="vzraku"] td:first-child{box-shadow:inset 3px 0 var(--brand)}
+tbody tr[data-faza="ustavljeno"] td:first-child{box-shadow:none}
+
 /* ---------- obrazci ---------- */
 .grid{display:grid;gap:18px 20px;grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
 .f{display:flex;flex-direction:column;gap:7px;min-width:0}
@@ -1044,7 +1110,15 @@ pre{font-family:var(--mono);font-size:12px;background:var(--surf3);border-radius
   opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
   border-radius:999px;max-width:90vw;text-align:center;box-shadow:var(--sh-3);
 }
-.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+/* obvestilo z dejanjem: „Izbrisano. [Razveljavi]“ */
+.toast.dej{display:flex;align-items:center;gap:14px;padding:9px 9px 9px 20px}
+.toast-b{
+  background:var(--bg);color:var(--ink);border:0;border-radius:999px;
+  padding:7px 15px;font:inherit;font-weight:650;cursor:pointer;flex:none;
+}
+.toast-b:hover{background:var(--surf2)}
+.toast-b:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 
 /* ---------- odzivnost ---------- */
 @media (max-width:1060px){

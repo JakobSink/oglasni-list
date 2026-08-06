@@ -22,6 +22,19 @@ create policy "berem svoje"     on public.stanje for select using (auth.uid() = 
 create policy "vstavim svoje"   on public.stanje for insert with check (auth.uid() = uporabnik);
 create policy "posodobim svoje" on public.stanje for update using (auth.uid() = uporabnik) with check (auth.uid() = uporabnik);
 
+-- ── sprotno obveščanje o tujih spremembah ───────────────────────────────────
+-- Brez tega aplikacija dela naprej: uskladi se ob zagonu, ob vrnitvi v zavihek
+-- in na gumb. S tem pa kolegovo delo pride k tebi takoj, ko ga shrani.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'stanje'
+  ) then
+    alter publication supabase_realtime add table public.stanje;
+  end if;
+end $$;
+
 -- ── slike in videi kreativ ───────────────────────────────────────────────────
 insert into storage.buckets (id, name, public)
 values ('material', 'material', false)

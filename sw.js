@@ -1,6 +1,18 @@
 /* Offline delovanje: omrežje najprej, predpomnilnik kot rezerva. */
-var CACHE="oglasni-list-v18";
-var DATOTEKE=["./","index.html","styles.css","app.js","config.js","manifest.webmanifest","icon.svg"];
+
+/* Ime predpomnilnika pride iz verzija.js, da različice ni treba popravljati na
+   dveh mestih in je ni mogoče pozabiti. Uvožena datoteka šteje tudi pri
+   brskalnikovem preverjanju posodobitev — ko se v njej spremeni številka, se
+   za brskalnik spremeni ta service worker.                                 */
+importScripts("./verzija.js");
+var CACHE=CACHE_IME;
+/* Seznam mora ostati usklajen s skriptami v index.html — če katera manjka, ta
+   del aplikacije brez povezave ne dela.                                     */
+var DATOTEKE=["./","index.html","styles.css","manifest.webmanifest","icon.svg",
+  "verzija.js","config.js","vendor/supabase.js",
+  "js/osnove.js","js/stanje.js","js/izracuni.js","js/datoteke.js","js/pogledi.js",
+  "js/kreative.js","js/predogled.js","js/kalkulator.js","js/oblak.js",
+  "js/podatki.js","js/excel.js","js/dogodki.js","js/zagon.js"];
 
 self.addEventListener("install",function(ev){
   ev.waitUntil(

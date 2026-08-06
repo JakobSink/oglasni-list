@@ -2,7 +2,7 @@
   "name": "oglasni-list",
   "version": "1.0.0",
   "description": "Delovni prostor za pisanje oglasnih kreativ (Facebook, Instagram, Google, TikTok), načrtovanje budgeta in izračun tega, kaj od naročila sploh ostane.",
-  "main": "app.js",
+  "main": "js/zagon.js",
   "scripts": {
     "test": "node test.js"
   },

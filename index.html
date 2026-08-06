@@ -39,20 +39,20 @@ try{var t=localStorage.getItem("oglasni-list-tema");if(t==="dark"||t==="light")d
       <button class="btn btn-p btn-w" id="pnew">Nov izdelek</button>
     </div>
 
-    <nav class="rail" id="rail" role="tablist" aria-label="Razdelki">
-      <button class="tab" role="tab" data-v="projekti">
+    <nav class="rail" id="rail" role="tablist" aria-label="Razdelki" aria-orientation="vertical">
+      <button class="tab" role="tab" id="tab-projekti" aria-controls="v-projekti" data-v="projekti">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h3.6a2 2 0 0 1 1.5.7L11.5 7H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>
         Projekti</button>
-      <button class="tab" role="tab" data-v="pregled">
+      <button class="tab" role="tab" id="tab-pregled" aria-controls="v-pregled" data-v="pregled">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/></svg>
         Pregled</button>
-      <button class="tab" role="tab" data-v="kreative">
+      <button class="tab" role="tab" id="tab-kreative" aria-controls="v-kreative" data-v="kreative">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M3 17l4.5-4 3 2.5L15 11l6 5"/></svg>
         Kreative</button>
-      <button class="tab" role="tab" data-v="kalkulator">
+      <button class="tab" role="tab" id="tab-kalkulator" aria-controls="v-kalkulator" data-v="kalkulator">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>
         Kalkulator</button>
-      <button class="tab" role="tab" data-v="podatki">
+      <button class="tab" role="tab" id="tab-podatki" aria-controls="v-podatki" data-v="podatki">
         <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
         Podatki in vodnik</button>
     </nav>
@@ -81,11 +81,11 @@ try{var t=localStorage.getItem("oglasni-list-tema");if(t==="dark"||t==="light")d
     </div>
 
     <main>
-      <section class="view" id="v-projekti" hidden></section>
-      <section class="view" id="v-pregled" hidden></section>
-      <section class="view" id="v-kreative" hidden></section>
-      <section class="view" id="v-kalkulator" hidden></section>
-      <section class="view" id="v-podatki" hidden></section>
+      <section class="view" id="v-projekti" role="tabpanel" aria-labelledby="tab-projekti" tabindex="-1" hidden></section>
+      <section class="view" id="v-pregled" role="tabpanel" aria-labelledby="tab-pregled" tabindex="-1" hidden></section>
+      <section class="view" id="v-kreative" role="tabpanel" aria-labelledby="tab-kreative" tabindex="-1" hidden></section>
+      <section class="view" id="v-kalkulator" role="tabpanel" aria-labelledby="tab-kalkulator" tabindex="-1" hidden></section>
+      <section class="view" id="v-podatki" role="tabpanel" aria-labelledby="tab-podatki" tabindex="-1" hidden></section>
     </main>
   </div>
 </div>
@@ -99,7 +99,22 @@ try{var t=localStorage.getItem("oglasni-list-tema");if(t==="dark"||t==="light")d
   <div class="lb-in" id="lb-in"></div>
 </div>
 
+<script src="verzija.js"></script>
 <script src="config.js"></script>
-<script src="app.js"></script>
+<!-- Koda je razdeljena po datotekah. Vrstni red šteje samo pri zagon.js,
+     ki mora ostati zadnji — takrat je vse ostalo že naloženo. -->
+<script src="js/osnove.js"></script>
+<script src="js/stanje.js"></script>
+<script src="js/izracuni.js"></script>
+<script src="js/datoteke.js"></script>
+<script src="js/pogledi.js"></script>
+<script src="js/kreative.js"></script>
+<script src="js/predogled.js"></script>
+<script src="js/kalkulator.js"></script>
+<script src="js/oblak.js"></script>
+<script src="js/podatki.js"></script>
+<script src="js/excel.js"></script>
+<script src="js/dogodki.js"></script>
+<script src="js/zagon.js"></script>
 </body>
 </html>

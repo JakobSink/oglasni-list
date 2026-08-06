@@ -47,7 +47,23 @@ V zavihku **Podatki** je izvoz in uvoz JSON — tako preneseš stanje na drugo n
 
 Uvoz je dvojen: **Uvozi in dodaj** mape, izdelke in stikala iz datoteke prilepi zraven obstoječim in ničesar ne povozi, **Uvozi in zamenjaj** pa vse nadomesti (prej vpraša). **Naloži pripravljeno mapo** vzame `mape/eureka.json`, ki je objavljena skupaj z aplikacijo, in jo doda — brez datoteke, kar je na telefonu edina znosna pot.
 
+**Koš.** Brisanje mape, izdelka ali kreative ni dokončno: zapis gre za 30 dni v koš, naložene slike se ohranijo z njim. Takoj po brisanju ponudi obvestilo *Razveljavi*, pozneje ga vrneš v zavihku Podatki. Koš je skupen z ekipo — kar izbriše eden, lahko vrne drugi, in vrnitev prebije brisanje tudi pri kolegih, ki so ga že prevzeli. Dokončno gre zapis stran po 30 dneh ali z gumbom *Zavrzi*; takrat gredo z njim tudi datoteke.
+
+Tudi **Uvozi in zamenjaj** gre skozi koš: pred zamenjavo se celotno stanje shrani kot en zapis, zato je mogoče razveljaviti tudi to. V aplikaciji tako ni več dejanja, ki bi ga ne dalo vzeti nazaj.
+
+**Kje je delo.** Deset statusov se na karticah zloži v pet faz — *ideja, v delu, pripravljeno, v zraku, ustavljeno*. Vsaka mapa in vsak izdelek imata trak, ki v enem pogledu pove, koliko je odprtega in koliko že teče; v Pregledu ima vsaka vrstica še barvni rob svoje faze, stolpec **Že** pa pove, koliko dni kreativa stoji v isti fazi. Kar v delu obtiči več kot teden dni, se označi rdeče.
+
+**Rok** je datum, zato zamuda ni stvar spomina — kreativa z rokom za nami dobi značko, mapa pa števec „N zamuja“. Kar je bilo prej vpisano z besedami („do petka“), migracija preseli v polje *Opomba k roku*.
+
+**Blokade.** Oglas pogosto ne čaka na delo, ampak na odgovor: manjka podatek stranke, ni ciljne strani, ni odločitve. Polje **Kaj to blokira** je zato ločeno od statusa — kreativa je lahko hkrati „za pregled“ in blokirana. Blokade so na vrhu Pregleda, skupaj z razlogom in klikom naravnost na kreativo, štete na kartici mape in zapisane v briefu kot *ČAKA NA*.
+
+**Iskanje.** Polje v pogledu Kreative išče po **vseh mapah**, ne le po odprtem izdelku — po naslovih, hookih, besedilih, kotu in publiki, tudi po različicah pod stikali. Zadetek pove, v kateri mapi in izdelku je, in ga klik odpre. Bližnjica `Alt` + `F`.
+
+**Tipkovnica.** `Alt` + `1`…`5` preklopi zavihek, `Alt` + `F` skoči v iskanje. Po zavihkih se da hoditi tudi s puščicami, `Home` in `End`.
+
 ## Skupen delovni prostor (Supabase)
+
+Zlivanje je po zapisih, pri kreativah pa po poljih: če v isto kreativo hkrati pišeta dva, se besedila ne prepišejo, ampak se tuja različica pridruži tvojim kot dodatna varianta. Enaka besedila se ne podvojijo. Status, budget in ostala enovita polja ostanejo pravilo novejše strani.
 
 Sinhronizacija med napravami in ljudmi je vgrajena, potrebuje pa svoj Supabase projekt. Sinhronizirajo se **mape, izdelki, kreative, stikala, budgeti in tudi naložene slike ter videi** — besedila in številke gredo v tabelo `stanje`, datoteke pa v Storage vedro `material`. V sinhroniziranem stanju je samo *kazalo* datotek (ime, tip, velikost); bajti se prenesejo takrat, ko odpreš kreativo, kjer visijo, in ostanejo v napravi za naprej.
 
@@ -114,9 +130,39 @@ python -m http.server 8000
 
 Nato odpri `http://localhost:8000`. (Odpiranje `index.html` neposredno prek `file://` deloma dela, a service worker in nekateri brskalniki tam nagajajo.)
 
+## Kje je koda
+
+Statične datoteke, brez gradnje. Koda je razdeljena po datotekah v `js/`, ki se nalagajo po vrsti iz `index.html` in si delijo isti prostor imen:
+
+| datoteka | kaj je notri |
+| --- | --- |
+| `js/osnove.js` | pomožne funkcije, branje in izpis števil, platforme, umestitve, formati |
+| `js/stanje.js` | stikala, tvorba zapisov, primer ob prvem zagonu, migracije, shranjevanje |
+| `js/izracuni.js` | ekonomika izdelka, lijak, doseženi rezultati |
+| `js/datoteke.js` | slike in videi v IndexedDB |
+| `js/pogledi.js` | celostna podoba mape, pogled Projekti in Pregled |
+| `js/kreative.js` | banka hookov, seznam kreativ, urejevalnik |
+| `js/predogled.js` | kako oglas izgleda v posamezni umestitvi |
+| `js/kalkulator.js` | pogled Kalkulator in vodnik |
+| `js/oblak.js` | zlivanje dveh stanj in sinhronizacija s Supabase |
+| `js/podatki.js` | pogled Podatki, uvoz/izvoz, urejanje stikal, brief |
+| `js/excel.js` | izvoz v `.xlsx`, napisan na roko |
+| `js/dogodki.js` | navigacija, tema, razdelilnik dogodkov |
+| `js/zagon.js` | zagon in service worker — **nalaga se zadnja** |
+
+Zraven sta še `verzija.js` (ena sama številka različice) in `vendor/supabase.js` (knjižnica Supabase, pripeta na točno različico — glej `vendor/README.md`).
+
+Če dodaš novo datoteko, jo vpiši na dve mesti: v `index.html` in v seznam `DATOTEKE` v `sw.js`. Test to preveri sam.
+
+## Objava
+
+Push na `main`; GitHub Pages streže datoteke neposredno iz veje. Pred vsako objavo povečaj `RAZLICICA_ST` v `verzija.js` — od tam pride tako napis v stranski vrstici kot ime predpomnilnika service workerja in naslov, pod katerim se ta registrira. Drugje številke ni.
+
+Ob vsakem pushu se v GitHub Actions požene `npm test` (`.github/workflows/test.yml`). Objave ne ustavi — Pages streže iz veje — pove pa takoj, če je kaj narobe. Če boš kdaj hotel, da pokvarjena koda sploh ne pride ven, preklopi Pages na objavo iz Actions in postavi ta korak pred objavo.
+
 ## Test
 
-Dimni test naloži aplikacijo v jsdom in preveri vse kombinacije platforme × umestitve × formata, zlaganje besedila, polja po umestitvi, Google polja, izvoz v Excel ter material in zapiske na izdelku:
+Dimni test naloži aplikacijo v jsdom in preveri vse kombinacije platforme × umestitve × formata, zlaganje besedila, polja po umestitvi, Google polja, izračune (marža, CPA, ROAS, profit, branje števil), zlivanje dveh stanj, izvoz v Excel ter material in zapiske na izdelku:
 
 ```
 npm install
