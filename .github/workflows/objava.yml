@@ -1,0 +1,81 @@
+# Testi in objava na GitHub Pages.
+#
+# Zakaj svoj workflow namesto GitHubovega samodejnega:
+#
+# 1. GitHubov „pages build and deployment“ se je pri nas začel zatikati — zidava
+#    je uspela v štirih sekundah, korak „Deploy to GitHub Pages“ pa je visel do
+#    poteka časa. Tu imamo objavo v svojih rokah in vidimo, kje se ustavi.
+# 2. Objave se postavijo v vrsto namesto da se prekličejo. Pri samodejnem
+#    workflowu je vsak nov push ubil objavo, ki je še tekla.
+# 3. Testi so pogoj za objavo: če `npm test` pade, nova koda sploh ne gre ven.
+# 4. Akcije so na aktualnih različicah, zato ni opozoril o opuščenem Node 20.
+#
+# Ob prvem teku `configure-pages` z `enablement: true` sam preklopi vir objave
+# s pod veje na Actions. Ročno nastavljanje ni potrebno.
+
+name: Testi in objava
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Ena objava naenkrat, brez preklicevanja — kar je porinjeno, tudi pride ven.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  testi:
+    name: npm test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+
+      # config.js s Supabase ključem ni nujno v repozitoriju; test rabi samo,
+      # da datoteka obstaja, ker jo index.html naloži.
+      - name: Pripravi prazen config.js, če ga ni
+        run: |
+          if [ ! -f config.js ]; then
+            echo 'window.OGLASNI_CONFIG={url:"",anonKey:""};' > config.js
+          fi
+
+      - run: npm ci
+
+      - run: npm test
+
+  objava:
+    name: Objava na Pages
+    needs: testi
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.objavi.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/configure-pages@v6
+        with:
+          enablement: true
+
+      # Objavimo celoten repozitorij — aplikacija je statična, brez gradnje.
+      # node_modules ni v repozitoriju, zato v artefakt ne pride.
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: .
+
+      - id: objavi
+        uses: actions/deploy-pages@v5
