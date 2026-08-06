@@ -591,10 +591,42 @@ function osveziPredVizual(){
     }catch(err){predVizual=null;}
     risiPredogled();
   }
-  Datoteke.prviVizual(datLastnik(k)).then(function(d){
-    if(d||!p)return uporabi(d,false);
-    Datoteke.prviVizual(datLastnikIzdelka(p)).then(function(d2){uporabi(d2,true);},function(){uporabi(null);});
+  /* Vse slike in videi te kreative. Če jih je več, se da izbrati, katera gre v
+     predogled — in vsaka si zapomni svoj izbrani hook.                      */
+  Datoteke.zaKreativo(datLastnik(k)).then(function(sez){
+    var vizuali=(sez||[]).slice().sort(Datoteke.poVrsti)
+      .filter(function(d){return /^(image|video)\//.test(d.tip);});
+    narisiIzbirnikSlik(k,vizuali);
+    if(!vizuali.length){
+      /* kreativa brez svojega materiala vzame prvo sliko izdelka */
+      if(!p)return uporabi(null);
+      return Datoteke.prviVizual(datLastnikIzdelka(p)).then(function(d2){uporabi(d2,true);},function(){uporabi(null);});
+    }
+    var izbrana=k.predSlika&&vizuali.filter(function(d){return d.id===k.predSlika;})[0];
+    var cilj=izbrana||vizuali[0];
+    if(cilj.blob)return uporabi(cilj,false);
+    Datoteke.zagotovi(cilj.id).then(function(z){uporabi(z&&z.blob?z:null,false);},function(){uporabi(null);});
   },function(){uporabi(null);});
+}
+/* Trak sličic nad predogledom. Pokaže se šele pri dveh ali več — pri eni sami
+   bi bil samo šum.                                                          */
+function narisiIzbirnikSlik(k,vizuali){
+  var c=el("pred-slike");
+  if(!c)return;
+  if(!vizuali||vizuali.length<2){c.innerHTML="";return;}
+  var izbranId=(k.predSlika&&vizuali.some(function(d){return d.id===k.predSlika;}))
+    ? k.predSlika : vizuali[0].id;
+  c.innerHTML='<span class="ps-l">'+vizuali.length+' slik v tej kreativi — izberi, katera je v predogledu</span>'+
+    '<div class="ps-v">'+vizuali.map(function(d,i){
+      var u="";
+      try{u=URL.createObjectURL(d.blob);odprtiUrlji.push(u);}catch(err){}
+      var vsebina=u
+        ? (/^video\//.test(d.tip)?'<video src="'+u+'" muted preload="metadata"></video>':'<img src="'+u+'" alt="">')
+        : '<span class="ps-x">ni tu</span>';
+      return '<button type="button" class="ps-i'+(d.id===izbranId?" on":"")+'" data-predslika="'+d.id+'" '+
+        'title="'+esc(d.ime)+'" aria-pressed="'+(d.id===izbranId?"true":"false")+'">'+
+        vsebina+'<em>'+(i+1)+'</em></button>';
+    }).join("")+'</div>';
 }
 function prenesiDatoteko(id){
   Datoteke.ena(id).then(function(d){

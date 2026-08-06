@@ -306,10 +306,24 @@ var CFG={
 function cfg(k){return CFG[k.platforma]||CFG.drugo;}
 
 /* katera različica gre v predogled */
+/* ---- izbira besedil, ločena po sliki ----
+   Ena kreativa ima pogosto več slik in vsaka nosi drug hook — ista slika z
+   drugim hookom je drug oglas. Zato se izbira ne hrani enkrat za kreativo,
+   ampak za vsako sliko posebej: ko preklopiš sliko v predogledu, se kljukice
+   na levi postavijo na to, kar si izbral zanjo.
+
+   Kreativa brez izbrane slike (ali z eno samo) uporablja `k.izbrana` kot doslej;
+   stara stanja zato delajo naprej brez migracije.                          */
 function izbrane(k){
   if(!k)return {};
   if(!k.izbrana||typeof k.izbrana!=="object")k.izbrana={};
-  return k.izbrana;
+  if(!k.predSlika)return k.izbrana;
+  if(!k.izbraneSlike||typeof k.izbraneSlike!=="object")k.izbraneSlike={};
+  if(!k.izbraneSlike[k.predSlika]){
+    /* nova slika začne s tem, kar je bilo izbrano doslej — ne s praznim */
+    k.izbraneSlike[k.predSlika]=JSON.parse(JSON.stringify(k.izbrana));
+  }
+  return k.izbraneSlike[k.predSlika];
 }
 var predIzbor={
   get hooki(){return izbrane(K()).hooki||0;},
@@ -637,6 +651,8 @@ function renderEditor(){
                 (ok?'':' disabled title="Format '+esc(k.format)+' se v tej umestitvi ne vrti"')+'>'+esc(x[1])+'</button>';
             }).join("")+
           '</div>'+
+          /* izbirnik slik — napolni ga osveziPredVizual, ker rabi bajte */
+          '<div id="pred-slike" class="ps no-print"></div>'+
           '<div id="predogled" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:10px"></div>'+
           '<p class="prev-note">Približek, ne posnetek zaslona — vsaka naprava reže besedilo malo drugače. '+
           'Številka v krogu ob različici pove, katera je zdaj v predogledu.</p>'+

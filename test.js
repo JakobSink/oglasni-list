@@ -1052,6 +1052,45 @@ console.log("\n== pošiljanje datotek pove resnico ==");
   cakajoci.push(predTest);
 }
 
+console.log("\n== izbira besedila po sliki ==");
+{
+  const staro = JSON.parse(JSON.stringify(w.S));
+  const k = w.P().kreative[0];
+  k.hooki = ["hook A", "hook B", "hook C"];
+  k.izbrana = { hooki: 0 };
+  delete k.predSlika; delete k.izbraneSlike;
+  w.odprtaKreativa = k.id;
+
+  /* brez izbrane slike velja stara, skupna izbira */
+  ok(w.izbrane(k) === k.izbrana, "brez izbrane slike ostane vse po starem");
+
+  /* prva slika: izberem hook B */
+  k.predSlika = "slika-1";
+  ok(w.izbrane(k).hooki === 0, "nova slika podeduje dosedanjo izbiro, ne začne prazna",
+    String(w.izbrane(k).hooki));
+  w.nastaviIzbor("hooki", 1);
+  ok(k.izbraneSlike["slika-1"].hooki === 1, "izbira se shrani k tej sliki");
+  ok(k.izbrana.hooki === 0, "in ne povozi skupne izbire");
+
+  /* druga slika: svoj hook */
+  k.predSlika = "slika-2";
+  w.nastaviIzbor("hooki", 2);
+  ok(k.izbraneSlike["slika-2"].hooki === 2, "druga slika ima svojo izbiro");
+
+  /* nazaj na prvo — kljukica mora biti tam, kjer sem jo pustil */
+  k.predSlika = "slika-1";
+  ok(w.izbrane(k).hooki === 1, "vrnitev na prvo sliko obnovi njen hook",
+    String(w.izbrane(k).hooki));
+  ok(w.izbor("hooki", 3) === 1, "in predogled kaže prav tega");
+  k.predSlika = "slika-2";
+  ok(w.izbor("hooki", 3) === 2, "preklop nazaj na drugo pokaže njenega");
+
+  /* izbira, ki kaže mimo krajšega seznama, ne sme razbiti predogleda */
+  ok(w.izbor("hooki", 1) === 0, "prevelik indeks pade nazaj na prvo različico");
+
+  w.S = staro; w.migriraj(); w.odprtaKreativa = null; w.view = "projekti"; w.render();
+}
+
 console.log("\n== opomba k stanju ==");
 {
   const d = w.document;

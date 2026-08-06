@@ -10,8 +10,8 @@
    primerja tudi datoteke, ki jih service worker uvozi z importScripts. Ko se
    spremeni številka tukaj, se spremeni ta datoteka, s tem pa se za brskalnik
    spremeni tudi service worker — in nova koda gre v uporabo.               */
-var RAZLICICA_ST = 23;
-var RAZLICICA_OPIS = "za popravke, opomba k stanju, brisanje datotek ki jih ni tu";
+var RAZLICICA_ST = 24;
+var RAZLICICA_OPIS = "izbira slike v predogledu, vsaka slika ima svoj hook";
 
 var RAZLICICA = "različica " + RAZLICICA_ST + " · " + RAZLICICA_OPIS;
 var CACHE_IME = "oglasni-list-v" + RAZLICICA_ST;

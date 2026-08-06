@@ -533,6 +533,13 @@ var KLIKI=[
     odprtaKreativa=null;shrani();polniIzbirnik();render();
     razveljaviZadnje("Mapa „"+pr.ime+"“ je v košu.");
   }],
+  ["data-predslika",function(g){
+    var k=K();if(!k)return;
+    if(k.predSlika===g.dataset.predslika)return;
+    k.predSlika=g.dataset.predslika;
+    /* izris na novo, ker se z izbrano sliko spremenijo tudi kljukice ob besedilih */
+    shrani();renderEditor();
+  }],
   ["data-kosvrni",function(g){vrniInPokazi(g.dataset.kosvrni);}],
   ["data-kosdel",function(g){
     var v=kosVrstica(g.dataset.kosdel);
