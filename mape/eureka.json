@@ -1,5 +1,5 @@
 {
-  "v": 4,
+  "v": 6,
   "projekti": [
     {
       "id": "pr-eureka",
@@ -12,144 +12,214 @@
       "id": "izd-vinil-klik",
       "projekt": "pr-eureka",
       "ime": "Vinil na klik",
-      "opis": "Vodoodporen vinil na klik, 5,5 mm, obrabni sloj 0,5 mm, razred 33/42. 13 dekorjev.",
+      "opis": "16,40 € / paket 2,23 m² = 7,35 €/m². Razred 33/42, 5,5 mm, obrabni sloj 0,5 mm.",
       "znamka": "Trgovina Eureka",
       "domena": "trgovinaeureka.si",
       "url": "https://trgovinaeureka.si/kategorija/vinil/vinil-na-klik/",
       "izracuni": false,
-      "zapiski": "SPECIFIKACIJE (prepisano s strani izdelka, 5. 8. 2026)\n· debelina 5,5 mm, obrabni sloj 0,5 mm (Extra Protect)\n· razred obrabe 33/42 — stanovanjsko in poslovno\n· plošča 1220 × 184 mm; paket 2,23 m² = 10 plošč, 22 kg\n· integrirana podloga IXPE 1,5 mm (akustika)\n· 100 % vodoodporen, primeren za talno gretje\n· cena na strani: 16,40 €\n· 13 dekorjev; CHESTNUT je označen kot „Ni na zalogi“\n\nODPRTO — PREVERI PRED OBJAVO\nNa strani nikjer ni navedeno, ali je 16,40 € cena na m² ali na paket (2,23 m²).\nPreveril sem kategorijo in tri strani izdelkov — enote ni nikjer.\nZato v teh oglasih namenoma NI cene. Če je 16,40 € na paket, je to 7,35 €/m² in\nnajmočnejši kljuk, ki ga imamo; če je na m², bi bil oglas s „7 €/m²“ zavajajoč.\nKo potrdiš, dam ceno v hook in v Google naslove.\nOb tem: manjkajoča enota pri ceni znižuje konverzijo tudi na strani sami — kupec,\nki ne ve, kaj kupuje za 16,40 €, ne doda v košarico.",
+      "zapiski": "Preverjeno 6. 8. 2026 prek Store API in strani izdelka:\n· cena 16,40 € je za PAKET 2,23 m² (10 plošč, teža 22 kg) = 7,35 €/m²\n· 1220 × 184 mm, debelina 5,5 mm, obrabni sloj 0,5 mm (Extra Protect)\n· razred obrabe 33/42, vodoodporen, primeren za talno gretje\n· 13 dekorjev, dostava 1–3 delovni dnevi, možen osebni prevzem in vnos\n\nPOZOR: kalkulator na strani izdelka računa total = 2,23 × 16,40 × št. paketov, torej za en paket pokaže 36,57 € namesto 16,40 €. Za 20 m² pokaže 329,15 € namesto 147,60 €. To je treba popraviti, preden pošlješ promet na stran.",
       "kreative": [
         {
           "id": "kr-vk-fb",
-          "naslov": "FB Feed · Vodoodporen — kopalnica brez ploščic",
-          "platforma": "facebook",
           "format": "slika",
           "umestitev": "fb-feed",
           "status": "brief",
-          "tagi": "vinil, vodoodpornost, prenova, hladen start",
-          "kot": "Vodoodpornost kot ločnica: vinil gre v kopalnico in kuhinjo, laminat ne. Sekundarno: prenova brez rušenja.",
-          "publika": "M+Ž 28–55, SLO, lastniki stanovanj in hiš, prenova doma, DIY, „home improvement“. Široko targetiranje, izloči najemnike in interese za nepremičninske posrednike.",
+          "tagi": "cena, glavni kot, hladna publika",
+          "kot": "Cena je najmočnejše, kar imamo. 7,35 €/m² za vinil razreda 33/42 je pod ceno spodobnega laminata. Ne prodajamo poceni tal — prodajamo tla za lokal po ceni za spalnico.",
+          "publika": "SLO 27–55, prenova stanovanja, lastniki nepremičnin, najemodajalci, DIY. Izključi: gradbena podjetja (druga cena, drug proces).",
           "hooki": [
-            "Laminat v kopalnici zdrži dve leti. Ta vinil ne rabi niti fug.",
-            "Prenova tal brez rušenja — klikneš ga na obstoječa tla.",
-            "Kopalnica brez ploščic in brez silikona, ki po letu dni črni.",
-            "Vprašanje, ki ga dobimo vsak dan: „Ali gre vinil v kopalnico?“"
+            "7,35 € za kvadratni meter. Ne za vzorec — za cel paket 2,23 m².",
+            "Tla, ki zdržijo lokal, po ceni tal za spalnico.",
+            "Preračunali smo za vas: 20 m² dnevne sobe = 147,60 €. Skupaj s tlemi.",
+            "Laminat za 12 €/m² se v kopalnici zvije. Ta vinil za 7,35 €/m² ne."
           ],
           "primarna": [
-            "Vinil na klik, 100 % vodoodporen. Klikneš ga direktno na stara tla — brez rušenja, brez lepila.\n\n· debelina 5,5 mm, obrabni sloj 0,5 mm\n· razred 33/42 — narejen tudi za poslovne prostore\n· integrirana akustična podloga, tiho pod nogami\n· primeren za talno gretje\n· 13 dekorjev, dostava 1–3 dni\n\nNaroči brezplačne vzorce in poglej barvo pri svoji svetlobi.",
-            "Vprašanje, ki ga dobimo vsak dan: „Ali gre vinil v kopalnico?“\n\nTa gre. 100 % vodoodporen, brez fug za čiščenje in brez silikona, ki potemni.\n\nKlik sistem pomeni, da ga položiš na obstoječa tla v enem dnevu. Razred 33/42 — doma ga ne boš izrabil.\n\nBrezplačni vzorci pred nakupom, dostava 1–3 dni.",
-            "Stara tla ostanejo, kjer so.\n\nVinil na klik se položi nanje: brez rušenja, brez prahu, brez kontejnerja pred hišo. En dan in soba je nova.\n\n100 % vodoodporen, primeren za talno gretje, razred 33/42."
+            "Vinil na klik, razred obrabe 33/42 — to je razred za trgovine in pisarne, ne za spalnice.\n\n· 7,35 €/m² (paket 2,23 m² = 16,40 €)\n· debelina 5,5 mm, obrabni sloj 0,5 mm Extra Protect\n· vodoodporen, primeren za talno gretje\n· 13 dekorjev na zalogi, dostava v 1–3 dneh\n\nDizajn, ki navduši. Kvaliteta, ki traja.",
+            "20 m² dnevne sobe za 147,60 €.\n\nToliko stane vinil na klik razreda 33/42 — isti razred, kot ga polagajo v trgovine.\n\n· 7,35 €/m², paket 2,23 m²\n· vodoodporen, za talno gretje\n· na zalogi, pri vas v 1–3 dneh\n\nKlikneš ga na obstoječa tla. Brez rušenja, brez lepila, brez čakanja."
           ],
           "naslovi": [
-            "Vodoodporen vinil na klik",
-            "V kopalnico brez ploščic",
-            "Nova tla v enem dnevu",
-            "Razred 33/42 — zdrži"
+            "7,35 €/m² · razred 33/42",
+            "Vinil na klik od 16,40 €/paket",
+            "20 m² za 147,60 €"
           ],
           "opisi": [
-            "Dostava 1–3 dni",
-            "Brezplačni vzorci",
-            "13 dekorjev na zalogi"
+            "Na zalogi, dostava 1–3 dni",
+            "13 dekorjev, vodoodporen"
           ],
           "cta": "Nakupuj zdaj",
           "url": "https://trgovinaeureka.si/kategorija/vinil/vinil-na-klik/",
-          "design": "Kvadratno-vertikalno 4:5, 1080 × 1350.\nGlavni vizual: kopalnica ali kuhinja z položenim vinilom, brez ljudi, dnevna svetloba od strani. Zgornja tretjina naj ostane mirna — tam sedi besedilo.\nOverlay, dve vrstici največ: „100 % vodoodporen“ / „brez rušenja starih tal“.\nCene NE daj na sliko, dokler ne potrdimo, ali je 16,40 € na m² ali na paket.\nDrugi vizual za test: split — levo napihnjen laminat na stiku z vodo, desno vinil pod isto vodo. Brez stock fotografij, uporabi svoje prostore ali fotke strank.\nTretji vizual: makro na klik spoj z merilnim trakom, ki pokaže 5,5 mm.",
-          "opombe": "Test: hook „ali gre v kopalnico“ proti hooku „brez rušenja“. Ločeni oglasni skupini, isti vizual, da meriš samo besedilo.",
+          "design": "Kvadrat 4:5, 1080×1350. Levo tretjina: velika cena 7,35 €/m² v rumeni, pod njo drobno „paket 2,23 m² = 16,40 €“. Desno dve tretjini: fotografija položenega poda v dnevni sobi, naravna svetloba, brez ljudi. Spodaj trak z ikonami: vodoodporno · talno gretje · razred 33/42. Logo Eureka zgoraj desno. Brez klicajev.",
+          "oddaja": "1× 4:5 (1080×1350) + 1× 1:1 (1080×1080), JPG, brez besedila čez 20 % površine.",
+          "opombe": "",
+          "rok": "",
+          "rokOpomba": "",
+          "blokada": "",
+          "statusOpomba": "potrdi ceno v košarici, preden gre v zrak",
           "budget": "15",
-          "cpm": "8",
-          "ctr": "1,4",
-          "cvr": "1,8",
+          "cpm": "9",
+          "ctr": "1,8",
+          "cvr": "2,2",
           "stikala": {
             "stik-trg": "Slovenija"
           },
           "vodi": "",
-          "variante": {}
+          "variante": {},
+          "naslov": "FB Feed · Cena na m² — 7,35 €",
+          "platforma": "facebook",
+          "kljucneBesede": "",
+          "pot1": "",
+          "pot2": "",
+          "sitelinki": ""
         },
         {
           "id": "kr-vk-ig",
-          "naslov": "IG Reels · UGC — položen v enem dnevu",
-          "platforma": "instagram",
           "format": "UGC video",
           "umestitev": "ig-reels",
           "status": "snemanje",
-          "tagi": "UGC, demo, prenova, Reels",
-          "kot": "Demonstracija: zvok klika in vidna hitrost polaganja. Prodaja gotovost, da to zmoreš sam.",
-          "publika": "Ž+M 25–45, IG, prvo stanovanje, prenova, DIY. Reels in Zgodbe ločeno od feeda, ker je kreativa vertikalna.",
+          "tagi": "UGC, DIY, video",
+          "kot": "Klik sistem odpravi mojstra. Strošek polaganja je pogosto večji od stroška tal — tu ga ni. Prikaz naredi verjetno tisto, česar cena sama ne.",
+          "publika": "IG 25–45, prvo stanovanje, DIY, „naredi sam“ vsebine, najemniki s privoljenjem lastnika.",
           "hooki": [
-            "Tri ure. Toliko je trajalo, da je soba dobila nova tla.",
-            "Brez rušenja, brez lepila, brez prahu.",
-            "Prvi klik je najlepši zvok pri prenovi.",
-            "Stara tla puščava kar spodaj."
+            "Mojster mi je za polaganje računal več, kot so stala tla.",
+            "Brez lepila, brez fug, brez mojstra. En popoldan.",
+            "Prvi klik in razumeš, zakaj se temu reče klik."
           ],
           "primarna": [
-            "Nova tla v enem dnevu, brez rušenja starih. Klik sistem, 100 % vodoodporen, razred 33/42. Vzorci brezplačni.",
-            "Položiš ga sam, brez orodja in brez mojstra. Vodoodporen, primeren za talno gretje. Dostava 1–3 dni."
+            "Cela soba v enem popoldnevu, sama.\n\nVinil na klik se polaga na obstoječa tla — brez rušenja in brez lepila. Razred 33/42, vodoodporen, 7,35 €/m².\n\nDizajn, ki navduši. Kvaliteta, ki traja."
           ],
           "naslovi": [
-            "Nova tla v enem dnevu"
+            "Položi sam v enem dnevu",
+            "Brez lepila in brez mojstra"
           ],
           "opisi": [
-            "Brezplačni vzorci"
+            "7,35 €/m², na zalogi"
           ],
           "cta": "Nakupuj zdaj",
           "url": "https://trgovinaeureka.si/kategorija/vinil/vinil-na-klik/",
-          "design": "Vertikalno 9:16, 1080 × 1920, snemano s telefonom, brez studia in brez stock posnetkov.\nPrvi 2 s: roke sklopijo dve plošči in ZVOK KLIKA ostane v posnetku — brez glasbe na začetku, zvok je hook.\nNato trije rezi: prazna soba → polovica položena → končana soba s prižgano lučjo.\nPodnapisi veliki, spodnja tretjina, brez emojijev; varno območje 250 px zgoraj in spodaj, ker Reels tam prekrije vmesnik.\nZadnje 3 s: paket vinila v roki + napis „vzorci brezplačno“ + gumb.\nDolžina 15–20 s. Ista surovina se prereže še v 6-sekundno različico za Zgodbe.",
-          "opombe": "V Reels in Zgodbah se naslov in opis ne prikažeta — vse mora povedati posnetek in prva vrstica primarnega besedila.",
+          "design": "9:16, 1080×1920, snemano s telefonom v pravem stanovanju. Prve 2 s: roka zaklikne prvo lamelo, zvok klika ostane. Nato hitri posnetki: prazna soba → tretjina → cela soba. Podnapisi veliki, spodnja tretjina, rumen highlight na „brez lepila“. Zadnje 3 s: pod od blizu + cena 7,35 €/m² + gumb.",
+          "oddaja": "9:16 MP4, 15–25 s, z vgrajenimi podnapisi in brez glasbe z avtorskimi pravicami.",
+          "opombe": "",
+          "rok": "",
+          "rokOpomba": "",
+          "blokada": "",
+          "statusOpomba": "",
           "budget": "15",
-          "cpm": "6",
-          "ctr": "1,2",
-          "cvr": "1,5",
+          "cpm": "9",
+          "ctr": "1,8",
+          "cvr": "2,2",
           "stikala": {
             "stik-trg": "Slovenija"
           },
           "vodi": "",
-          "variante": {}
+          "variante": {},
+          "naslov": "IG Reels · UGC — položim sam v enem popoldnevu",
+          "platforma": "instagram",
+          "kljucneBesede": "",
+          "pot1": "",
+          "pot2": "",
+          "sitelinki": ""
+        },
+        {
+          "id": "kr-vk-fb2",
+          "format": "slika",
+          "umestitev": "fb-feed",
+          "status": "brief",
+          "tagi": "boleča točka, vodoodpornost",
+          "kot": "Vodoodpornost je ločnica do laminata. Fuge, ki črnijo, so konkretna bolečina, ki jo vsak pozna. Talno gretje je drugi razlog, zakaj ljudje ne upajo v vinil.",
+          "publika": "SLO 30–60, prenova kopalnice in kuhinje, lastniki starejših stanovanj.",
+          "hooki": [
+            "Silikon v kopalnici črni po enem letu. Ta pod nima niti ene fuge.",
+            "Vodoodporen pod, ki gre na talno gretje. Brez ploščic in brez rušenja.",
+            "Laminat v kuhinji nabrekne ob prvi razliti vodi."
+          ],
+          "primarna": [
+            "Vodoodporen vinil na klik — za kopalnico, kuhinjo in vhod.\n\n· brez fug in brez silikona, ki črni\n· primeren za talno gretje\n· razred obrabe 33/42, obrabni sloj 0,5 mm\n· 7,35 €/m², dostava v 1–3 dneh\n\nPoloži se na obstoječa tla. Prenova brez rušenja."
+          ],
+          "naslovi": [
+            "Vodoodporen, brez fug",
+            "Kopalnica brez ploščic",
+            "Gre tudi na talno gretje"
+          ],
+          "opisi": [
+            "Razred 33/42, 7,35 €/m²",
+            "Na zalogi, 1–3 dni"
+          ],
+          "cta": "Nakupuj zdaj",
+          "url": "https://trgovinaeureka.si/kategorija/vinil/vinil-na-klik/",
+          "design": "4:5. Deljen kader: levo umazana črna fuga med ploščicami (blizu), desno gladek vinil brez stikov. Med njima tanka bela črta. Napis čez desno polovico: „brez fug“. Spodaj cena. Brez ljudi, brez studia.",
+          "oddaja": "1× 4:5, JPG. Fotografija fuge naj bo prava, ne stock.",
+          "opombe": "",
+          "rok": "",
+          "rokOpomba": "",
+          "blokada": "",
+          "statusOpomba": "",
+          "budget": "15",
+          "cpm": "9",
+          "ctr": "1,8",
+          "cvr": "2,2",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "",
+          "variante": {},
+          "naslov": "FB Feed · Kopalnica in kuhinja — brez fug",
+          "platforma": "facebook",
+          "kljucneBesede": "",
+          "pot1": "",
+          "pot2": "",
+          "sitelinki": ""
         },
         {
           "id": "kr-vk-g",
-          "naslov": "Google · Search — vinil na klik",
-          "platforma": "google",
           "format": "RSA",
           "umestitev": "g-search",
           "status": "pripravljeno",
-          "tagi": "Search, namera, glavni izdelek",
-          "kot": "Namera nakupa: išče vinil in primerja ponudnike. Prodaja zaloga v SLO, dostava in vzorci.",
-          "publika": "Iskanja v SLO, exact + phrase. Ločena skupina za „vinil za kopalnico“, ker je namera drugačna.",
+          "tagi": "search, namera nakupa",
+          "kot": "Namera nakupa: išče konkreten izdelek in primerja ceno. Cena na m² mora biti v naslovu, ker je to edino, po čemer primerja.",
+          "publika": "Iskanja v SLO: vinil na klik, vinil talne obloge, vinil cena m2. Izključi: rabljeno, popravilo, najem, vzorec.",
+          "hooki": [
+            ""
+          ],
+          "primarna": [
+            ""
+          ],
           "naslovi": [
-            "Vinil na klik – zaloga SLO",
-            "Vodoodporen vinil na klik",
-            "Vinil za kopalnico",
-            "Vinil na klik, razred 33/42",
-            "Brezplačni vzorci vinila",
-            "Vinil brez lepila",
-            "Dostava vinila 1–3 dni",
-            "13 dekorjev na zalogi",
-            "Vinil 5,5 mm, sloj 0,5 mm",
-            "Položiš ga sam",
-            "Vinil na stara tla",
-            "Primeren za talno gretje"
+            "Vinil na klik 7,35 €/m²",
+            "Vinil na klik — na zalogi",
+            "Razred 33/42, vodoodporen",
+            "Paket 2,23 m² za 16,40 €",
+            "Dostava v 1–3 delovnih dneh",
+            "Trgovina Eureka"
           ],
           "opisi": [
-            "Vodoodporen vinil na klik, razred 33/42. Klikneš ga na obstoječa tla, brez lepila.",
-            "Debelina 5,5 mm, obrabni sloj 0,5 mm, integrirana akustična podloga. Talno gretje: da.",
-            "13 dekorjev na zalogi v Sloveniji. Dostava 1–3 dni, brezplačni vzorci pred nakupom.",
-            "Za kopalnico in kuhinjo. Brez fug za čiščenje in brez silikona, ki potemni."
+            "Vinil na klik razreda 33/42, debelina 5,5 mm, obrabni sloj 0,5 mm. Vodoodporen.",
+            "13 dekorjev na zalogi. Paket 2,23 m² = 16,40 € (7,35 €/m²). Dostava v 1–3 delovnih dneh.",
+            "Polaganje brez lepila, na obstoječa tla. Možna strokovna montaža in vnos v stanovanje."
           ],
-          "kljucneBesede": "vinil na klik, vinilne plosce, vinil za kopalnico, vodoodporen vinil, vinil talna obloga, vinil na klik cena, spc vinil, vinil plosce cena",
+          "cta": "Izvedi več",
           "url": "https://trgovinaeureka.si/kategorija/vinil/vinil-na-klik/",
-          "pot1": "vinil",
-          "pot2": "na-klik",
-          "sitelinki": "Brezplačni vzorci, Vinil na klik, Vinil za lepljenje, Dostava in plačilo",
-          "design": "Search — brez vizuala.\nCallouti: zaloga v SLO, dostava 1–3 dni, brezplačni vzorci, obroki Leanpay.\nStrukturirani izvleček „Vrste“: vinil na klik, vinil za lepljenje, zaključne letvice.",
-          "opombe": "Negativne ključne besede: rabljeno, drugorabno, popravilo, obnova laminata, vinil folija, avto folija, vinilne plošče glasba, vinyl, LP, gramofon, tapeta.\nCene v naslovih ni, dokler ne potrdimo enote — konkurenca jo ima in nas bo prehitela, zato je to prva stvar, ki jo rabim.",
-          "budget": "10",
-          "ctr": "6",
-          "cvr": "2,5",
+          "design": "Brez vizuala — Search.",
+          "oddaja": "Prikazna pot: vinil / na-klik. Sitelinki: Vsi dekorji · Vinil za lepljenje · Dostava in montaža.",
+          "opombe": "",
+          "rok": "",
+          "rokOpomba": "",
+          "blokada": "",
+          "statusOpomba": "",
+          "budget": "15",
+          "cpm": "9",
+          "ctr": "1,8",
+          "cvr": "2,2",
           "stikala": {
             "stik-trg": "Slovenija"
           },
           "vodi": "",
-          "variante": {}
+          "variante": {},
+          "naslov": "Google Search · vinil na klik",
+          "platforma": "google",
+          "kljucneBesede": "",
+          "pot1": "",
+          "pot2": "",
+          "sitelinki": ""
         }
       ],
       "stikala": {
@@ -160,97 +230,215 @@
       "id": "izd-vinil-lep",
       "projekt": "pr-eureka",
       "ime": "Vinil za lepljenje",
-      "opis": "Vinil za lepljenje, 2,5 mm, obrabni sloj 0,5 mm, razred 33/42. Nizka vgradna višina.",
+      "opis": "13,40 € / paket 3,47 m² = 3,86 €/m². Razred 33/42.",
       "znamka": "Trgovina Eureka",
       "domena": "trgovinaeureka.si",
       "url": "https://trgovinaeureka.si/kategorija/vinil/",
       "izracuni": false,
-      "zapiski": "SPECIFIKACIJE (prepisano s strani izdelka, 5. 8. 2026)\n· debelina 2,5 mm, obrabni sloj 0,5 mm (Extra Protect)\n· razred obrabe 33/42\n· paket 3,47 m² = 16 plošč, 22 kg\n· vodoodporen, talno gretje do 26 °C\n· cena na strani: 13,40 €\n\nODPRTO — ista negotovost kot pri vinilu na klik: enota cene ni navedena\n(13,40 € na m² ali na paket 3,47 m²?). Zato v oglasih ni cene.\n\nKDAJ TA IN NE KLIK\nRazlika, ki jo kupec razume: 2,5 mm proti 5,5 mm pomeni, da gre pod vrata brez\nrezkanja in da ni stopnice na prehodu. To je edini pravi razlog, da izbere\nlepljenje — v oglasih naj bo to glavni kot, ne cena.",
+      "zapiski": "Preverjeno 6. 8. 2026: cena 13,40 € je za PAKET 3,47 m² (16 plošč) = 3,86 €/m².\nRazred obrabe 33/42. Na strani piše debelina 5,5 mm — enako kot pri kliku, kar je pri lepljenem vinilu nenavadno; pred objavo preveri pri dobavitelju.\n\nIsti kalkulator, ista napaka: za en paket pokaže 46,50 € namesto 13,40 €.",
       "kreative": [
         {
           "id": "kr-vl-fb",
-          "naslov": "FB Feed · Nizka višina — brez stopnice na prehodu",
-          "platforma": "facebook",
           "format": "slika",
           "umestitev": "fb-feed",
           "status": "brief",
-          "tagi": "vinil, lepljenje, nizka višina",
-          "kot": "Tehnična ovira: 2,5 mm gre pod vrata in ne naredi stopnice. Za prenove, kjer klik vinil ne gre.",
-          "publika": "M+Ž 30–60, SLO, prenova stanovanja, mojstri in polagalci kot ločena skupina.",
+          "tagi": "cena, šok, hladna publika",
+          "kot": "3,86 €/m² je pod ceno, ki jo ljudje sploh pričakujejo za talno oblogo. Številka sama je hook — vse ostalo je dokaz, da ni prevara.",
+          "publika": "SLO 27–60, prenova, najemodajalci, poslovni prostori, obrtniki.",
           "hooki": [
-            "2,5 mm. Vrata ostanejo, kjer so.",
-            "Nova tla brez stopnice na prehodu v hodnik.",
-            "Klik vinil je predebel? Ta je pol nižji."
+            "3,86 € za kvadratni meter. Preberi še enkrat.",
+            "Cela garsonjera 30 m² za 116 €. Tla, ne akontacija.",
+            "Za ceno enega kosila na kvadratni meter — pod, ki zdrži trgovino."
           ],
           "primarna": [
-            "Vinil za lepljenje, samo 2,5 mm. Pomeni: vrat ni treba rezkati in na prehodu ni stopnice.\n\n· obrabni sloj 0,5 mm, razred 33/42\n· vodoodporen, talno gretje do 26 °C\n· paket 3,47 m² = 16 plošč\n· dostava 1–3 dni\n\nBrezplačni vzorci pred nakupom.",
-            "Prenova, pri kateri vrata ostanejo, kjer so.\n\n2,5 mm vgradne višine namesto 5,5 mm: brez rezkanja vrat, brez stopnice na prehodu, brez prilagajanja pragov.\n\nVodoodporen, razred 33/42, primeren za talno gretje."
+            "Vinil za lepljenje, 3,86 €/m².\n\nPaket 3,47 m² (16 plošč) = 13,40 €.\n\n· razred obrabe 33/42 — za trgovine in pisarne\n· nizka gradbena višina, brez stopnice na prehodu\n· vodoodporen\n· na zalogi, dostava v 1–3 dneh\n\nCena je nizka, ker uvažamo sami. Kakovost ni.",
+            "30 m² za 116 €.\n\nToliko stane vinil za lepljenje pri nas — razred 33/42, isti, kot ga polagajo v poslovne prostore.\n\nDizajn, ki navduši. Kvaliteta, ki traja."
           ],
           "naslovi": [
-            "Vinil za lepljenje, 2,5 mm",
-            "Brez stopnice na prehodu",
-            "Vrata ostanejo, kjer so"
+            "3,86 €/m² · razred 33/42",
+            "30 m² za 116 €",
+            "Paket 3,47 m² za 13,40 €"
           ],
           "opisi": [
-            "Dostava 1–3 dni",
-            "Brezplačni vzorci"
+            "Na zalogi, dostava 1–3 dni",
+            "Nizka višina, brez stopnice"
           ],
           "cta": "Nakupuj zdaj",
           "url": "https://trgovinaeureka.si/kategorija/vinil/",
-          "design": "4:5, 1080 × 1350. Vizual: makro prehoda med sobo in hodnikom, kjer se vidi, da ni stopnice; ob robu merilni trak, ki pokaže 2,5 mm. Overlay: „2,5 mm“ veliko, spodaj „brez rezkanja vrat“. Ta oglas prodaja meritev, zato mora biti številka berljiva na telefonu.",
-          "budget": "10",
-          "cpm": "8",
-          "ctr": "1,2",
-          "cvr": "1,6",
+          "design": "4:5. Ena sama velika številka 3,86 € na čisti podlagi v barvi znamke, pod njo drobno „za m² · paket 3,47 m² = 13,40 €“. Spodnja tretjina: fotografija poda v poslovnem prostoru. Brez oseb. Logo zgoraj desno.",
+          "oddaja": "1× 4:5 + 1× 1:1, JPG.",
+          "opombe": "",
+          "rok": "",
+          "rokOpomba": "",
+          "blokada": "",
+          "statusOpomba": "potrdi ceno v košarici, preden gre v zrak",
+          "budget": "15",
+          "cpm": "9",
+          "ctr": "1,8",
+          "cvr": "2,2",
           "stikala": {
             "stik-trg": "Slovenija"
           },
           "vodi": "",
-          "variante": {}
+          "variante": {},
+          "naslov": "FB Feed · 3,86 €/m² — številka, ki ustavi",
+          "platforma": "facebook",
+          "kljucneBesede": "",
+          "pot1": "",
+          "pot2": "",
+          "sitelinki": ""
+        },
+        {
+          "id": "kr-vl-fb2",
+          "format": "slika",
+          "umestitev": "fb-feed",
+          "status": "ideja",
+          "tagi": "storitev, brez tveganja",
+          "kot": "Za tistega, ki noče sam. Konkurenca prodaja samo material — mi pripeljemo, vnesemo in položimo. To je razlika, ki je cena ne pokrije.",
+          "publika": "SLO 35–65, manj DIY, več „naredite mi“. Lastniki stanovanj, oddajalci, mlajši upokojenci.",
+          "hooki": [
+            "Tla kupite pri enih, mojstra iščete pri drugih. Pri nas oboje na enem računu.",
+            "Pripeljemo, vnesemo in položimo. Vi odprete vrata.",
+            "Koliko časa ste že iskali nekoga, da to položi?"
+          ],
+          "primarna": [
+            "Vinil za lepljenje s strokovno montažo.\n\n· material 3,86 €/m² (paket 3,47 m² = 13,40 €)\n· dostava v 1–3 delovnih dneh\n· možnost vnosa v stanovanje\n· strokovna montaža talnih oblog\n\nVse pri istem ponudniku. Brez iskanja mojstra in brez usklajevanja dveh terminov."
+          ],
+          "naslovi": [
+            "Dostava in montaža",
+            "Tla in mojster na enem računu",
+            "Vnesemo in položimo"
+          ],
+          "opisi": [
+            "Material od 3,86 €/m²",
+            "Dostava v 1–3 dneh"
+          ],
+          "cta": "Izvedi več",
+          "url": "https://trgovinaeureka.si/kategorija/vinil/",
+          "design": "1:1. Fotografija: monter polaga vinil, roke in kolena, obraz ni potreben. Zgoraj napis „dostava · vnos · montaža“. Spodaj cena materiala drobno.",
+          "oddaja": "1× 1:1 + 1× 4:5.",
+          "opombe": "",
+          "rok": "",
+          "rokOpomba": "",
+          "blokada": "preveri, ali montaža velja tudi za vinil za lepljenje in po kakšni ceni — na strani piše samo „montaža izbranih izdelkov“",
+          "statusOpomba": "",
+          "budget": "15",
+          "cpm": "9",
+          "ctr": "1,8",
+          "cvr": "2,2",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "",
+          "variante": {},
+          "naslov": "FB Feed · Dostava in montaža — ne rabiš nikogar iskati",
+          "platforma": "facebook",
+          "kljucneBesede": "",
+          "pot1": "",
+          "pot2": "",
+          "sitelinki": ""
         },
         {
           "id": "kr-vl-g",
-          "naslov": "Google · Search — vinil za lepljenje",
-          "platforma": "google",
           "format": "RSA",
           "umestitev": "g-search",
           "status": "pripravljeno",
-          "tagi": "Search, namera",
-          "kot": "Išče konkreten tip vinila; pogosto mojster ali kupec, ki že ve, da rabi lepljenje.",
-          "publika": "Iskanja v SLO, exact + phrase na „vinil za lepljenje“, „lepljeni vinil“, „LVT lepljenje“.",
+          "tagi": "search, cena",
+          "kot": "Iskalec primerja ceno na m². Damo mu jo v naslovu in v opisu razred, da ne izgleda kot najcenejša šara.",
+          "publika": "Iskanja v SLO: vinil za lepljenje, lepljeni vinil, vinil cena, LVT.",
+          "hooki": [
+            ""
+          ],
+          "primarna": [
+            ""
+          ],
           "naslovi": [
-            "Vinil za lepljenje 2,5 mm",
-            "Lepljeni vinil – zaloga SLO",
-            "Nizka vgradna višina",
-            "Obrabni sloj 0,5 mm",
-            "Razred 33/42",
-            "Brezplačni vzorci",
-            "Dostava 1–3 dni",
-            "Paket 3,47 m², 16 plošč",
-            "Vodoodporen vinil",
-            "Primeren za talno gretje"
+            "Vinil za lepljenje 3,86 €/m²",
+            "Paket 3,47 m² za 13,40 €",
+            "Razred 33/42, na zalogi",
+            "Dostava v 1–3 delovnih dneh",
+            "Možna strokovna montaža",
+            "Trgovina Eureka"
           ],
           "opisi": [
-            "Vinil za lepljenje, 2,5 mm. Brez rezkanja vrat in brez stopnice na prehodu.",
-            "Obrabni sloj 0,5 mm, razred 33/42. Vodoodporen, talno gretje do 26 °C.",
-            "Paket pokrije 3,47 m² (16 plošč). Zaloga v Sloveniji, dostava 1–3 dni.",
-            "Brezplačni vzorci pred nakupom. Plačilo tudi na obroke z Leanpay."
+            "Vinil za lepljenje razreda 33/42. Nizka višina, vodoodporen. Paket 3,47 m² = 13,40 €.",
+            "Na zalogi, dostava v 1–3 delovnih dneh. Možnost vnosa v prostor in strokovne montaže.",
+            "3,86 €/m². Uvažamo sami, zato je cena nižja od primerljivih oblog istega razreda."
           ],
-          "kljucneBesede": "vinil za lepljenje, lepljeni vinil, lvt vinil, vinil 2,5 mm, vinil plosce za lepljenje, vinil lepilo",
+          "cta": "Izvedi več",
           "url": "https://trgovinaeureka.si/kategorija/vinil/",
-          "pot1": "vinil",
-          "pot2": "lepljenje",
-          "sitelinki": "Brezplačni vzorci, Vinil na klik, Zaključne letvice, Dostava in plačilo",
-          "design": "Search — brez vizuala. Callouti: nizka vgradna višina, zaloga v SLO, brezplačni vzorci.",
-          "opombe": "Negativne: vinil folija, avto folija, vinyl, LP, gramofon, lepilo za ploščice, rabljeno.",
-          "budget": "8",
-          "ctr": "6",
-          "cvr": "2,5",
+          "design": "Brez vizuala — Search.",
+          "oddaja": "Prikazna pot: vinil / za-lepljenje.",
+          "opombe": "",
+          "rok": "",
+          "rokOpomba": "",
+          "blokada": "",
+          "statusOpomba": "",
+          "budget": "15",
+          "cpm": "9",
+          "ctr": "1,8",
+          "cvr": "2,2",
           "stikala": {
             "stik-trg": "Slovenija"
           },
           "vodi": "",
-          "variante": {}
+          "variante": {},
+          "naslov": "Google Search · vinil za lepljenje",
+          "platforma": "google",
+          "kljucneBesede": "",
+          "pot1": "",
+          "pot2": "",
+          "sitelinki": ""
+        },
+        {
+          "id": "kr-vl-karusel",
+          "format": "karusel",
+          "umestitev": "fb-feed",
+          "status": "ideja",
+          "tagi": "izbira, znamka, remarketing",
+          "kot": "Za tiste, ki jih cena že zanima, a se ne morejo odločiti za videz. Izbira je razlog za ponoven obisk — 13 dekorjev je konkretna številka, ne „široka ponudba“.",
+          "publika": "Remarketing: obiskovalci kategorije vinil zadnjih 30 dni, brez nakupa.",
+          "hooki": [
+            "Trinajst dekorjev. Eden od njih je vaš.",
+            "Hrast, beton, javor, breza — isti pod, trinajst obrazov.",
+            "Niste se odločili za videz? Poglejte vse naenkrat."
+          ],
+          "primarna": [
+            "Dizajn, ki navduši. Kvaliteta, ki traja.\n\n13 dekorjev vinila na klik — od svetlega hrasta do betona. Vsi razred 33/42, vsi vodoodporni, vsi 7,35 €/m².\n\nNa zalogi, pri vas v 1–3 dneh."
+          ],
+          "naslovi": [
+            "13 dekorjev, ena cena",
+            "Hrast, beton, javor",
+            "Vsi 7,35 €/m²"
+          ],
+          "opisi": [
+            "Vsi na zalogi",
+            "Razred 33/42"
+          ],
+          "cta": "Nakupuj zdaj",
+          "url": "https://trgovinaeureka.si/kategorija/vinil/",
+          "design": "Karusel, 5 kartic 1:1. Vsaka kartica en dekor, položen pod od zgoraj, isti kot in ista svetloba pri vseh — da se vidi razlika v dekorju, ne v fotografiji. Ime dekorja v spodnjem levem kotu. Zadnja kartica: „še 8 dekorjev“ + gumb.",
+          "oddaja": "5× 1:1 (1080×1080), ista svetloba in isti kot pri vseh.",
+          "opombe": "",
+          "rok": "",
+          "rokOpomba": "",
+          "blokada": "",
+          "statusOpomba": "",
+          "budget": "15",
+          "cpm": "9",
+          "ctr": "1,8",
+          "cvr": "2,2",
+          "stikala": {
+            "stik-trg": "Slovenija"
+          },
+          "vodi": "",
+          "variante": {},
+          "naslov": "FB Feed · Dizajn, ki navduši — 13 dekorjev",
+          "platforma": "facebook",
+          "kljucneBesede": "",
+          "pot1": "",
+          "pot2": "",
+          "sitelinki": ""
         }
       ],
       "stikala": {
