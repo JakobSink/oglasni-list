@@ -11,8 +11,17 @@
    tudi kodo iz drugih datotek in te ob nalaganju stanje.js še ni bilo.     */
 naloziStanje();
 
-var zac=String(location.hash||"").replace("#","");
-if(zac)view=pravView(zac);
+/* Naslov pove, kje si bil: pogled, pri odprti kreativi pa še ta. Zato te
+   osvežitev — tudi tista, ki jo naredi nov service worker — vrne tja, kjer si
+   nehal, in povezava do kreative drži tudi po ponovnem zagonu.              */
+if(location.hash){
+  var zac=izNaslova(location.hash);
+  var zacKre=zac.kreativa?najdiKreativo(zac.kreativa):null;
+  if(zacKre){
+    S.aktivenProjekt=zacKre.izdelek.projekt;S.aktiven=zacKre.izdelek.id;
+    odprtaKreativa=zacKre.kreativa.id;view="kreative";
+  }else view=zac.view;
+}
 /* V vrstici je prostor za številko, ne za ves opis — ta gre v namig ob miški.
    Številka je tisto, kar pove, ali brskalnik strežé svežo kopijo.           */
 if(el("verzija")){

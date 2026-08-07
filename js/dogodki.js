@@ -26,6 +26,7 @@ function render(){
   });
   el("v-"+view).hidden=false;
   RENDER[view]();
+  osveziNaslov();
 }
 function paint(){
   if(view==="kreative"&&odprtaKreativa&&K())paintKreativa();
@@ -68,10 +69,63 @@ var IMENA={projekti:"Projekti",pregled:"Pregled",kreative:"Kreative",
 function nastaviView(v){
   view=pravView(v);if(view!=="kreative")odprtaKreativa=null;
   render();window.scrollTo(0,0);
-  var mt=el("mobTitle");if(mt)mt.textContent=IMENA[view]||"Oglasni list";
+  osveziMobNaslov();
   zapriMeni();
-  try{location.hash=view;}catch(err){}
 }
+function osveziMobNaslov(){
+  var mt=el("mobTitle");if(mt)mt.textContent=IMENA[view]||"Oglasni list";
+}
+
+/* ============ naslov in gumb za nazaj ============
+   V naslovu je zapisan pogled, pri odprti kreativi pa še ta: `#kreative/<id>`.
+   Zato gumb za nazaj v brskalniku dela to, kar uporabnik pričakuje — zapre
+   kreativo oziroma se vrne na prejšnji zavihek. Prej je naslov sicer pisalo,
+   nihče pa ga ni bral: klik na nazaj je zamenjal naslov, zaslon je ostal isti
+   in izgledalo je, da gumb ne dela. Na telefonu je to sistemski gumb, zato je
+   iz aplikacije vsakič vrglo ven.
+
+   Naslov pišemo z enega mesta — iz `render()`. Kdor spremeni pogled ali odpre
+   kreativo, se mu ni treba spomniti še na naslov; ker pišemo samo, kadar se je
+   res spremenil, enako stanje ne naredi novega vnosa v zgodovino, tiha
+   uskladitev pa je ne polni.                                                */
+function naslovIzStanja(){
+  return view==="kreative"&&odprtaKreativa?"kreative/"+odprtaKreativa:view;
+}
+function osveziNaslov(){
+  var zelim="#"+naslovIzStanja();
+  if(location.hash===zelim)return;
+  /* Prvi zapis ob zagonu gre brez vnosa v zgodovino — drugače bi prvi klik na
+     nazaj samo pobrisal lojtro in navzven ne bi naredil nič.                */
+  if(!location.hash&&window.history&&history.replaceState){
+    try{history.replaceState(null,"",zelim);return;}catch(err){}
+  }
+  try{location.hash=zelim;}catch(err){}
+}
+function izNaslova(h){
+  var deli=String(h||"").replace(/^#/,"").split("/");
+  return {view:pravView(deli[0]),kreativa:deli[0]==="kreative"&&deli[1]?deli[1]:null};
+}
+function poNaslovu(){
+  /* Naslov, ki smo ga pravkar napisali sami, se ujema s stanjem na zaslonu —
+     tak dogodek preskočimo. Brez tega bi vsaka menjava pogleda izrisala
+     dvakrat: enkrat na klik in enkrat na svoj lasten zapis naslova.         */
+  if(location.hash==="#"+naslovIzStanja())return;
+  var c=izNaslova(location.hash);
+  var najd=c.kreativa?najdiKreativo(c.kreativa):null;
+  if(najd){
+    /* Kreativa je lahko v drugem izdelku ali celo v drugi mapi — brez tega bi
+       se odprla prazna, ker jo `K()` išče samo v odprtem izdelku.           */
+    S.aktivenProjekt=najd.izdelek.projekt;S.aktiven=najd.izdelek.id;
+    odprtaKreativa=najd.kreativa.id;view="kreative";
+    polniIzbirnik();
+  }else{
+    /* kreative, ki je kolega medtem izbrisal, ne odpiramo — ostane seznam */
+    odprtaKreativa=null;view=c.view;
+  }
+  render();window.scrollTo(0,0);
+  osveziMobNaslov();zapriMeni();
+}
+window.addEventListener("hashchange",poNaslovu);
 /* stranski meni na telefonu */
 function odpriMeni(){document.body.classList.add("menu");el("sideVeil").hidden=false;}
 function zapriMeni(){document.body.classList.remove("menu");el("sideVeil").hidden=true;}
@@ -278,6 +332,14 @@ var IZBIRA=[
   }],
   /* radio pri različici → katera gre v predogled */
   ["data-pv",function(t){nastaviIzbor(t.dataset.pv,parseInt(t.dataset.i,10)||0);risiPredogled();}],
+  /* izbirnik mape pod kartico izdelka v pogledu Projekti */
+  ["data-prmove",function(t){
+    var ime=prestaviIzdelek(t.dataset.prmove,t.value);
+    if(!ime)return;
+    var izd=S.izdelki.filter(function(x){return x.id===t.dataset.prmove;})[0];
+    polniIzbirnik();render();
+    toast("„"+izd.ime+"“ je zdaj v mapi „"+ime+"“.");
+  }],
   ["=impFile",uvoziIzDatoteke],
   ["=impFileAdd",uvoziIzDatoteke],
   ["=dfile",function(t){dodajDatoteke(t.files);t.value="";}],
@@ -506,6 +568,12 @@ var KLIKI=[
   ["data-prpick",function(g){
     S.aktivenProjekt=g.dataset.prpick;S.aktiven=null;odprtaKreativa=null;
     shrani();polniIzbirnik();render();toast("Mapa izbrana.");
+  }],
+  ["data-prgor",function(g){
+    if(premakniMapo(g.dataset.prgor,-1)){polniIzbirnik();render();}
+  }],
+  ["data-prdol",function(g){
+    if(premakniMapo(g.dataset.prdol,1)){polniIzbirnik();render();}
   }],
   ["data-prrename",function(g){
     var pr=S.projekti.filter(function(x){return x.id===g.dataset.prrename;})[0];

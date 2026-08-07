@@ -1368,6 +1368,115 @@ console.log("\n== izdelek se da preimenovati in izbrisati ==");
   w.view = "projekti"; w.render();
 }
 
+console.log("\n== gumb za nazaj: naslov je stanje ==");
+{
+  const d = w.document;
+  /* Naslov pisemo z enega mesta, iz render(). Dogodek hashchange sprozimo sami,
+     ker ga jsdom (in brskalnik) odda sele v naslednjem koraku zanke.         */
+  const nazaj = (h) => {
+    w.location.hash = h;
+    w.dispatchEvent(new w.HashChangeEvent("hashchange", { bubbles: false }));
+  };
+  const izdSKre = w.S.izdelki.filter((x) => x.kreative.length > 0)[0];
+  w.S.aktivenProjekt = izdSKre.projekt; w.S.aktiven = izdSKre.id;
+  w.odprtaKreativa = null;
+
+  w.nastaviView("kalkulator");
+  ok(w.location.hash === "#kalkulator", "menjava pogleda se zapiše v naslov", w.location.hash);
+
+  const kre = izdSKre.kreative[0];
+  w.view = "kreative"; w.odprtaKreativa = kre.id; w.render();
+  ok(w.location.hash === "#kreative/" + kre.id,
+    "odprta kreativa je del naslova, zato ima svojo povezavo", w.location.hash);
+
+  /* to je klik na sistemski gumb za nazaj */
+  nazaj("#kalkulator");
+  ok(w.view === "kalkulator" && !w.odprtaKreativa,
+    "nazaj zapre kreativo in vrne prejšnji pogled", w.view + " / " + w.odprtaKreativa);
+
+  /* naprej po zgodovini: kreativa se odpre nazaj, tudi ce je v drugem izdelku */
+  const drug = w.S.izdelki.filter((x) => x.id !== izdSKre.id && x.kreative.length > 0)[0];
+  if (drug) {
+    w.S.aktiven = izdSKre.id;
+    nazaj("#kreative/" + drug.kreative[0].id);
+    ok(w.odprtaKreativa === drug.kreative[0].id && w.S.aktiven === drug.id,
+      "naslov odpre kreativo tudi iz drugega izdelka", w.S.aktiven + " / " + w.odprtaKreativa);
+    ok(w.K() !== null, "in kreativa se res najde, ne odpre se prazna");
+  } else ok(true, "naslov odpre kreativo tudi iz drugega izdelka (ni druge)");
+
+  /* kreativa, ki je ni vec: pogled ostane na seznamu, ne pade */
+  nazaj("#kreative/ni-me-vec");
+  ok(w.view === "kreative" && !w.odprtaKreativa,
+    "izbrisana kreativa iz naslova pusti seznam, ne prazne strani", w.view);
+
+  /* Dvojni izris: nas lasten zapis naslova ne sme sprozit se enega izrisa.
+     Prej je prav to dvakrat naredilo vsak prenos datoteke.                   */
+  let stIzrisov = 0;
+  /* stejemo prek tabele RENDER, ker si je ta zapomnila funkcijo ob nastanku */
+  const pravi = w.RENDER.kalkulator;
+  w.RENDER.kalkulator = function () { stIzrisov++; return pravi.apply(this, arguments); };
+  w.view = "projekti"; w.render();
+  w.nastaviView("kalkulator");
+  w.dispatchEvent(new w.HashChangeEvent("hashchange", { bubbles: false }));
+  w.RENDER.kalkulator = pravi;
+  ok(stIzrisov === 1, "lasten zapis naslova ne izriše drugič", stIzrisov + " izrisov");
+
+  w.odprtaKreativa = null; w.view = "projekti"; w.render();
+}
+
+console.log("\n== mape: vrstni red in premik izdelka ==");
+{
+  const d = w.document;
+  const klik = (sel) => {
+    const g = d.querySelector(sel);
+    if (g) g.dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+    return g;
+  };
+  while (w.S.projekti.length < 2) w.S.projekti.push(w.novProjekt("Druga mapa"));
+  w.view = "projekti"; w.render();
+
+  const prvi = w.S.projekti[0], drugi = w.S.projekti[1];
+  ok(d.querySelector('[data-prgor="' + prvi.id + '"]').disabled,
+    "prva mapa se ne more premakniti višje");
+  ok(d.querySelector('[data-prdol="' + w.S.projekti[w.S.projekti.length - 1].id + '"]').disabled,
+    "in zadnja ne nižje");
+
+  klik('[data-prdol="' + prvi.id + '"]');
+  ok(w.S.projekti[0].id === drugi.id && w.S.projekti[1].id === prvi.id,
+    "puščica navzdol premakne mapo za eno mesto",
+    w.S.projekti.map((x) => x.ime).join(" | "));
+  ok(d.getElementById("prsel").options[0].value === drugi.id,
+    "nov vrstni red velja tudi v izbirniku v stranski vrstici");
+  klik('[data-prgor="' + prvi.id + '"]');
+  ok(w.S.projekti[0].id === prvi.id, "in puščica navzgor ga vrne");
+
+  /* premik izdelka med mapama kar s kartice */
+  const izd = w.izdelkiVProjektu(prvi.id)[0] || w.S.izdelki[0];
+  izd.projekt = prvi.id;
+  w.S.aktivenProjekt = prvi.id; w.render();
+  const izbirnik = d.querySelector('[data-prmove="' + izd.id + '"]');
+  ok(!!izbirnik, "kartica izdelka ima izbirnik mape");
+  /* interaktivni element ne sme stati v gumbu — brskalnik tam klika ne odda */
+  ok(d.querySelector("button .card-mv") === null,
+    "izbirnik stoji ob kartici, ne v gumbu");
+  if (izbirnik) {
+    izbirnik.value = drugi.id;
+    izbirnik.dispatchEvent(new w.Event("change", { bubbles: true }));
+    ok(izd.projekt === drugi.id, "izbira mape prestavi izdelek", izd.projekt);
+    ok(w.izdelkiVProjektu(drugi.id).some((x) => x.id === izd.id),
+      "in izdelek je zdaj naštet pod novo mapo");
+  }
+
+  /* ena sama mapa: ni kam prestavljati, zato izbirnika in puščic ni */
+  const shramba = w.S.projekti.slice();
+  w.S.projekti = [prvi];
+  w.S.izdelki.forEach((x) => { x.projekt = prvi.id; });
+  w.S.aktivenProjekt = prvi.id; w.render();
+  ok(d.querySelector("[data-prmove]") === null && d.querySelector("[data-prgor]") === null,
+    "pri eni sami mapi ni ne izbirnika ne puščic");
+  w.S.projekti = shramba; w.render();
+}
+
 console.log("\n== testi tečejo tudi v CI ==");
 {
   /* Imena datoteke ne priklepamo — šteje, da nek workflow poganja teste in da

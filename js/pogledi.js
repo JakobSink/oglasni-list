@@ -171,7 +171,7 @@ function renderProjekti(){
   var vseIzd=S.izdelki.length;
   var vseKre=S.izdelki.reduce(function(a,x){return a+x.kreative.length;},0);
 
-  var mape=S.projekti.map(function(pr){
+  var mape=S.projekti.map(function(pr,iMape){
     var izd=izdelkiVProjektu(pr.id);
     var stK=izd.reduce(function(a,x){return a+x.kreative.length;},0);
     var aktivnih=izd.reduce(function(a,x){return a+budgetAktivnih(x);},0);
@@ -179,10 +179,25 @@ function renderProjekti(){
     var jeZdaj=pr.id===S.aktivenProjekt;
     var vseKre_=kreativeVProjektu(pr.id);
 
+    /* Premik izdelka v drugo mapo je bil doslej samo v Pregledu odprtega
+       izdelka. Tu je pri roki, kjer mape vidiš eno ob drugi. Izbirnik je
+       sestra kartice, ne njen otrok — v gumbu interaktivni element ne sme
+       stati in klik nanj bi sprožil še odpiranje izdelka.                   */
+    function premikHtml(p){
+      if(S.projekti.length<2)return "";
+      return '<label class="card-mv no-print"><span>Mapa</span>'+
+        '<select data-prmove="'+p.id+'" aria-label="Premakni „'+esc(p.ime)+'“ v drugo mapo">'+
+          S.projekti.map(function(x){
+            return '<option value="'+x.id+'"'+(x.id===pr.id?" selected":"")+'>'+esc(x.ime)+'</option>';
+          }).join("")+
+        '</select></label>';
+    }
+
     var izdelki=izd.map(function(p){
       var ek=ekon(p);
       var st=fazeStevila(p.kreative);
-      return '<button class="card'+(p.id===S.aktiven&&jeZdaj?" zdaj":"")+'" data-pick="'+p.id+'">'+
+      return '<div class="card-w">'+
+        '<button class="card'+(p.id===S.aktiven&&jeZdaj?" zdaj":"")+'" data-pick="'+p.id+'">'+
         '<div class="card-b">'+
           /* zgoraj samo to, kar terja pozornost — statusi pridejo pod opis */
           '<div class="row" style="gap:7px">'+
@@ -198,7 +213,9 @@ function renderProjekti(){
           '<span class="sp"></span>'+
           '<span>'+(st.skupaj?steviloIn(st.skupaj,"kreativa","kreativi","kreative","kreativ"):"brez kreativ")+'</span>'+
         '</div>'+
-      '</button>';
+        '</button>'+
+        premikHtml(p)+
+      '</div>';
     }).join("");
 
     return '<div class="block">'+
@@ -213,6 +230,11 @@ function renderProjekti(){
           '<span class="pill np">'+steviloIn(izd.length,"izdelek","izdelka","izdelki","izdelkov")+' · '+steviloIn(stK,"kreativa","kreativi","kreative","kreativ")+(aktivnih>0?' · '+e(aktivnih)+'/dan':'')+'</span>'+
           odprtoPills(vseKre_)+
           (jeZdaj?'':'<button class="btn btn-s btn-soft" data-prpick="'+pr.id+'">Izberi</button>')+
+          /* vrstni red map: enako kot pri različicah besedila, s puščicama */
+          (S.projekti.length>1
+            ? '<button class="btn btn-s btn-soft" data-prgor="'+pr.id+'" title="Premakni mapo višje" aria-label="Premakni mapo višje"'+(iMape===0?' disabled':'')+'>↑</button>'+
+              '<button class="btn btn-s btn-soft" data-prdol="'+pr.id+'" title="Premakni mapo nižje" aria-label="Premakni mapo nižje"'+(iMape===S.projekti.length-1?' disabled':'')+'>↓</button>'
+            : '')+
           '<button class="btn btn-s" data-prrename="'+pr.id+'">Preimenuj</button>'+
           (S.projekti.length>1?'<button class="btn btn-s btn-d" data-prdel="'+pr.id+'">Izbriši</button>':'')+
         '</div>'+
@@ -228,7 +250,9 @@ function renderProjekti(){
           '<textarea id="pr-zap-'+pr.id+'" data-przap="'+pr.id+'" rows="4" placeholder="Kar velja za celo stranko ali sezono: dogovori, dostopi, kdo odloča, kaj je že bilo testirano, roki …">'+esc(pr.zapiski||"")+'</textarea>'+
           '<span class="hint">Shranjuje se med tipkanjem. Gre v brief vsake kreative v tej mapi.</span></div>'+
         cgpHtml(pr)+
-        (izd.length?'<p class="note" style="margin-top:14px">Klik na izdelek odpre njegove <b>kreative</b>. Za premik v drugo mapo odpri izdelek in spremeni polje <i>Mapa</i> v Ekonomiki.</p>':
+        (izd.length?'<p class="note" style="margin-top:14px">Klik na izdelek odpre njegove <b>kreative</b>.'+
+            (S.projekti.length>1?' Za premik v drugo mapo uporabi izbirnik <i>Mapa</i> pod kartico; isto polje je tudi v Pregledu izdelka.':'')+
+            ' S puščicama ob imenu mape premakneš celo mapo višje ali nižje.</p>':
           '<p class="note" style="margin-top:14px">Mapa je prazna.</p>')+
       '</div>'+
     '</div>';

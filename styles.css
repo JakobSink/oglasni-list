@@ -334,6 +334,20 @@ main{
   font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--ink3);
 }
 .card-f b{color:var(--ink);font-weight:600}
+/* kartica z izbirnikom mape pod njo: kartica ostane gumb, izbirnik je zraven
+   njega, ne v njem — v gumbu interaktivni element ne sme stati */
+.card-w{display:flex;flex-direction:column;gap:7px;min-width:0}
+.card-w>.card{flex:1}
+.card-mv{
+  display:flex;align-items:center;gap:7px;padding:0 3px;
+  font-size:12px;color:var(--ink3);
+}
+.card-mv select{
+  flex:1;min-width:0;padding:5px 7px;font:inherit;color:var(--ink2);
+  background:var(--surf2);border:1px solid var(--line);border-radius:var(--r-s);
+  cursor:pointer;
+}
+.card-mv select:hover{border-color:var(--line2)}
 .card-add{
   align-items:center;justify-content:center;gap:6px;min-height:150px;
   border:1.5px dashed var(--line2);background:transparent;box-shadow:none;color:var(--ink3);

@@ -343,7 +343,6 @@ function uvoziDodaj(d){
     view="kreative";
   }
   odprtaKreativa=null;shrani();polniIzbirnik();render();
-  try{location.hash=view;}catch(err){}
   toast("Dodano: "+novihIzd+" izdelkov, "+novihKr+" kreativ"+
     (novihMap?", "+novihMap+" novih map":"")+
     (novihStik?", "+novihStik+" stikal":"")+

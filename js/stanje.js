@@ -247,6 +247,32 @@ function pociStiKos(){
 }
 
 function novProjekt(ime){return {id:uid(),ime:ime||"Nov projekt",opis:"",zapiski:""};}
+/* Vrstni red map je vrstni red v seznamu — enako kot pri različicah besedila in
+   kreativah. Posebnega polja za vrstni red namenoma ni: zlivanje v oblaku vzame
+   vrstni red naše strani (`zlij` gradi po seznamu `a`), zato preurejanje ostane
+   na tej napravi in kolegu ne premeče map med delom.                        */
+function premakniMapo(id,smer){
+  var pr=S.projekti.filter(function(x){return x.id===id;})[0];
+  if(!pr)return false;
+  var od=S.projekti.indexOf(pr), doK=od+smer;
+  if(od<0||doK<0||doK>=S.projekti.length)return false;
+  S.projekti.splice(doK,0,S.projekti.splice(od,1)[0]);
+  shrani();
+  return true;
+}
+/* Izdelek v drugo mapo. Vrne ime ciljne mape, da klicatelj ve, kaj sporočiti;
+   če izdelka ni ali je že tam, vrne prazno.                                 */
+function prestaviIzdelek(iid,pid){
+  var izd=S.izdelki.filter(function(x){return x.id===iid;})[0];
+  var cilj=S.projekti.filter(function(x){return x.id===pid;})[0];
+  if(!izd||!cilj||izd.projekt===pid)return "";
+  izd.projekt=pid;
+  /* Če je bil to odprt izdelek, gre pogled za njim — drugače bi izginil iz
+     seznama in izgledalo bi, da se je izbrisal.                             */
+  if(S.aktiven===izd.id)S.aktivenProjekt=pid;
+  shrani();
+  return cilj.ime;
+}
 function novIzdelek(ime,projekt){
   return {id:uid(),projekt:projekt||null,ime:ime||"Nov izdelek",opis:"",znamka:"",domena:"",url:"",
     zapiski:"",stDatotek:0,izracuni:false,stikala:{},
