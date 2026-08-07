@@ -1477,6 +1477,132 @@ console.log("\n== mape: vrstni red in premik izdelka ==");
   w.S.projekti = shramba; w.render();
 }
 
+console.log("\n== obrez slike: cilji in matematika ==");
+{
+  const d = w.document;
+  const cilji = w.obrezCilji();
+  const poId = {};
+  cilji.forEach((c) => { poId[c.id] = c; });
+
+  /* cilji se berejo iz UMESTITVE, zato nobena umestitev s sliko ne sme ostati brez */
+  const brezCilja = [];
+  Object.keys(w.UMESTITVE).forEach((plat) => {
+    w.UMESTITVE[plat].forEach((u) => {
+      const px = u[2] && u[2].px;
+      if (!px) return;
+      const st = String(px).split(/[^0-9]+/).filter(Boolean);
+      if (!poId[st[0] + "x" + st[1]]) brezCilja.push(plat + "/" + u[0]);
+    });
+  });
+  ok(brezCilja.length === 0, "vsaka umestitev s sliko ima svoj cilj", brezCilja.join(", "));
+  ok(!!poId["1080x1350"] && !!poId["1080x1920"] && !!poId["1200x628"],
+    "feed, zgodba in Google display so med cilji", cilji.map((c) => c.id).join(", "));
+  ok(poId["1080x1920"].kje.length >= 3,
+    "en cilj našteje vse umestitve, ki ga rabijo", poId["1080x1920"].kje.join(", "));
+  const razmerja = cilji.map((c) => c.w / c.h);
+  ok(razmerja.every((r, i) => i === 0 || razmerja[i - 1] <= r),
+    "cilji so urejeni od pokončnega proti ležečemu");
+
+  /* izrez nikoli ne gre čez vir in vedno pokrije cel cilj */
+  let cez = 0, nepokrito = 0;
+  [[1080, 1350], [1920, 1080], [900, 900], [4032, 3024]].forEach(([sw2, sh2]) => {
+    cilji.forEach((c) => {
+      [[0.5, 0.5], [0, 0], [1, 1], [0.2, 0.9]].forEach(([fx, fy]) => {
+        const o = w.obrezOkno(sw2, sh2, c.w, c.h, fx, fy);
+        if (o.sx < 0 || o.sy < 0 || o.sx + o.dw > sw2 || o.sy + o.dh > sh2) cez++;
+        /* razmerje izreza se mora ujemati s ciljem, sicer bi slika bila raztegnjena */
+        if (Math.abs(o.dw / o.dh - c.w / c.h) > 0.02) nepokrito++;
+      });
+    });
+  });
+  ok(cez === 0, "izrez nikoli ne seže čez rob vira", cez + " primerov");
+  ok(nepokrito === 0, "izrez ima razmerje cilja, slika se ne razteguje", nepokrito + " primerov");
+
+  const enako = w.obrezOkno(1080, 1350, 1080, 1350, 0.5, 0.5);
+  ok(enako.izgubljeno < 0.001 && enako.povecava === 1,
+    "isto razmerje ne odreže ničesar", enako.izgubljeno);
+
+  /* 4:5 → 9:16 odreze sirino, 4:5 → 1,91:1 pa vecino visine */
+  const vZgodbo = w.obrezOkno(1080, 1350, 1080, 1920, 0.5, 0.5);
+  ok(vZgodbo.dh === 1350 && Math.abs(vZgodbo.dw - 759) <= 2,
+    "4:5 → 9:16 obdrži vso višino in ~70 % širine", vZgodbo.dw + " × " + vZgodbo.dh);
+  const vSiroko = w.obrezOkno(1080, 1350, 1200, 628, 0.5, 0.5);
+  ok(vSiroko.izgubljeno > 0.5,
+    "4:5 → 1,91:1 odreže več kot polovico", Math.round(vSiroko.izgubljeno * 100) + " %");
+
+  /* tocka fokusa: pri robu se izrez prilepi na rob, ne pade cez */
+  const levo = w.obrezOkno(2000, 1000, 1080, 1920, 0, 0.5);
+  ok(levo.sx === 0, "fokus na levem robu prilepi izrez na rob", levo.sx);
+  const desno = w.obrezOkno(2000, 1000, 1080, 1920, 1, 0.5);
+  ok(desno.sx + desno.dw === 2000, "in na desnem na desni rob", desno.sx + desno.dw);
+  const sredina = w.obrezOkno(2000, 1000, 1080, 1920, 0.5, 0.5);
+  ok(sredina.sx > levo.sx && sredina.sx < desno.sx, "vmes se premika z njim");
+  ok(w.obrezOkno(2000, 1000, 1080, 1920).sx === sredina.sx,
+    "brez fokusa je izrez sredinski");
+
+  /* premajhen vir: raje povemo, kot tiho povecamo */
+  const mehko = w.obrezOkno(600, 800, 1080, 1920, 0.5, 0.5);
+  ok(mehko.povecava > 2, "premajhen vir javi povečavo", mehko.povecava.toFixed(2) + "×");
+  ok(w.obrezOkno(4000, 5000, 1080, 1350, 0.5, 0.5).povecava === 1,
+    "dovolj velik vir je brez povečave");
+
+  /* ime izreza pove mere, koncnica pa sledi vrsti zapisa */
+  ok(w.obrezIme("ARIEL.png", poId["1080x1920"], "image/png") === "ARIEL · 1080×1920.png",
+    "ime izreza nosi mere", w.obrezIme("ARIEL.png", poId["1080x1920"], "image/png"));
+  ok(w.obrezTip("image/png") === "image/png" && w.obrezTip("image/jpeg") === "image/jpeg",
+    "PNG ostane PNG, fotografija gre v JPEG");
+}
+
+console.log("\n== predloga mer ==");
+{
+  const m = w.predlogaMere();
+  ok(!!m && m.w === 1080 && m.h === 1920, "predloga stoji na 1080 × 1920", m && m.w + "×" + m.h);
+  ok(m.okvirji.length > 0, "v njej so okvirji ožjih formatov",
+    m.okvirji.map((o) => o.ime).join(", "));
+  ok(m.okvirji.every((o) => o.w === 1080 && o.h < 1920),
+    "vsak okvir drži vso širino in manj višine");
+  ok(m.presek.w > 0 && m.presek.h > 0, "presek ni prazen",
+    m.presek.w + " × " + m.presek.h);
+  /* presek mora biti znotraj vsakega okvirja in zunaj varnih con */
+  const vsebovan = m.okvirji.every((o) =>
+    m.presek.x >= o.x && m.presek.y >= o.y &&
+    m.presek.x + m.presek.w <= o.x + o.w && m.presek.y + m.presek.h <= o.y + o.h);
+  ok(vsebovan, "presek leži znotraj vseh okvirjev");
+  ok(m.presek.y >= m.cona.zgoraj && m.presek.y + m.presek.h <= m.h - m.cona.spodaj,
+    "in se izogne temu, kar pokrije vmesnik",
+    m.presek.y + "…" + (m.presek.y + m.presek.h));
+  ok(m.presek.x + m.presek.w <= m.w - m.cona.desno, "tudi gumbom ob desnem robu");
+}
+
+console.log("\n== obrez: pot od kartice do okna ==");
+{
+  const d = w.document;
+  ok(d.getElementById("ob") !== null && d.getElementById("ob").hidden,
+    "okno za obrez je v strani in zaprto");
+  ok(w.KLIKI.some((r) => r[0] === "data-obrez"), "gumb obreži ima svoje pravilo");
+  ok(w.IZBIRA.some((r) => r[0] === "data-obcilj"), "izbira formata ima svoje pravilo");
+  ok(w.KLIKI.some((r) => r[0] === "=ob-predloga"), "in predloga svoje");
+  /* obrez brez odprtega okna ne sme pasti */
+  w.zapriObrez();
+  ok(w.obrezStanje === null, "zapiranje zaprtega okna ne pade");
+  /* obljuba pride iz okna jsdom, zato instanceof cez realm ne drzi — dovolj je,
+     da se da nanjo obesiti .then */
+  const prazna = w.obrezIzvedi("prenos");
+  ok(prazna && typeof prazna.then === "function", "izvedba brez okna vrne prazno obljubo");
+
+  /* privzeti cilji: umestitev kreative plus pokoncni par */
+  const kre = w.S.izdelki.filter((x) => x.kreative.length)[0].kreative[0];
+  kre.platforma = "facebook"; kre.umestitev = "fb-market";
+  const priv = w.obrezPrivzeti(kre);
+  ok(priv.indexOf("1080x1080") >= 0, "privzeto je vključena umestitev kreative", priv.join(", "));
+  ok(priv.indexOf("1080x1350") >= 0 && priv.indexOf("1080x1920") >= 0,
+    "in zraven feed in zgodba, ker isti oglas teče še tam", priv.join(", "));
+
+  /* samo slike: video nima gumba za obrez */
+  ok(/jeSlika\?'<button data-obrez/.test(fs.readFileSync(path.join(REPO, "js/predogled.js"), "utf8")),
+    "gumb obreži se izriše samo pri sliki");
+}
+
 console.log("\n== testi tečejo tudi v CI ==");
 {
   /* Imena datoteke ne priklepamo — šteje, da nek workflow poganja teste in da

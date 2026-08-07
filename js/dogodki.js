@@ -332,6 +332,7 @@ var IZBIRA=[
   }],
   /* radio pri različici → katera gre v predogled */
   ["data-pv",function(t){nastaviIzbor(t.dataset.pv,parseInt(t.dataset.i,10)||0);risiPredogled();}],
+  ["data-obcilj",function(t){obrezIzberi(t.dataset.obcilj,t.checked);}],
   /* izbirnik mape pod kartico izdelka v pogledu Projekti */
   ["data-prmove",function(t){
     var ime=prestaviIzdelek(t.dataset.prmove,t.value);
@@ -617,6 +618,16 @@ var KLIKI=[
       shrani();render();toast("Zavrženo dokončno.");
     });
   }],
+  ["data-obrez",function(g){odpriObrez(g.dataset.obrez);}],
+  ["=ob-x",function(){zapriObrez();}],
+  ["=ob-shrani",function(){obrezIzvedi("material");}],
+  ["=ob-prenesi",function(){obrezIzvedi("prenos");}],
+  ["=ob-predloga",function(){
+    predlogaPng().then(function(r){
+      obrezPrenesi(r.blob,r.ime);
+      toast("Predloga prenesena: varno povsod je "+r.mere.presek.w+" × "+r.mere.presek.h+" px.");
+    },function(err){toast("Predloge ni bilo mogoče narediti: "+(err&&err.message||"neznana napaka"));});
+  }],
   ["data-zoom",function(g){pokaziPovecano(g.dataset.zoom);}],
   ["=lb-x",function(){zapriPovecano();}],
   ["=lb",function(){zapriPovecano();}],
@@ -780,7 +791,7 @@ document.addEventListener("keydown",function(ev){
     }
     return;
   }
-  if(ev.key==="Escape"){zapriIzvoz();zapriPovecano();return;}
+  if(ev.key==="Escape"){zapriIzvoz();zapriPovecano();zapriObrez();return;}
   /* Alt + 1…5 skoči na zavihek. Alt zato, ker same številke pripadajo poljem,
      brskalniku pa Alt+številka ni zaseden.                                  */
   if(ev.altKey&&!ev.ctrlKey&&!ev.metaKey&&/^[1-5]$/.test(ev.key)){

@@ -11,7 +11,7 @@ var CACHE=CACHE_IME;
 var DATOTEKE=["./","index.html","styles.css","manifest.webmanifest","icon.svg",
   "verzija.js","config.js","vendor/supabase.js",
   "js/osnove.js","js/stanje.js","js/izracuni.js","js/datoteke.js","js/pogledi.js",
-  "js/kreative.js","js/predogled.js","js/kalkulator.js","js/oblak.js",
+  "js/kreative.js","js/predogled.js","js/obrez.js","js/kalkulator.js","js/oblak.js",
   "js/podatki.js","js/excel.js","js/dogodki.js","js/zagon.js"];
 
 self.addEventListener("install",function(ev){

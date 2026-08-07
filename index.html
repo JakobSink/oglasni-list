@@ -101,6 +101,17 @@ try{var t=localStorage.getItem("oglasni-list-tema");if(t==="dark"||t==="light")d
   <div class="lb-in" id="lb-in"></div>
 </div>
 
+<div class="ob" id="ob" hidden role="dialog" aria-modal="true" aria-labelledby="ob-t">
+  <div class="ob-box">
+    <header class="ob-glava">
+      <h2 id="ob-t">Obrez slike za umestitve</h2>
+      <span class="sp"></span>
+      <button class="btn btn-s" id="ob-x">Zapri</button>
+    </header>
+    <div class="ob-in" id="ob-in"></div>
+  </div>
+</div>
+
 <script src="verzija.js"></script>
 <script src="config.js"></script>
 <!-- Koda je razdeljena po datotekah. Vrstni red šteje samo pri zagon.js,
@@ -112,6 +123,7 @@ try{var t=localStorage.getItem("oglasni-list-tema");if(t==="dark"||t==="light")d
 <script src="js/pogledi.js"></script>
 <script src="js/kreative.js"></script>
 <script src="js/predogled.js"></script>
+<script src="js/obrez.js"></script>
 <script src="js/kalkulator.js"></script>
 <script src="js/oblak.js"></script>
 <script src="js/podatki.js"></script>

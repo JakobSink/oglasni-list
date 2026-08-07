@@ -524,7 +524,12 @@ function narisiDatotekeV(c){
       return '<div class="file">'+
         '<div class="prev"'+((jeSlika||jeVideo)?' data-zoom="'+d.id+'" title="Klikni za povečavo"':'')+'>'+prev+'</div>'+
         '<div class="meta"><span class="fn">'+esc(d.ime)+'</span><span class="fs">'+mb(d.velikost)+'</span></div>'+
-        '<div class="fa no-print"><button data-dl="'+d.id+'">prenesi</button><button class="d" data-ddel="'+d.id+'">izbriši</button></div>'+
+        '<div class="fa no-print">'+
+          /* obreže se samo slika — videa v brskalniku ne pretvarjamo */
+          (jeSlika?'<button data-obrez="'+d.id+'">obreži</button>':'')+
+          '<button data-dl="'+d.id+'">prenesi</button>'+
+          '<button class="d" data-ddel="'+d.id+'">izbriši</button>'+
+        '</div>'+
       '</div>';
     }).join("");
     /* Kar visi v oblaku, poberemo in seznam prerišemo enkrat. Kar ne pride,
